@@ -1,9 +1,9 @@
 # -*- encoding: utf-8 -*-
 {
-    'name': 'Mollie acquirer for online payments',
-    'version': '1.10',
-    'author': 'BeOpen NV',
-    'website': 'http://www.beopen.be',
+    'name': 'Mollie Odoo plugin',
+    'version': '1.0',
+    'author': 'Mollie & BeOpen',
+    'website': 'http://www.mollie.com',
     'category': 'eCommerce',
     'description': "",
     'depends': ['payment','website_sale'],
