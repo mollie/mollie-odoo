@@ -22,7 +22,7 @@
                 <!-- submit -->
                 <button type="submit" width="100px"
                     t-att-class="submit_class">
-                    <img t-if="not submit_txt" src="/payment_mollie_beopen/static/src/img/mollie_icon.png"/>
+                    <img t-if="not submit_txt" src="/mollie-payments-plugin/static/src/img/mollie_icon.png"/>
                     <span t-if="submit_txt"><t t-esc="submit_txt"/> <span class="fa fa-long-arrow-right"/></span>
                 </button>
             </form>
