@@ -3,7 +3,7 @@
     <data noupdate="1">
 
         <record id="payment.payment_acquirer_mollie" model="payment.acquirer">
-            <field name="name">Online payment</field>
+            <field name="name">Mollie</field>
             <field name="image" type="base64" file="payment_mollie_official/static/src/img/mollie_icon.png"/>
             <field name="provider">mollie</field>
             <field name="company_id" ref="base.main_company"/>
