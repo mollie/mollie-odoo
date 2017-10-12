@@ -167,14 +167,7 @@ class TxMollie(models.Model):
                 'date_validate':  fields.datetime.strptime(data["paidDatetime"].replace(".0Z", ""), "%Y-%m-%dT%H:%M:%S"),
                 'acquirer_reference': reference,
             }
-            if mollie_reference and self.partner_id and self.type == 'form':
-                payment_token = self.env['payment.token'].create({
-                    'partner_id': self.partner_id.id,
-                    'acquirer_id': self.acquirer_id.id,
-                    'acquirer_ref': mollie_reference,
-                    'name': data["method"]
-                })
-                vals.update(payment_token_id=payment_token.id)
+
             self.write(vals)
             if self.callback_eval:
                 safe_eval(self.callback_eval, {'self': self})
@@ -198,14 +191,6 @@ class TxMollie(models.Model):
             })
             return False
 
-class PaymentToken(models.Model):
-    _inherit = 'payment.token'
-
-    def mollie_create(self, values):
-        return {
-                'acquirer_ref': values['acquirer_ref'],
-                'name': values['name']
-               }
 
 
 
