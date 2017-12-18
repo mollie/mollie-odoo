@@ -2,9 +2,6 @@
 
 import json
 import logging
-from hashlib import sha256
-import urlparse
-import unicodedata
 import pprint
 import requests
 
@@ -169,8 +166,7 @@ class TxMollie(models.Model):
             }
 
             self.write(vals)
-            if self.callback_eval:
-                safe_eval(self.callback_eval, {'self': self})
+
             return True
         elif status in ["cancelled", "expired", "failed"]:
             self.write({

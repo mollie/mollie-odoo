@@ -1,5 +1,5 @@
-# Mollie addon for Odoo 10© 
-This is the official Mollie addon for Odoo 10© 
+# Mollie addon for Odoo 11©
+This is the official Mollie addon for Odoo 11©
 
 ## Installation
 For installation instructions please refer to the odoo docs:

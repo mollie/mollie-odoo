@@ -65,7 +65,6 @@ class MollieController(http.Controller):
         payload = {
             "description": description,
             "amount": amount,
-            #"webhookUrl": base_url + self._notify_url,
             "redirectUrl": "%s%s?reference=%s" % (base_url, self._redirect_url, orderid),
             "metadata": {
                 "order_id": orderid,

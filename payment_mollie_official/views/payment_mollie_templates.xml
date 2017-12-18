@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data noupdate="0">
+
+        <template id="mollie_form">
+            <input type="hidden" name="data_set" t-att-data-action-url="tx_url" data-remove-me=""/>
+            <input type="hidden" name="OrderId" t-att-value="OrderId"/>
+            <input type="hidden" name="Description" t-att-value="Description"/>
+            <input type="hidden" name="Currency" t-att-value="Currency"/>
+            <input type="hidden" name="Amount" t-att-value="Amount"/>
+            <input type="hidden" name="Key" t-att-value="Key"/>
+            <input type="hidden" name="URL" t-att-value="URL"/>
+            <input type="hidden" name="BaseUrl" t-att-value="BaseUrl"/>
+            <input type="hidden" name="Language" t-att-value="Language"/>
+            <input type="hidden" name="Name" t-att-value="Name"/>
+            <input type="hidden" name="Email" t-att-value="Email"/>
+            <input type="hidden" name="Zip" t-att-value="Zip"/>
+            <input type="hidden" name="Address" t-att-value="Address"/>
+            <input type="hidden" name="Town" t-att-value="Town"/>
+            <input type="hidden" name="Country" t-att-value="Country"/>
+            <input type="hidden" name="Phone" t-att-value="Phone"/>
+        </template>
+
+    </data>
+</openerp>
+
