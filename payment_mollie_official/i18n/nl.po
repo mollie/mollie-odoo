@@ -1,0 +1,55 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+#	* payment_mollie_official
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 10.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-03-26 13:30+0000\n"
+"PO-Revision-Date: 2018-03-26 13:30+0000\n"
+"Last-Translator: <>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: payment_mollie_official
+#: code:addons/payment_mollie_official/models/mollie.py:111
+#, python-format
+msgid "; multiple order found"
+msgstr "; meerdere orders gevonden"
+
+#. module: payment_mollie_official
+#: code:addons/payment_mollie_official/models/mollie.py:109
+#, python-format
+msgid "; no order found"
+msgstr "; geen order gevonden"
+
+#. module: payment_mollie_official
+#: model:ir.model.fields,field_description:payment_mollie_official.field_payment_acquirer_mollie_api_key_prod
+msgid "Mollie Live API key"
+msgstr "Mollie live API sleutel"
+
+#. module: payment_mollie_official
+#: model:ir.model.fields,field_description:payment_mollie_official.field_payment_acquirer_mollie_api_key_test
+msgid "Mollie Test API key"
+msgstr "Mollie test API sleutel"
+
+#. module: payment_mollie_official
+#: model:ir.model,name:payment_mollie_official.model_payment_acquirer
+msgid "Payment Acquirer"
+msgstr "Betaling verwerver"
+
+#. module: payment_mollie_official
+#: model:ir.model,name:payment_mollie_official.model_payment_transaction
+msgid "Payment Transaction"
+msgstr "Betalingstransactie"
+
+#. module: payment_mollie_official
+#: code:addons/payment_mollie_official/models/mollie.py:107
+#, python-format
+msgid "received data for reference %s"
+msgstr "Data ontvangen voor referentie %s"
+
