@@ -1,5 +1,7 @@
-# Mollie addon for Odoo 10© 
-This is the official Mollie addon for Odoo 10© 
+<p align="center">
+  <img src="https://info.mollie.com/hubfs/github/odoo/logo.png" width="128" height="128"/>
+</p>
+<h1 align="center">Mollie addon for Odoo 10</h1>
 
 ## Installation
 For installation instructions please refer to the odoo docs:
