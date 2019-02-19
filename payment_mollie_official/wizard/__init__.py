@@ -18,10 +18,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-
-from . import mollie
-from . import provider_log
-from . import res_partner
-from . import sale_order
+from . import config_mollie
+from . import force_updates
 
 
