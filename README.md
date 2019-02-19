@@ -1,7 +1,7 @@
 <p align="center">
   <img src="https://info.mollie.com/hubfs/github/odoo/logo.png" width="128" height="128"/>
 </p>
-<h1 align="center">Mollie addon for Odoo 10</h1>
+<h1 align="center">Mollie addon for Odoo 10-11-12</h1>
 
 ## Installation
 For installation instructions please refer to the odoo docs:
