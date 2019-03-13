@@ -27,7 +27,7 @@ After a succesfull payment, a confirmation is shown to the shopper:
 
 For Refunds: Activate module Cancel Journal Entries
 
-![alt text](/mollie-odoo/payment_mollie_official/static/src/img/Refund.JPG "Odoo mollie payment refunds")
+![alt text](/mollie-odoo/payment_mollie_official/static/src/img/Refund.png "Odoo mollie payment refunds")
 
 For Specific Gateway Configuration: Go to gateways and change the Country, Amount or Currency that wil be used for specific gateways.
 
