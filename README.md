@@ -20,3 +20,15 @@ Shopper will then be redirected to the Mollie payment method selection screen.
 After a succesfull payment, a confirmation is shown to the shopper:
 
 ![alt text](/payment_mollie_official/static/description/crm_sc_02.png "Odoo mollie payment confirmation")
+
+For Refunds: Activate module Cancel Journal Entries
+
+![alt text](/payment_mollie_official/static/description/src/img/Cancel_Journal_Entry.JPG "Odoo mollie payment refunds")
+
+For Specific Gateway Configuration: Go to gateways and change the Country, Amount or Currency that wil be used for specific gateways.
+
+![alt text](/payment_mollie_official/static/description/src/img/Gateways.JPG "Odoo Mollie Gateways Configuration")
+
+For Updating the available Payment Methods: Go to configuration and click update. The list is generated automatically based on the payment methods active in your Mollie account.
+
+![alt text](/payment_mollie_official/static/description/src/img/Mollie_Configuration.JPG "Odoo Mollie Payment Methods")
