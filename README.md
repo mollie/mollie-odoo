@@ -23,7 +23,7 @@ Shopper will then be redirected to the Mollie payment method selection screen.
 
 After a succesfull payment, a confirmation is shown to the shopper:
 
-![alt text](/payment_mollie_official/static/description/crm_sc_02.png "Odoo mollie payment confirmation")
+![alt text](/payment_mollie_official/static/description/Payment_Confirmation.png "Odoo mollie payment confirmation")
 
 For Refunds: Activate module Cancel Journal Entries
 
