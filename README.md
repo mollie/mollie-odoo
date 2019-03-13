@@ -29,9 +29,11 @@ For Refunds: Activate module Cancel Journal Entries
 
 ![alt text](/payment_mollie_official/static/description/Refund.png "Odoo mollie payment refunds")
 
+![alt text](/payment_mollie_official/static/description/cancel_journal_entry.png "Odoo Cancel Journal Entry Module")
+
 For Specific Gateway Configuration: Go to gateways and change the Country, Amount or Currency that wil be used for specific gateways.
 
-![alt text](/payment_mollie_official/static/description/src/img/Gateways.JPG "Odoo Mollie Gateways Configuration")
+![alt text](/payment_mollie_official/static/description/Gateways.JPG "Odoo Mollie Gateways Configuration")
 
 For Updating the available Payment Methods: Go to configuration and click update. The list is generated automatically based on the payment methods active in your Mollie account.
 
