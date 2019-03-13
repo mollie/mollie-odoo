@@ -15,7 +15,7 @@ http://odoo-development.readthedocs.io/en/latest/odoo/usage/install-module.html#
 Go to Invoicing section -> Payments -> Payment Acquirers -> Mollie.  
 Add API Keys (test and/or live) from your Mollie Account.
 
-![alt text](/payment_mollie_official/static/description/crm_sc_02.png "Odoo mollie configuration example")
+![alt text](/payment_mollie_official/static/description/crm_sc_02.PNG "Odoo mollie configuration example")
 
 When Mollie acquirer is configured correctly, you can see Mollie payment option at the time of checkout.
 
