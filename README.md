@@ -4,7 +4,7 @@
 <h1 align="center">Mollie addon for Odoo 12</h1>
 
 ## Install Python Package
-First install the python package "mollie-api-python": install mollie-api-python==1.2.0
+First install the python package "mollie-api-python": install mollie-api-python==1.2.0 or 2.1.0
 https://pypi.org/project/mollie-api-python/1.2.0/
 
 ## Installation
