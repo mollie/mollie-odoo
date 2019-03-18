@@ -101,7 +101,7 @@
                         </div>
                     </t>
                 </t>
-                <t t-if="mollie_aq!='0'">
+                <t t-if="mollie_aq!='0' and website_sale_order">
                     <t t-call="payment_mollie_official.mollie_payment_gateway_list"/>
                 </t>
                 <t t-foreach="pms" t-as="pm">
@@ -126,3 +126,4 @@
     </template>
     
 </odoo>
+
