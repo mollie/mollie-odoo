@@ -125,5 +125,10 @@
         </xpath>
     </template>
     
+    <template id="mollie_address" name="Mollie Address Inherit" inherit_id="website_sale.address">
+        <xpath expr="//input[@name='field_required']" position="attributes">
+            <attribute name="t-att-value">'phone,name,zip'</attribute>
+        </xpath>
+    </template>
+    
 </odoo>
-
