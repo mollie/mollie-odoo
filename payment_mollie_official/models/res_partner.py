@@ -24,6 +24,7 @@ from odoo import api, models
 
 class ResPartner(models.Model):
     _inherit = "res.partner"
+    _description = 'Res Partner'
 
     @api.multi
     def _get_mollie_address(self):
@@ -37,10 +38,10 @@ class ResPartner(models.Model):
             'streetAndNumber': "%s %s" % ((self.street or ''), (
                 self.street2 or '')),
             'city': self.city or '',
-            'postalCode': self.zip or '',
+            'postalCode': self.zip or '0000',
             'country': (self.country_id and
                         self.country_id.code) or 'nl',
             'email': self.email,
-            'phone': self.phone,
         }
         return res
+
