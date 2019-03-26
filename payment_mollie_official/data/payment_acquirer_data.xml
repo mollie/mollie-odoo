@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <data>
         <template id="mollie_form">
             <input type="hidden" name="data_set" t-att-data-action-url="tx_url" data-remove-me=""/>
             <input type="hidden" name="OrderId" t-att-value="OrderId"/>
@@ -19,6 +20,8 @@
             <input type="hidden" name="Phone" t-att-value="Phone"/>
             <input name="Method" t-att-value="Method"/>
         </template>
+    </data>
+    <data noupdate="1">
         <record id="payment_acquirer_mollie" model="payment.acquirer">
             <field name="name">Mollie</field>
             <field name="image" type="base64" file="payment_mollie_official/static/src/img/mollie_icon.png"/>
@@ -41,5 +44,6 @@
                 </ul>
             </field>
         </record>
+    </data>
 </odoo>
 
