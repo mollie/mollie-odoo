@@ -22,6 +22,7 @@
 import logging
 
 from mollie.api.client import Client
+import phonenumbers
 import werkzeug
 
 from odoo import http
@@ -93,6 +94,24 @@ class MollieController(http.Controller):
         order = order_model.browse(OrderId)
         method = order.acquirer_method and\
             order.acquirer_method.acquirer_reference
+        phone = ''
+
+        """
+          Mollie only accepts E164 phone numbers. If the phone number is not in an E164 format Mollie will refuse
+          the payment, resulting in Odoo doing a rollback and the user being 'kicked' to the homepage again.
+          In this try/except we will do a check for it. If there is no valid phone number we'll give back '' which
+          will be accepted by Mollie (no phone number).
+        """
+        try:
+            raw_phone_number = post.get('Phone', '')
+            result = phonenumbers.parse(raw_phone_number, None)
+            if result:
+                phone = phonenumbers.format_number(result, phonenumbers.PhoneNumberFormat.E164)
+        except Exception as error:
+            _logger.warning('The customer filled in a phone number in an invalid format. The phone number is not in '
+                            'the E164 format which Mollie requires. We will not send it to Mollie.')
+            phone = ''
+
         payment_tx = request.env['payment.transaction'].sudo(
         )._mollie_form_get_tx_from_data({'reference': tx_reference})
         webhookUrl = '%s/web#id=%s&action=%s&model=%s&view_type=form' % (
@@ -118,7 +137,7 @@ class MollieController(http.Controller):
                     "zip_code": post.get('Zip', ''),
                     "city": post.get('Town', ''),
                     "country": post.get('Country', ''),
-                    "phone": post.get('Phone', ''),
+                    "phone": phone or '',
                     "email": post.get('Email', '')
                 }
             },
@@ -139,3 +158,4 @@ class MollieController(http.Controller):
             checkout_url = order_response["_links"]["checkout"]["href"]
             return werkzeug.utils.redirect(checkout_url)
         return werkzeug.utils.redirect("/")
+
