@@ -88,16 +88,21 @@
             <xpath expr='//field[@name="payment_icon_ids"]' position='replace'/>
             
             <xpath expr='//field[@name="journal_id"]' position='after'>
-                <div>
-                    <div class="row">
-                     <field name="payment_icon_ids" widget="many2many_tags" colspan="4" attrs="{'invisible': [('provider', '=', 'mollie')]}"/>
-                     <button name="update_available_mollie_methods"
-                                    string="_Update" class="oe_link"
+                <field name="payment_icon_ids" widget="many2many_tags" colspan="4" attrs="{'invisible': [('provider', '=', 'mollie')]}"/>
+            </xpath>
+            <xpath expr="//group[@name='acquirer_config']" position="before">
+                <group>
+                    <button name="update_available_mollie_methods"
+                                    string="_Update payment methods"
+                                    class="btn btn-info"
+                                    help="Will get all the configured payment methods from your Mollie account and will
+                                    make them available in Odoo automatically."
                                     groups="base.group_system"
                                     type="object"
                                     attrs="{'invisible': [('provider', '!=', 'mollie')]}"/>
-                    </div>
-                    <div class="row" title="Methods">
+                </group>
+                <group>
+
                   <field name="method_ids" colspan="4" nolabel="1" attrs="{'invisible': [('provider', '!=', 'mollie')]}">
                    <tree string="Supported method" create="false" editable="top">
                       <field name="sequence" widget="handle"/>
@@ -109,8 +114,7 @@
                       <field name="acquirer_id" invisible="1"/>
                    </tree>
                   </field>
-                 </div>
-                </div>
+                </group>
             </xpath>
         </field>
     </record>
@@ -135,3 +139,4 @@
         </field>
     </record>
 </odoo>
+
