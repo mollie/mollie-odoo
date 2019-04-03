@@ -9,10 +9,10 @@ You can install both these requirements by running the following command:
 ```
 pip3 install -R requirements.txt
 ```
-Alternatively you can install them manually by doing `pip3 install mollie-api-python==1.2.0` and `pip3 install phonenumbers==8.10.3`
+Alternatively you can install them manually by doing `pip3 install mollie-api-python==2.1.0` and `pip3 install phonenumbers==8.10.3`
 You can find all the information about the dependencies on the following URL's:
-https://pypi.org/project/mollie-api-python/1.2.0/ <br/>
-https://pypi.org/project/phonenumbers/
+https://pypi.org/project/mollie-api-python/2.1.0/ <br/>
+https://pypi.org/project/phonenumbers/8.10.3/
 
 ## Installation
 For installation instructions please refer to the odoo docs:
