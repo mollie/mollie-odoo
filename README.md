@@ -3,6 +3,13 @@
 </p>
 <h1 align="center">Mollie addon for Odoo 12</h1>
 
+## Quick guide
+1. Download the Odoo module and add it under your custom apps in your Odoo configuration file (found under /etc/).
+2. Install all Python packages with `pip3 install -r requirements.txt`
+3. Restart your Odoo service so that Odoo can find and use all required Python packages.
+4. Update your apps list from the 'Apps' menu in Odoo.
+5. Install the Mollie app from the 'Apps' menu in Odoo.
+
 ## Installing the Python packages
 You will need two Python packages for using this application.
 You can install both these requirements by running the following command:
@@ -13,6 +20,8 @@ Alternatively you can install them manually by doing `pip3 install mollie-api-py
 You can find all the information about the dependencies on the following URL's:
 https://pypi.org/project/mollie-api-python/2.1.0/ <br/>
 https://pypi.org/project/phonenumbers/8.10.3/
+
+After installing the Python packages you should **restart** your Odoo service to make sure that your Odoo instance can access and use the dependencies. If you get a 'mollie' keyerror it means Odoo cannot use your Python packages or that you've installed an old version from mollie-api-python.
 
 ## Installation
 For installation instructions please refer to the odoo docs:
