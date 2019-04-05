@@ -103,8 +103,8 @@
                 </group>
                 <group>
 
-                  <field name="method_ids" colspan="4" nolabel="1" attrs="{'invisible': [('provider', '!=', 'mollie')]}">
-                   <tree string="Supported method" create="false" editable="top">
+                  <field name="method_ids" nolabel="1" attrs="{'invisible': [('provider', '!=', 'mollie')]}">
+                   <tree string="Supported method" create="false">
                       <field name="sequence" widget="handle"/>
                       <field name="image_small" widget="image" class="oe_avatar" nolabel="1" readonly="1"/>
                       <field name="name" readonly="1"/>
