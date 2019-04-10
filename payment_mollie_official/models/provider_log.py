@@ -35,6 +35,7 @@ EXCEPTION_LOG_TYPE = {
 
 class ProviderLog(models.Model):
     _name = "provider.log"
+    _description = "Mollie provider log details"
     _order = "id desc"
 
     name = fields.Char(string="Description", required=True)
