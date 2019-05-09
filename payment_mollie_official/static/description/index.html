@@ -1,61 +1,127 @@
 <section class="oe_container">
     <div class="oe_row oe_spaced">
-        <div class="oe_span10">
-<h2>Official Mollie integration</h2>
-            <p>
-Integrate Mollie in Odoo very easily. Mollie accepts the following payment methods :<br>
-
-                <ul>
-                <li>Creditcard</li>
-                <li>SOFORT Banking</li>
-                <li>iDEAL</li>
-                <li>Bancontact</li>
-                <li>Bank transfer</li>
-                <li>SEPA Direct Debit</li>
-                <li>PayPal</li>
-                <li>Bitcoin</li>
-                <li>PODIUM Cadeaukaart</li>
-                <li>paysafecard</li>
-                <li>KBC/CBC Payment Button</li>
-                <li>Belfius Direct Net</li>
-                <li>Gift cards</li>
-            </ul>
-            </p>
+        <div class="oe_span12">
+            <h2 class="oe_slogan" style="font-family: 'Calibre',sans-serif;">Official Mollie integration</h2>
+            <h2 class="oe_slogan" style="font-family: 'Calibre',sans-serif;">Installation guidelines</h2>
         </div>
+        <ol style="font-size:16px; font-family: 'Calibre',sans-serif;color: #111;">
+            <li>
+                Download the module or clone the <a href="https://github.com/mollie/mollie-odoo">
+                Github repository</a> and add it under your custom apps in your Odoo configuration file (found under
+                /etc/).
+            </li>
+            <li>
+                Install all Python packages with pip3 install -r requirements.txt
+            </li>
+            <li>
+                Restart your Odoo service so that Odoo can find and use all required Python packages.
+            </li>
+            <li>
+                Update your apps list from the 'Apps' menu in Odoo.
+            </li>
+            <li>
+                Install the Mollie app from the 'Apps' menu in Odoo.
+            </li>
+        </ol>
     </div>
 </section>
+
+<section class="oe_container oe_dark">
+    <div class="oe_row oe_spaced">
+        <div class="oe_span12">
+            <h2 class="oe_slogan" style="font-family: 'Calibre',sans-serif;">Supported payment methods</h2>
+        </div>
+        <ul style="font-size:16px; font-family: 'Calibre',sans-serif;color: #111;">
+            <li>Creditcard</li>
+            <li>SOFORT Banking</li>
+            <li>iDEAL</li>
+            <li>Bancontact</li>
+            <li>Bank transfer</li>
+            <li>SEPA Direct Debit</li>
+            <li>PayPal</li>
+            <li>Bitcoin</li>
+            <li>PODIUM Cadeaukaart</li>
+            <li>paysafecard</li>
+            <li>KBC/CBC Payment Button</li>
+            <li>Belfius Direct Net</li>
+            <li>Gift cards</li>
+        </ul>
+    </div>
+</section>
+
 
 <section class="oe_container">
     <div class="oe_row oe_spaced">
-<div class="oe_span10">
-        <h2>Easy install and configuration</h2>
-            <p>
-Install this module. Go to Invoicing section -> Payments -> Payment Acquirers -> Mollie and Add API Keys (test and/or live) from your Mollie Account.</p>
-	<p>
-After you choose to pay with Mollie, the possible payment methods will be displayed.
-</p>
-       
-            <p>
-When Mollie acquirer is configured correctly, you can see Mollie payment option at the time of checkout.
-            </p>
-     
-            <p>
-Once Mollie payment option is selected, it will redirect the shopper to all payment methods supported by Mollie.
-            </p>
-       
-            <p>
-After a succesfull payment, a confirmation is shown to the shopper.
-            </p>
-      </div>
+        <div class="oe_span12">
+            <h2 class="oe_slogan" style="font-family: 'Calibre',sans-serif;">Configuration</h2>
+        </div>
+        <p style="font-size:16px; font-family: 'Calibre',sans-serif;color: #111;">
+            Go to Invoicing > Payments > Payment Acquirers -> Mollie and add the API keys (test and/or live) from your
+            Mollie account here:
+            <img src="api_configuration_example.jpg"/>
+            Depending on the button at the top you can choose if you want to use Mollie for testing purposes (with the
+            test API) or if you want to use it for production (with the live API key).
+            Make sure that you activate the payment method too as it is not activated by default.
+        </p>
+        <p style="font-size:16px; font-family: 'Calibre',sans-serif;color: #111;">
+            When the Mollie payment acquirer is configured correctly, you can see the Mollie payment option at the
+            time of checkout. You will not see Mollie as long as there are no payment methods configured on the payment
+            acquirer. You will first have to add payment methods to your account on the Mollie website and then
+            configure it under the tab "Configuration" of the payment method Mollie in Odoo.
+            The customer will be redirected to the Mollie payment methods screen after choosing Mollie in the webshop.
+        </p>
+        <p style="font-size:16px; font-family: 'Calibre',sans-serif;color: #111;">
+            Mollie will automatically redirect the customer after the payment to Odoo and a payment is made on the sale
+            order:
+        </p>
+        <img src="transaction_example.jpg"/>
     </div>
 </section>
 
-<section class="oe_container">
-<div class="oe_row oe_spaced">
-<div class="oe_span10">
-	<h2>Questions & Support</h2>
-	<a target="_blank" href="https://help.mollie.com/hc">&nbsp;Contact Us&nbsp;</a>
-</div>
-</div>
+
+<section class="oe_container oe_dark">
+    <div class="oe_row oe_spaced">
+        <div class="oe_span12">
+            <h2 class="oe_slogan" style="font-family: 'Calibre',sans-serif;">Installing the Python package</h2>
+        </div>
+        <p style="font-size:16px; font-family: 'Calibre',sans-serif;color: #111;">
+            You will need the Python package "mollie-api-python" for using this application.
+            You can install this requirement from the requirements.txt file or from the command line. <br/>
+            From the requirements.txt file:<br/>
+            <code>
+                sudo pip3 install -R requirements.txt
+            </code>
+            <br/>
+            From the terminal:<br/>
+            <code>
+                sudo pip3 install mollie-api-python==1.2.0
+            </code>
+        </p>
+    </div>
 </section>
 
+
+<section class="oe_container oe_spaced">
+    <div class="oe_row oe_spaced">
+        <div class="oe_span12">
+            <h2 class="oe_slogan" style="font-family: 'Calibre',sans-serif;">Questions / support</h2>
+        </div>
+        <div class="row mb64" style=" display: block; margin: 0 auto; text-align: center;
+      ">
+            <div class="mt32" style="display: inline-block;margin:0px 10px;">
+                <a href="https://help.mollie.com/hc" target="_blank" style="font-family: 'Calibre',sans-serif;">
+                    <h4 class="mt16 mb0"
+                        style="padding: 16px 45px;font-family: 'Calibre',sans-serif;text-transform: uppercase;background: linear-gradient(to right, #2f8df9, #07f);text-align: center;box-shadow: 2px 1px 12px 3px #ece6e6;border-radius: 10px;color: #fff;font-weight: 700;">
+                        Contact Us</h4>
+                </a>
+            </div>
+            <div class="mt32" style="display: inline-block;margin:0px 10px;">
+                <a href="https://github.com/mollie/mollie-odoo/issues" target="_blank">
+                    <h4 class="mt16 mb0"
+                        style="background: linear-gradient(to right,  #2f8df9, #07f);padding: 16px 45px;font-family: 'Calibre',sans-serif;text-transform: uppercase;text-align: center;box-shadow: 2px 1px 12px 3px #ece6e6;border-radius: 10px;color: #fff;font-weight: 700;">
+                        Report an issue</h4>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
