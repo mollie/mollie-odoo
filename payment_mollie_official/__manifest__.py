@@ -3,6 +3,7 @@
 #
 #    Copyright Mollie (C) 2019
 #    Contributor: Eezee-It <info@eezee-it.com>
+#    Contributor: Odoo Experts <info@odooexperts.nl>
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Lesser General Public License as
@@ -21,7 +22,7 @@
 {
     'name': 'Mollie Payments',
     'version': '12.0.1',
-    'author': 'Mollie & BeOpen',
+    'author': 'Mollie',
     'website': 'http://www.mollie.com',
     'category': 'eCommerce',
     'description': """
