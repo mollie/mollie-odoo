@@ -40,7 +40,7 @@
                 <t t-set="acquirers_count" t-value="len(acquirers) if acquirers else 0"/>
                 <t t-set="pms_count" t-value="len(pms) if pms else 0"/>
                 <t t-set="MAX_BRAND_LINE" t-value="3"/>
-                <t t-set="mollie_aq" t-value="0"/>
+                <t t-set="mollie_aq" t-value="False"/>
                 <t t-foreach="acquirers" t-as="acq">
                     <t t-if="acq.provider == 'mollie'">
                         <t t-set="mollie_aq" t-value="acq"/>
@@ -101,7 +101,7 @@
                         </div>
                     </t>
                 </t>
-                <t t-if="mollie_aq!='0' and website_sale_order">
+                <t t-if="mollie_aq and website_sale_order">
                     <t t-call="payment_mollie_official.mollie_payment_gateway_list"/>
                 </t>
                 <t t-foreach="pms" t-as="pm">
