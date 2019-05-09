@@ -115,6 +115,7 @@ class PaymentIcon(models.Model):
 
 class AcquirerMollieMethod(models.Model):
     _name = 'payment.acquirer.method'
+    _description = 'Mollie payment acquirer details'
     _order = 'sequence'
 
     name = fields.Char('Description', index=True,
