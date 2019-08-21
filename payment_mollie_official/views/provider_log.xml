@@ -17,7 +17,7 @@
         <field name="name">provider.log.tree.view</field>
         <field name="model">provider.log</field>
         <field name="arch" type="xml">
-            <tree string="Provider log" create="false" edit="false" delete="false"  colors="type">
+            <tree string="Provider log" create="false" edit="false" delete="false">
                 <field name="create_date" readonly="1"/>
                 <field name="type" readonly="1" invisible="1"/>
                 <field name="name" readonly="1"/>
@@ -25,22 +25,23 @@
             </tree>
         </field>
     </record>
-    
+
     <record id="provider_log_form_view" model="ir.ui.view">
         <field name="name">provider.log.form.view</field>
         <field name="model">provider.log</field>
         <field name="arch" type="xml">
-            <form string="Provider logging" create="false" edit="false" delete="false">
-                <group>
+            <form string="Provider logging">
+                <header>
+                    <field name="type" widget="statusbar" options="{'clickable': '1', 'fold_field': 'fold'}"/>
+                </header>
+                <sheet>
                     <group>
                         <field name="create_date" readonly="1"/>
                         <field name="name" readonly="1"/>
                         <field name="origin" readonly="1"/>
-                    </group>
-                    <group colspan="4">
                         <field name="detail" readonly="1"/>
                     </group>
-                </group>
+                </sheet>
             </form>
         </field>
     </record>
@@ -48,7 +49,6 @@
     <record id="provider_log_action" model="ir.actions.act_window">
         <field name="name">Logging</field>
         <field name="res_model">provider.log</field>
-        <field name="view_type">form</field>
         <field name="view_id" ref="provider_log_tree_view"/>
         <field name="search_view_id" ref="provider_log_search_view"/>
         <field name="context">{}</field>
@@ -57,7 +57,6 @@
     <record id="mollie_log_action" model="ir.actions.act_window">
         <field name="name">Mollie Logging</field>
         <field name="res_model">provider.log</field>
-        <field name="view_type">form</field>
         <field name="view_id" ref="provider_log_tree_view"/>
         <field name="search_view_id" ref="provider_log_search_view"/>
         <field name="domain">[('origin','=','mollie')]</field>

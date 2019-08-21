@@ -1,2 +1,2 @@
-mollie-api-python==2.1.0
+mollie-api-python==2.2.1
 phonenumbers==8.10.3

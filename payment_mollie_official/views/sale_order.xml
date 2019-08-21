@@ -5,7 +5,7 @@
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//group[@name='sale_pay']" position="after">
+            <xpath expr="//group[@name='sale_info']" position="after">
                 <group string="Mollie connection">
                     <div class="three-inline-buttons">
                         <strong>Mollie ref.</strong>
