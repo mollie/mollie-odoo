@@ -1,14 +1,14 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-#	* payment_mollie_official
+# 	* payment_mollie_official
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 12.0+e\n"
+"Project-Id-Version: Odoo Server 13.0alpha1+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-04-05 12:27+0000\n"
-"PO-Revision-Date: 2019-04-05 12:27+0000\n"
-"Last-Translator: <>\n"
+"POT-Creation-Date: 2019-08-22 07:07+0000\n"
+"PO-Revision-Date: 2019-08-22 07:07+0000\n"
+"Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -16,26 +16,32 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. module: payment_mollie_official
-#: code:addons/payment_mollie_official/models/mollie.py:336
+#: code:addons/payment_mollie_official/models/payment_transaction.py:0
 #, python-format
 msgid "; multiple order found"
-msgstr "; meerdere bestellingen gevonden"
+msgstr "; meerdere orders gevonden"
 
 #. module: payment_mollie_official
-#: code:addons/payment_mollie_official/models/mollie.py:334
+#: code:addons/payment_mollie_official/models/payment_transaction.py:0
 #, python-format
 msgid "; no order found"
-msgstr "; geen bestelling gevonden"
+msgstr "; geen order gevonden"
 
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.mollie_payment_tokens_list
-msgid "<i class=\"fa fa-check text-success\" title=\"This payment method is verified by our system.\" role=\"img\" aria-label=\"Ok\"/>"
-msgstr "<i class=\"fa fa-check text-success\" title=\"Deze betaalmethode is door ons systeem geverifieerd.\" role=\"img\" aria-label=\"Ok\"/>"
+msgid ""
+"<i class=\"fa fa-check text-success\" title=\"This payment method is "
+"verified by our system.\" role=\"img\" aria-label=\"Ok\"/>"
+msgstr "<i class=\"fa fa-check text-success\" title=\"Deze betaalmethode is "
+"geverifieerd door ons systeem.\" role=\"img\" aria-label=\"Ok\"/>"
 
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.mollie_payment_tokens_list
-msgid "<i class=\"fa fa-close text-danger\" title=\"This payment method has not been verified by our system.\" role=\"img\" aria-label=\"Not verified\"/>"
-msgstr "<i class=\"fa fa-close text-danger\" title=\"Deze betaalmethode is niet door ons systeem geverifieerd.\" role=\"img\" aria-label=\"Niet geverifieerd\"/>"
+msgid ""
+"<i class=\"fa fa-close text-danger\" title=\"This payment method has not "
+"been verified by our system.\" role=\"img\" aria-label=\"Not verified\"/>"
+msgstr "<i class=\"fa fa-close text-danger\" title=\"Deze betaalmethode is niet "
+"geverifieerd door ons systeem.\" role=\"img\" aria-label=\"Niet geverifieerd\"/>"
 
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.mollie_payment_tokens_list
@@ -44,30 +50,28 @@ msgstr "<i class=\"fa fa-trash\"/> Verwijder"
 
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.mollie_install_config_set_keys_form
-msgid "<span class=\"c-status c-status-success\"/>\n"
-"		                            <span>Live API key</span>\n"
-"		                            <span><span> Example: live_Ndppb372zfj79......</span></span>"
-msgstr ""
+msgid ""
 "<span class=\"c-status c-status-success\"/>\n"
-"\t\t                            <span>Live API-key</span>\n"
-"\t\t                            <span><span> Bijvoorbeeld: "
-"live_Ndppb372zfj79......</span></span>"
+"\t\t                            <span>Live API key</span>\n"
+"\t\t                            <span><span> Example: live_Ndppb372zfj79......</span></span>"
+msgstr "<span class=\"c-status c-status-success\"/>\n"
+"\t\t                            <span>Live API sleutel</span>\n"
+"\t\t                            <span><span> Bijvoorbeeld: live_Ndppb372zfj79......</span></span>"
 
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.mollie_install_config_set_keys_form
-msgid "<span class=\"c-status-pending c-status\"/>\n"
-"	                                <span>Test API key</span>\n"
-"	                                <span><span> Example: test_Ndppb372zfj79......</span></span>"
-msgstr ""
+msgid ""
 "<span class=\"c-status-pending c-status\"/>\n"
-"\t                                <span>Test API-key</span>\n"
-"\t                                <span><span> Bijvoorbeeld: "
-"test_Ndppb372zfj79......</span></span>"
+"\t                                <span>Test API key</span>\n"
+"\t                                <span><span> Example: test_Ndppb372zfj79......</span></span>"
+msgstr "<span class=\"c-status-pending c-status\"/>\n"
+"\t                                <span>Test API sleutel</span>\n"
+"\t                                <span><span> bijvoorbeeld: test_Ndppb372zfj79......</span></span>"
 
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.acquirer_form_mollie
 msgid "<span class=\"o_stat_text\">Gateways</span>"
-msgstr ""<span class=\"o_stat_text\">Gateways</span>"
+msgstr "<span class=\"o_stat_text\">Gateways</span>"
 
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.acquirer_form_mollie
@@ -75,29 +79,9 @@ msgid "<span class=\"o_stat_text\">Logging</span>"
 msgstr "<span class=\"o_stat_text\">Logging</span>"
 
 #. module: payment_mollie_official
-#: model_terms:payment.acquirer,cancel_msg:payment_mollie_official.payment_acquirer_mollie
-msgid "<span><i>Cancel,</i> Your payment has been cancelled.</span>"
-msgstr "<span><i>Annuleer,</i> Uw betaling is geannuleerd.</span>"
-
-#. module: payment_mollie_official
-#: model_terms:payment.acquirer,done_msg:payment_mollie_official.payment_acquirer_mollie
-msgid "<span><i>Done,</i> Your online payment has been successfully processed. Thank you for your order.</span>"
-msgstr "<span><i>Klaar,</i> Uw online betaling is succesvol verwerkt. Bedankt voor uw order.</span>"
-
-#. module: payment_mollie_official
-#: model_terms:payment.acquirer,error_msg:payment_mollie_official.payment_acquirer_mollie
-msgid "<span><i>Error,</i> Please be aware that an error occurred during the transaction. The order has been confirmed but will not be paid. Do not hesitate to contact us if you have any questions on the status of your order.</span>"
-msgstr "<span><i>Fout,</i> Er is een fout opgetreden tijdens de transactie. De order is bevestigd maar niet betaald. Aarzel niet om met ons contact op te nemen indien u vragen heeft over de status van uw order.</span>"
-
-#. module: payment_mollie_official
-#: model_terms:payment.acquirer,pending_msg:payment_mollie_official.payment_acquirer_mollie
-msgid "<span><i>Pending,</i> Your online payment has been successfully processed. But your order is not validated yet.</span>"
-msgstr "<span>In behandeling,</i> Uw online betaling is succesvol verwerkt. Uw order is nog niet bevestigd.</span>"
-
-#. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.mollie_install_config_form
 msgid "<strong>Congratulations and BRAVO!</strong>"
-msgstr "<strong>Gefeliciteerd en BRAVO!</strong>"
+msgstr "<strong>Proficiat en BRAVO!</strong>"
 
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.mollie_install_config_form
@@ -136,7 +120,17 @@ msgstr "Betaalprovider referentie"
 #. module: payment_mollie_official
 #: model:ir.model.fields,field_description:payment_mollie_official.field_force_update_data__acquirer_reference
 msgid "Acquirer Reference Id"
-msgstr "Betaalprovider referentie ID"
+msgstr "Betaalprovider ID"
+
+#. module: payment_mollie_official
+#: model:ir.model.fields,field_description:payment_mollie_official.field_payment_acquirer_method__active
+msgid "Active"
+msgstr "Actief"
+
+#. module: payment_mollie_official
+#: model_terms:ir.ui.view,arch_db:payment_mollie_official.acquirer_form_mollie
+msgid "Active on website"
+msgstr "Actief op website"
 
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.mollie_install_config_set_keys_form
@@ -151,7 +145,7 @@ msgstr "Bancontact"
 #. module: payment_mollie_official
 #: model:payment.icon,name:payment_mollie_official.payment_method_belfius
 msgid "Belfius Direct Net"
-msgstr "Belfius Direct Net"
+msgstr "Belfius Direct net"
 
 #. module: payment_mollie_official
 #: model:payment.icon,name:payment_mollie_official.payment_method_bitcoin
@@ -161,14 +155,14 @@ msgstr "Bitcoin"
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.force_update_field_view_form
 msgid "Cancel"
-msgstr "Annuleren"
+msgstr "Annuleer"
 
 #. module: payment_mollie_official
 #. openerp-web
-#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:256
+#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:0
 #, python-format
 msgid "Cannot set-up the payment"
-msgstr "Kan de betaling niet opstellen"
+msgstr "Kan betaling niet opzetten"
 
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.mollie_install_config_form
@@ -184,7 +178,7 @@ msgstr "Contact"
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.mollie_install_config_set_keys_form
 msgid "Copy your keys Here!"
-msgstr "Kopieer hier uw keys!"
+msgstr "Kopieer uw sleutels hier!"
 
 #. module: payment_mollie_official
 #: model:ir.model.fields,field_description:payment_mollie_official.field_config_mollie__create_uid
@@ -205,13 +199,7 @@ msgstr "Aangemaakt op"
 #. module: payment_mollie_official
 #: model:payment.icon,name:payment_mollie_official.payment_method_creditcard
 msgid "Credit Card"
-msgstr "Creditcard"
-
-#. module: payment_mollie_official
-#: code:addons/payment_mollie_official/models/provider_log.py:29
-#, python-format
-msgid "Danger"
-msgstr "Gevaar"
+msgstr "Credit card"
 
 #. module: payment_mollie_official
 #: model:ir.model.fields,field_description:payment_mollie_official.field_payment_acquirer__dashboard_url
@@ -235,63 +223,69 @@ msgstr "Detail"
 #: model:ir.model.fields,field_description:payment_mollie_official.field_payment_acquirer_method__display_name
 #: model:ir.model.fields,field_description:payment_mollie_official.field_provider_log__display_name
 msgid "Display Name"
-msgstr "Weergavenaam"
+msgstr "Schermnaam"
 
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.force_update_field_view_form
-msgid "Do you really want to continue changing the acquirer_reference of this record?"
-msgstr "Wilt u echt de betaalprovider referentie van dit item wijzigen? "
+msgid ""
+"Do you really want to continue changing the acquirer_reference of this "
+"record?"
+msgstr "Bent u zeker dat u de betaalprovider referent van "
+"deze record wilt wijzigen?"
 
 #. module: payment_mollie_official
-#: code:addons/payment_mollie_official/models/sale_order.py:176
+#: code:addons/payment_mollie_official/models/sale_order.py:0
 #, python-format
 msgid "ERROR! on Create order"
-msgstr "FOUT! Bij aanmaken van verkooporder"
+msgstr "FOUT! Bij aanmaken van order"
 
 #. module: payment_mollie_official
-#: code:addons/payment_mollie_official/models/sale_order.py:218
+#: code:addons/payment_mollie_official/models/sale_order.py:0
 #, python-format
 msgid "ERROR! on delete order"
-msgstr "FOUT! Bij verwijderen van verkooporder"
+msgstr "FOUT! Bij verwijderen van order"
 
 #. module: payment_mollie_official
-#: code:addons/payment_mollie_official/models/sale_order.py:197
+#: code:addons/payment_mollie_official/models/sale_order.py:0
 #, python-format
 msgid "ERROR! on find order"
-msgstr "FOUT! Bij het vinden van de order"
+msgstr "FOUT! Bij vinden van order"
 
 #. module: payment_mollie_official
-#: code:addons/payment_mollie_official/models/sale_order.py:275
+#: code:addons/payment_mollie_official/models/sale_order.py:0
 #, python-format
 msgid "ERROR! on sync order"
-msgstr "FOUT! Bij het synchroniseren van de order"
+msgstr "FOUT! Bij synchroniseren van order"
 
 #. module: payment_mollie_official
-#: code:addons/payment_mollie_official/models/sale_order.py:241
+#: code:addons/payment_mollie_official/models/sale_order.py:0
 #, python-format
 msgid "ERROR! on update order"
-msgstr "FOUT! Bij het updaten van de order"
+msgstr "FOUT! Bij updaten van order"
 
 #. module: payment_mollie_official
 #. openerp-web
-#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:413
+#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:0
 #, python-format
 msgid "Error: "
 msgstr "Fout: "
 
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.mollie_install_config_form
-msgid "Every day a great number of webshops trust Mollie with their payments. Join them and drive conversions through effortless payments too."
-msgstr "Elke dag vertrouwen tal van webshops op Mollie en zijn betalingen. Volg ze en voer conversies uit via eenvoudige betalingen."
+msgid ""
+"Every day a great number of webshops trust Mollie with their payments. Join "
+"them and drive conversions through effortless payments too."
+msgstr "Elke dag vertrouwen tal van webshops op Mollie en zijn betalingen. Volg
+"ze en voer conversies uit via eenvoudige betalingen."
 
 #. module: payment_mollie_official
 #: model:ir.actions.act_window,name:payment_mollie_official.force_update_field_view_action
 msgid "Force update Data field"
-msgstr "Forceer update Gegevensveld"
+msgstr "Forceer update van gegevensveld"
 
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.force_update_field_view_form
-msgid "Force update Fileds"
+msgid "Force update fields"
 msgstr "Forceer veld updates"
 
 #. module: payment_mollie_official
@@ -330,12 +324,6 @@ msgid "Icon"
 msgstr "Icoon"
 
 #. module: payment_mollie_official
-#: code:addons/payment_mollie_official/models/provider_log.py:31
-#, python-format
-msgid "Info"
-msgstr "Info"
-
-#. module: payment_mollie_official
 #: model:payment.icon,name:payment_mollie_official.payment_method_kbc
 msgid "KBC/CBC Payment button"
 msgstr "KBC/CBC betaalknop"
@@ -343,7 +331,7 @@ msgstr "KBC/CBC betaalknop"
 #. module: payment_mollie_official
 #: model:payment.icon,name:payment_mollie_official.payment_method_klarnapaylater
 msgid "Klarna Pay later."
-msgstr "Klarna betaal later."
+msgstr "Klarna Pay later."
 
 #. module: payment_mollie_official
 #: model:payment.icon,name:payment_mollie_official.payment_method_klarnasliceit
@@ -381,11 +369,6 @@ msgid "Logging"
 msgstr "Loggen"
 
 #. module: payment_mollie_official
-#: selection:payment.acquirer,provider:0
-msgid "Manual Configuration"
-msgstr "Handmatige instellingen"
-
-#. module: payment_mollie_official
 #: model:ir.model.fields,field_description:payment_mollie_official.field_payment_icon__maximum_amount
 msgid "Maximum amount"
 msgstr "Maximaal bedrag"
@@ -398,11 +381,11 @@ msgstr "Bericht"
 #. module: payment_mollie_official
 #: model:ir.model.fields,field_description:payment_mollie_official.field_payment_icon__minimum_amount
 msgid "Minimum amount"
-msgstr "Minimaal bedrag"
+msgstr "Minimum bedrag"
 
 #. module: payment_mollie_official
+#: model:ir.model.fields.selection,name:payment_mollie_official.selection__payment_acquirer__provider__mollie
 #: model:payment.acquirer,name:payment_mollie_official.payment_acquirer_mollie
-#: selection:payment.acquirer,provider:0
 msgid "Mollie"
 msgstr "Mollie"
 
@@ -447,6 +430,16 @@ msgid "Mollie connection"
 msgstr "Mollie verbinding"
 
 #. module: payment_mollie_official
+#: model:ir.model,name:payment_mollie_official.model_payment_acquirer_method
+msgid "Mollie payment acquirer details"
+msgstr "Mollie betaalprovider gegevens"
+
+#. module: payment_mollie_official
+#: model:ir.model,name:payment_mollie_official.model_provider_log
+msgid "Mollie provider log details"
+msgstr "Mollie betaalprovider log gegevens"
+
+#. module: payment_mollie_official
 #: model:ir.model.fields,field_description:payment_mollie_official.field_payment_icon__name
 msgid "Name"
 msgstr "Naam"
@@ -457,34 +450,34 @@ msgid "No"
 msgstr "Nee"
 
 #. module: payment_mollie_official
-#: code:addons/payment_mollie_official/models/sale_order.py:153
+#: code:addons/payment_mollie_official/models/sale_order.py:0
 #, python-format
 msgid "No order data function mollie_orders_create"
 msgstr "Geen bestelling gegevens functie mollie_orders_create"
 
 #. module: payment_mollie_official
 #. openerp-web
-#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:268
-#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:395
+#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:0
+#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:0
 #, python-format
 msgid "No payment method selected"
 msgstr "Geen betaalmethode geselecteerd"
 
 #. module: payment_mollie_official
 #. openerp-web
-#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:417
+#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:0
 #, python-format
 msgid "Ok"
-msgstr "Ok"
+msgstr "OK"
 
 #. module: payment_mollie_official
-#: code:addons/payment_mollie_official/models/sale_order.py:285
+#: code:addons/payment_mollie_official/models/sale_order.py:0
 #, python-format
 msgid "OpenMollieOrder"
 msgstr "OpenMollieOrder"
 
 #. module: payment_mollie_official
-#: code:addons/payment_mollie_official/models/sale_order.py:168
+#: code:addons/payment_mollie_official/models/sale_order.py:0
 #, python-format
 msgid "Order created"
 msgstr "Order aangemaakt"
@@ -516,14 +509,14 @@ msgstr "Betalingstransactie"
 
 #. module: payment_mollie_official
 #. openerp-web
-#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:269
+#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:0
 #, python-format
 msgid "Please select a payment method."
 msgstr "Gelieve een betaalmethode te selecteren."
 
 #. module: payment_mollie_official
 #. openerp-web
-#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:396
+#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:0
 #, python-format
 msgid "Please select the option to add a new payment method."
 msgstr "Selecteer de optie om een nieuwe betaalmethode toe te voegen."
@@ -531,7 +524,7 @@ msgstr "Selecteer de optie om een nieuwe betaalmethode toe te voegen."
 #. module: payment_mollie_official
 #: model:ir.model.fields,field_description:payment_mollie_official.field_sale_order_line__price_unit_taxinc
 msgid "Price Unit Tax inc"
-msgstr "Prijs Eenheid Belasting inclusief"
+msgstr "Prijs inclusief BTW"
 
 #. module: payment_mollie_official
 #: model:ir.model.fields,field_description:payment_mollie_official.field_payment_acquirer__provider
@@ -544,29 +537,29 @@ msgstr "Provider"
 #: model:ir.cron,cron_name:payment_mollie_official.cron_clean_old_loggings
 #: model:ir.cron,name:payment_mollie_official.cron_clean_old_loggings
 msgid "Provider - Clean old logging"
-msgstr "Leverancier - Verwijder oude logging"
+msgstr "Provider - verwijder oude loggings"
 
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.provider_log_tree_view
 msgid "Provider log"
-msgstr "Leverancier log"
+msgstr "Provider log"
 
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.provider_log_form_view
 msgid "Provider logging"
-msgstr "Leverancier logging"
+msgstr "Provider logging"
 
 #. module: payment_mollie_official
 #: model:ir.model.fields,help:payment_mollie_official.field_sale_order_line__acquirer_reference
 msgid "Reference of the line as stored in the acquirer database"
-msgstr "Referentie van de regel zoals opgeslagen in de acquirer databank"
+msgstr "Referentie van de regel zoals opgeslagen in de betaalprovider database"
 
 #. module: payment_mollie_official
 #: model:ir.model.fields,help:payment_mollie_official.field_payment_acquirer_method__acquirer_reference
 #: model:ir.model.fields,help:payment_mollie_official.field_payment_icon__acquirer_reference
 #: model:ir.model.fields,help:payment_mollie_official.field_sale_order__acquirer_reference
 msgid "Reference of the order as stored in the acquirer database"
-msgstr "Referentie van de bestelling zoals opgeslagen in de acquirer databank"
+msgstr "Referentie van de bestelling zoals opgeslagen in de betaalprovider database"
 
 #. module: payment_mollie_official
 #: model:payment.icon,name:payment_mollie_official.payment_method_banktransfer
@@ -576,11 +569,11 @@ msgstr "SEPA-incasso"
 #. module: payment_mollie_official
 #: model:payment.icon,name:payment_mollie_official.payment_method_sofort
 msgid "SOFORT Banking"
-msgstr "SOFORT Banking"
+msgstr "SOFORT banking"
 
 #. module: payment_mollie_official
 #: model:ir.model,name:payment_mollie_official.model_sale_order
-msgid "Sale Order"
+msgid "Sales Order"
 msgstr "Verkooporder"
 
 #. module: payment_mollie_official
@@ -597,22 +590,22 @@ msgstr "Bewaar mijn betaal gegevens"
 #: model:ir.model.fields,field_description:payment_mollie_official.field_payment_acquirer_method__sequence
 #: model:ir.model.fields,field_description:payment_mollie_official.field_payment_icon__sequence
 msgid "Sequence"
-msgstr "Volgorde"
+msgstr "Reeks"
 
 #. module: payment_mollie_official
 #. openerp-web
-#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:171
-#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:188
-#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:240
-#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:246
-#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:370
+#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:0
+#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:0
+#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:0
+#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:0
+#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:0
 #, python-format
 msgid "Server Error"
 msgstr "Serverfout"
 
 #. module: payment_mollie_official
 #. openerp-web
-#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:387
+#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:0
 #, python-format
 msgid "Server error"
 msgstr "Serverfout"
@@ -630,14 +623,13 @@ msgstr "Nu overslaan"
 
 #. module: payment_mollie_official
 #: model:ir.model.fields,help:payment_mollie_official.field_payment_acquirer_method__image_small
-msgid "Small-sized image of the method. It is automatically resized as a 64x64px image, with aspect ratio preserved. Use this field anywhere a small image is required."
-msgstr "Klein formaat afbeelding van de methode. Het is automatisch verkleind naar een 64x64 px-afbeelding, met het behouden van de beeldverhouding. Gebruik dit veld overal waar een kleine afbeelding vereist is."
-
-#. module: payment_mollie_official
-#: code:addons/payment_mollie_official/models/provider_log.py:32
-#, python-format
-msgid "Success"
-msgstr "Succes"
+msgid ""
+"Small-sized image of the method. It is automatically resized as a 64x64px "
+"image, with aspect ratio preserved. Use this field anywhere a small image is"
+" required."
+msgstr "Klein formaat afbeelding van de methode. Het is automatisch verkleind naar een 64x64 px-afbeelding "
+", met het behouden van de beeldverhouding. Gebruik dit veld overal waar een kleine afbeelding "
+"vereist is."
 
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.acquirer_form_mollie
@@ -650,15 +642,18 @@ msgid "Supported methods"
 msgstr "Ondersteunde methodes"
 
 #. module: payment_mollie_official
-#: code:addons/payment_mollie_official/wizard/force_updates.py:46
+#: code:addons/payment_mollie_official/wizard/force_updates.py:0
 #, python-format
-msgid "This template does not belong to authorized Models for changing the 'acquirer_reference' field, please contact your administrator!"
-msgstr "Dit sjabloon behoort niet toe aan de geauthoriseerde modellen voor het wijzigen van het 'acquirer_reference' veld. Gelieve uw administrator te contacteren!"
+msgid ""
+"This template does not belong to authorized Models for changing the "
+"'acquirer_reference' field, please contact your administrator!"
+msgstr "Dit sjabloon behoort niet toe aan de geauthoriseerde modellen voor het wijzigen van het
+"'acquirer_reference' veld. Gelieve uw administrator te contacteren!"
 
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.force_update_field_view_form
 msgid "This wizard lets you force changing the selected Field"
-msgstr "Deze wizard laat u toe wijzigingen te forceren op het geselecteerde Veld"
+msgstr "Deze wizard laat u toe wijzigingen te forceren op het geselecteerde veld"
 
 #. module: payment_mollie_official
 #: model:ir.model.fields,field_description:payment_mollie_official.field_provider_log__type
@@ -671,55 +666,48 @@ msgid "Use the Test"
 msgstr "Gebruik de test"
 
 #. module: payment_mollie_official
-#: code:addons/payment_mollie_official/models/provider_log.py:30
-#, python-format
-msgid "Warning"
-msgstr "Waarschuwing"
-
-#. module: payment_mollie_official
 #. openerp-web
-#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:189
+#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:0
 #, python-format
 msgid "We are not able to add your payment method at the moment."
 msgstr "We kunnen uw betalingsmethode momenteel niet toevoegen."
 
 #. module: payment_mollie_official
 #. openerp-web
-#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:388
+#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:0
 #, python-format
 msgid "We are not able to add your payment method at the moment.</p>"
 msgstr "We kunnen uw betalingsmethode momenteel niet toevoegen.</p>"
 
 #. module: payment_mollie_official
 #. openerp-web
-#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:241
+#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:0
 #, python-format
 msgid "We are not able to redirect you to the payment form."
 msgstr "We kunnen u niet omleiden naar het betalingsformulier."
 
 #. module: payment_mollie_official
 #. openerp-web
-#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:247
+#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:0
 #, python-format
 msgid "We are not able to redirect you to the payment form. "
 msgstr "We kunnen u niet omleiden naar het betalingsformulier."
 
 #. module: payment_mollie_official
 #. openerp-web
-#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:257
+#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:0
 #, python-format
 msgid "We're unable to process your payment."
 msgstr "We konden uw betaling niet verwerken."
 
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.acquirer_form_mollie
-msgid "Will get all the configured payment methods from your Mollie account and will                                     make them available in Odoo automatically."
-msgstr "Haalt alle geconfigureerde betaalmethodes op vanuit uw Mollie account en maakt ze automatisch beschikbaar in Odoo."
-
-#. module: payment_mollie_official
-#: selection:payment.acquirer,provider:0
-msgid "Wire Transfer"
-msgstr "Overschrijving"
+msgid ""
+"Will get all the configured payment methods from your Mollie account and "
+"will                                     make them available in Odoo "
+"automatically."
+msgstr "msgstr "Haalt alle geconfigureerde betaalmethodes op vanuit uw Mollie account en
+"maakt ze automatisch beschikbaar in Odoo."
 
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.mollie_install_config_form
@@ -733,8 +721,32 @@ msgstr "U heeft de betalingsgateway van Mollie geïnstalleerd"
 
 #. module: payment_mollie_official
 #: model_terms:payment.acquirer,pre_msg:payment_mollie_official.payment_acquirer_mollie
-msgid "You will be redirected to the Mollie website after clicking on payment button."
-msgstr "U wordt naar de Mollie website doorgestuurd nadat u op de knop betalen hebt geklikt."
+msgid ""
+"You will be redirected to the Mollie website after clicking on payment "
+"button."
+msgstr "U wordt naar de Mollie website doorgestuurd nadat u op de knop betalen "
+"hebt geklikt."
+
+#. module: payment_mollie_official
+#: model_terms:payment.acquirer,auth_msg:payment_mollie_official.payment_acquirer_mollie
+msgid "Your payment has been authorized."
+msgstr "Uw betaling is geautoriseerd."
+
+#. module: payment_mollie_official
+#: model_terms:payment.acquirer,cancel_msg:payment_mollie_official.payment_acquirer_mollie
+msgid "Your payment has been cancelled."
+msgstr "Uw betaling is geannuleerd."
+
+#. module: payment_mollie_official
+#: model_terms:payment.acquirer,pending_msg:payment_mollie_official.payment_acquirer_mollie
+msgid ""
+"Your payment has been successfully processed but is waiting for approval."
+msgstr "Uw betaling is succesvol verwerkt maar wacht nog op goedkeuring."
+
+#. module: payment_mollie_official
+#: model_terms:payment.acquirer,done_msg:payment_mollie_official.payment_acquirer_mollie
+msgid "Your payment has been successfully processed. Thank you!"
+msgstr "Uw betaling is succesvol verwerkt. Bedankt!"
 
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.mollie_view_order_form_inherit
@@ -751,13 +763,13 @@ msgstr "_Update"
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.acquirer_form_mollie
 msgid "_Update payment methods"
-msgstr "_Update betaalmethoden"
+msgstr "_Update betaal methodes"
 
 #. module: payment_mollie_official
-#: code:addons/payment_mollie_official/models/sale_order.py:113
+#: code:addons/payment_mollie_official/models/sale_order.py:0
 #, python-format
 msgid "_____No order lignes__"
-msgstr "____Geen orderlijnen____"
+msgstr "____Geen orderregels___"
 
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.mollie_payment_tokens_list
@@ -766,8 +778,8 @@ msgstr "en meer"
 
 #. module: payment_mollie_official
 #. openerp-web
-#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:172
-#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:371
+#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:0
+#: code:addons/payment_mollie_official/static/src/js/payment_mollie_official.js:0
 #, python-format
 msgid "e.g. Your credit card details are wrong. Please verify."
 msgstr "bv. Uw kredietkaart gegevens zijn niet juist. Graag controleren."
@@ -793,22 +805,12 @@ msgid "loggings"
 msgstr "loggings"
 
 #. module: payment_mollie_official
-#: model:ir.model,name:payment_mollie_official.model_payment_acquirer_method
-msgid "payment.acquirer.method"
-msgstr "payment.acquirer.method"
-
-#. module: payment_mollie_official
 #: model:payment.icon,name:payment_mollie_official.payment_method_paysafecard
 msgid "paysafecard"
-msgstr "Paysafecard"
+msgstr "paysafecard"
 
 #. module: payment_mollie_official
-#: model:ir.model,name:payment_mollie_official.model_provider_log
-msgid "provider.log"
-msgstr "provider.log"
-
-#. module: payment_mollie_official
-#: code:addons/payment_mollie_official/models/mollie.py:331
+#: code:addons/payment_mollie_official/models/payment_transaction.py:0
 #, python-format
 msgid "received data for reference %s"
 msgstr "ontvangen gegevens voor referentie %s"
@@ -817,13 +819,13 @@ msgstr "ontvangen gegevens voor referentie %s"
 #: model:ir.model.fields,field_description:payment_mollie_official.field_payment_acquirer_method__country_ids
 #: model:ir.model.fields,field_description:payment_mollie_official.field_payment_icon__country_ids
 msgid "specific Countries"
-msgstr "Specifieke landen"
+msgstr "specifieke landen"
 
 #. module: payment_mollie_official
 #: model:ir.model.fields,field_description:payment_mollie_official.field_payment_acquirer_method__currency_ids
 #: model:ir.model.fields,field_description:payment_mollie_official.field_payment_icon__currency_ids
 msgid "specific Currencies"
-msgstr "Specifieke valutas"
+msgstr "specieke valuta's"
 
 #. module: payment_mollie_official
 #: model:ir.model.fields,help:payment_mollie_official.field_payment_icon__maximum_amount
@@ -837,5 +839,8 @@ msgstr "het minimale bedrag per betaalmethode"
 
 #. module: payment_mollie_official
 #: model_terms:ir.ui.view,arch_db:payment_mollie_official.mollie_install_config_set_keys_form
-msgid "to test your integration, and the Live API key to create real payments. Please keep them private as much as possible."
-msgstr "om uw integratie, en de Live API-key te testen om echte betalingen te maken. Probeer ze zoveel mogelijk privé te houden."
+msgid ""
+"to test your integration, and the Live API key to create real payments. "
+"Please keep them private as much as possible."
+msgstr "om uw integratie, en de Live API-key te testen om echte betalingen te maken. "
+"Probeer ze zoveel mogelijk privé te houden."

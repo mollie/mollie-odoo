@@ -129,7 +129,6 @@ class PaymentAcquirer(models.Model):
 
     def update_available_mollie_methods(self):
         for acquirer in self:
-            print('acquirer.provider: ' + str(acquirer.provider))
             if acquirer.provider != 'mollie':
                 continue
             mollie_api_key = self._get_mollie_api_keys(
@@ -138,13 +137,11 @@ class PaymentAcquirer(models.Model):
             try:
                 self._mollie_client.set_api_key(mollie_api_key)
                 methods = self._mollie_client.methods.list(resource='orders')
-                # print('methods: ' + str(methods))
                 method_ids = []
                 if methods.get('_embedded', False):
                     i = 10
                     for method in methods.get('_embedded',
                                               {"methods": []})["methods"]:
-                        print('method: ' + str(method))
                         image_url = method['image']['size1x']
                         image = base64.b64encode(requests.get(image_url).content)
                         values = {
@@ -154,10 +151,7 @@ class PaymentAcquirer(models.Model):
                             'image_small': image,
                             'sequence': i,
                         }
-                        print('before append')
-                        print('values: ' + str(values))
                         method_ids.append((0, _, values))
-                        print('method_ids: ' + str(method_ids))
                         i += 1
                 acquirer.write({'method_ids': method_ids})
                 acquirer.update_payment_icon_ids()

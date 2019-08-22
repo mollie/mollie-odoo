@@ -5,7 +5,7 @@
         <field name="name">force.update.field.view.form</field>
         <field name="model">force.update.data</field>
         <field name="arch" type="xml">
-            <form string="Force update Fileds">
+            <form string="Force update fields">
                 <group class="oe_title" colspan="4">
                     <p>This wizard lets you force changing the selected Field</p>
                 </group>
