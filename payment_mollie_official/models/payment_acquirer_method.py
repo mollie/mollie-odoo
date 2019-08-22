@@ -49,3 +49,21 @@ class PaymentAcquirerMethod(models.Model):
                                     string='specific Currencies')
     country_ids = fields.Many2many('res.country',
                                    string='specific Countries')
+    active = fields.Boolean(string='Active')
+
+    def toggle_active(self):
+        for record in self:
+            record.active = not record.active
+            if record.provider == 'mollie':
+                key = get_mollie_provider_key(self.env)
+                self._mollie_client.set_api_key(key)
+
+                if record.active:
+                    # Activates the payment method for your Mollie account (on mollie.com).
+                    # Note: this only works when the payment acquirer Mollie is in 'production' and not in test mode.
+                    self._mollie_client.profile_methods.with_parent_id('me', record.acquirer_reference).create()
+                else:
+                    # Deactivates the payment method for your Mollie account (on mollie.com).
+                    # Note: this only works when the payment acquirer Mollie is in 'production' and not in test mode.
+                    self._mollie_client.profile_methods.with_parent_id('me', record.acquirer_reference).delete()
+

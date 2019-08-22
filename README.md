@@ -1,7 +1,7 @@
 <p align="center">
   <img src="https://info.mollie.com/hubfs/github/odoo/logo.png" width="128" height="128"/>
 </p>
-<h1 align="center">Mollie addon for Odoo 12</h1>
+<h1 align="center">Mollie addon for Odoo 13</h1>
 
 ## Quick guide
 1. Download the Odoo module and add it under your custom apps in your Odoo configuration file (found under /etc/).
@@ -16,9 +16,9 @@ You can install both these requirements by running the following command:
 ```
 pip3 install -R requirements.txt
 ```
-Alternatively you can install them manually by doing `pip3 install mollie-api-python==2.1.0` and `pip3 install phonenumbers==8.10.3`
+Alternatively you can install them manually by doing `pip3 install mollie-api-python==2.2.1` and `pip3 install phonenumbers==8.10.3`
 You can find all the information about the dependencies on the following URL's:
-https://pypi.org/project/mollie-api-python/2.1.0/ <br/>
+https://pypi.org/project/mollie-api-python/2.2.1/ <br/>
 https://pypi.org/project/phonenumbers/8.10.3/
 
 After installing the Python packages you should **restart** your Odoo service to make sure that your Odoo instance can access and use the dependencies. If you get a 'mollie' keyerror it means Odoo cannot use your Python packages or that you've installed an old version from mollie-api-python.
@@ -55,3 +55,6 @@ For updating the available payment Methodp: Go to configuration and click on the
 
 ![alt text](/payment_mollie_official/static/description/mollie_configuration.png "Odoo Mollie Payment Methods")
 
+
+## Changelog
+22/08/2019: add option to activate/deactivate payment methods in Odoo and syncing them to Mollie.

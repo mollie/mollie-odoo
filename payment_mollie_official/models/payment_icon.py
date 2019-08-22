@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 from odoo import models, fields, api
 
+from mollie.api.client import Client
+from odoo.addons.payment_mollie_official.models.payment_acquirer_method import get_mollie_provider_key
+
 # minimum and maximum amounts per payment method
 DEFAULT_METHOD_VALUES = {
     'ideal': (0.01, 50000.00),
@@ -24,6 +27,8 @@ DEFAULT_METHOD_VALUES = {
 class PaymentIcon(models.Model):
     _inherit = 'payment.icon'
     _order = 'sequence'
+
+    _mollie_client = Client()
 
     sequence = fields.Integer(
         'Sequence', default=1,

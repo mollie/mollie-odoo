@@ -162,7 +162,7 @@ class PaymentAcquirer(models.Model):
                 acquirer.write({'method_ids': method_ids})
                 acquirer.update_payment_icon_ids()
             except Exception as e:
-                _logger.info("__Error!_get_mollie_order__ %s" % (e,))
+                _logger.error("__Error!_get_mollie_order__ %s" % e)
         return True
 
     @api.model

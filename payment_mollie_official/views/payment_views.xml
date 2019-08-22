@@ -113,6 +113,7 @@
                       <field name="country_ids"  widget="many2many_tags" invisible="1"/>
                       <field name="acquirer_reference" readonly="1"/>
                       <field name="acquirer_id" invisible="1"/>
+                      <field name="active" string="Active on website"/>
                    </tree>
                   </field>
                 </group>
