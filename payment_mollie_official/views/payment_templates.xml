@@ -124,13 +124,5 @@
             </div>
         </xpath>
     </template>
-
-    <!--
-    <template id="mollie_zip_required" name="Mollie address inherit" inherit_id="website_sale.address">
-        <xpath expr="//input[@name='field_required']" position="attributes">
-            <attribute name="t-att-value">'zip'</attribute>
-        </xpath>
-    </template>
-    -->
 </odoo>
 

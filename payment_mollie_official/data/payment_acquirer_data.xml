@@ -43,13 +43,6 @@
                 </ul>
             </field>
         </record>
-        <!--
-        <template id="assets_frontend" inherit_id="web.assets_frontend">
-            <xpath expr="script[last()]" position="after">
-                <script type="text/javascript" src="/payment_mollie_official/static/src/js/payment_mollie_official.js"></script>
-            </xpath>
-        </template>
-        -->
     </data>
 </odoo>
 
