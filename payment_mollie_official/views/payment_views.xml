@@ -83,8 +83,10 @@
             <xpath expr='//field[@name="journal_id"]' position='attributes'>
                 <attribute name="attrs">{'required':[('provider', '=', 'mollie')]}</attribute>
             </xpath>
+            <!--
             <xpath expr='//field[@name="payment_icon_ids"]' position='replace'/>
-            
+            -->
+
             <xpath expr='//field[@name="journal_id"]' position='after'>
                 <field name="payment_icon_ids" widget="many2many_tags" colspan="4" attrs="{'invisible': [('provider', '=', 'mollie')]}"/>
             </xpath>

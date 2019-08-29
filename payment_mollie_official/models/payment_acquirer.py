@@ -48,10 +48,11 @@ class PaymentAcquirer(models.Model):
                                 "valid. Should begin with 'live_'", }}
 
     def _get_mollie_api_keys(self, state):
-        keys = {'prod': self.mollie_api_key_prod,
-                'test': self.mollie_api_key_test
-                }
-        return {'mollie_api_key': keys.get(state, keys['test']), }
+        if self.state == 'enabled':
+            api_key = self.mollie_api_key_prod
+        elif self.state == 'test':
+            api_key = self.mollie_api_key_test
+        return {'mollie_api_key': api_key}
 
     @api.onchange('method_ids')
     def _onchange_method_ids(self):
@@ -113,7 +114,7 @@ class PaymentAcquirer(models.Model):
                 icon = icon_model.create({
                     'name': method.name,
                     'acquirer_reference': method.acquirer_reference,
-                    'image': method.image_small,
+                    'image': method.image_medium,
                     'sequence': method.sequence,
                     'provider': self.provider,
                     'currency_ids': method.currency_ids,
