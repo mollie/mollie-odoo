@@ -47,7 +47,7 @@
     </record>
 
     <record id="provider_log_action" model="ir.actions.act_window">
-        <field name="name">Logging</field>
+        <field name="name">Logging Mollie</field>
         <field name="res_model">provider.log</field>
         <field name="view_id" ref="provider_log_tree_view"/>
         <field name="search_view_id" ref="provider_log_search_view"/>
@@ -65,7 +65,7 @@
     <menuitem
             action='provider_log_action'
             id='menu_provider_log'
-            parent='website_sale.menu_ecommerce_settings'
+            parent='base.next_id_9'
             groups="base.group_no_one"
             sequence='25' />
 </odoo>

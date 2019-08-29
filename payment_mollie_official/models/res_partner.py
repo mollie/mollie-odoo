@@ -40,7 +40,7 @@ class ResPartner(models.Model):
             'streetAndNumber': "%s %s" % ((self.street or ''), (
                 self.street2 or '')),
             'city': self.city or '',
-            'postalCode': self.zip or '',
+            'postalCode': self.zip or '9999',
             'country': (self.country_id and
                         self.country_id.code) or 'nl',
             'email': self.email,

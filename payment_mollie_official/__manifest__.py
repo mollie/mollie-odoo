@@ -10,8 +10,7 @@
          more efficiently with a solid but easy-to-use payment solution.
          Start growing your business today with effortless payments.
     """,
-    'depends': ["sale", "base", "payment", "website_sale", "website", "web",
-                "sale_stock"],
+    'depends': ["payment", "sale"],
     'data': [
         'data/payment_acquirer_data.xml',
         'data/ir_cron.xml',

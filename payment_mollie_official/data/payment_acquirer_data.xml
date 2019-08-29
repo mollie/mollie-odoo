@@ -29,9 +29,8 @@
             <field name="company_id" ref="base.main_company"/>
             <field name="view_template_id" ref="payment_mollie_official.mollie_form"/>
             <field name="environment">test</field>
-            <field name="dashboard_url">https://www.mollie.com/dashboard</field>
             <field name="pre_msg"><![CDATA[
-<p>You will be redirected to the Mollie website after clicking on payment button.</p>]]></field>
+<p>You will be redirected to the Mollie website after clicking on the payment button.</p>]]></field>
             <field name="mollie_api_key_test">mollie api test key</field>
             <field name="mollie_api_key_prod">mollie api live key</field>
             <field name="module_id" ref="base.module_payment_mollie_official"/>
@@ -44,6 +43,13 @@
                 </ul>
             </field>
         </record>
+        <!--
+        <template id="assets_frontend" inherit_id="web.assets_frontend">
+            <xpath expr="script[last()]" position="after">
+                <script type="text/javascript" src="/payment_mollie_official/static/src/js/payment_mollie_official.js"></script>
+            </xpath>
+        </template>
+        -->
     </data>
 </odoo>
 

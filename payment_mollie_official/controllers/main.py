@@ -115,7 +115,7 @@ class MollieController(http.Controller):
                     "locale": post.get('Language', 'nl_NL'),
                     "last_name": post.get('Name', ''),
                     "address": post.get('Address', ''),
-                    "zip_code": post.get('Zip', ''),
+                    "zip_code": post.get('Zip', '9999'),
                     "city": post.get('Town', ''),
                     "country": post.get('Country', ''),
                     "phone": phone or '',
@@ -124,6 +124,7 @@ class MollieController(http.Controller):
             },
             "locale": post.get('Language', 'nl_NL'),
         }
+
         if method:
             payload.update({'method': method, })
 

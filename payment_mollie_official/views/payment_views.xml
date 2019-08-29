@@ -79,9 +79,6 @@
                     <field name="mollie_api_key_test"/>
                     <field name="mollie_api_key_prod"/>
                 </group>
-                <group attrs="{'required':[('provider', '=', 'mollie')], 'invisible': [('provider', '!=', 'mollie')]}">
-                    <field name="dashboard_url"/>
-                </group>
             </xpath>
             <xpath expr='//field[@name="journal_id"]' position='attributes'>
                 <attribute name="attrs">{'required':[('provider', '=', 'mollie')]}</attribute>

@@ -21,7 +21,6 @@ class PaymentAcquirer(models.Model):
     mollie_api_key_prod = fields.Char('Mollie Live API key', size=40,
                                       required_if_provider='mollie',
                                       groups='base.group_user')
-    dashboard_url = fields.Char(string="Dashboard URL")
     method_ids = fields.One2many('payment.acquirer.method',
                                  'acquirer_id', 'Supported methods')
 
@@ -85,7 +84,7 @@ class PaymentAcquirer(models.Model):
             'Language': values.get('partner_lang'),
             'Name': values.get('partner_name'),
             'Email': values.get('partner_email'),
-            'Zip': values.get('partner_zip'),
+            'Zip': values.get('partner_zip') or '9999',
             'Address': values.get('partner_address'),
             'Town': values.get('partner_city'),
             'Country': values.get('partner_country') and
