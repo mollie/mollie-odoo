@@ -69,10 +69,7 @@ class MollieController(http.Controller):
         tx_reference = post['Description']
         currency = post['Currency']
         amount = post['Amount']
-        order_model = request.env['sale.order'].sudo()
-        OrderId = post.get('OrderId', '')
-        OrderId = int(OrderId)
-        order = order_model.browse(OrderId)
+        order = request.env['sale.order'].sudo().browse(int(post.get('OrderId', '')))
         method = order.acquirer_method and\
             order.acquirer_method.acquirer_reference
         phone = ''
@@ -93,9 +90,10 @@ class MollieController(http.Controller):
                             'the E164 format which Mollie requires. We will not send it to Mollie.')
             phone = ''
 
-        payment_tx = request.env['payment.transaction'].sudo(
-        )._mollie_form_get_tx_from_data({'reference': tx_reference})
-        webhookUrl = '%s/web#id=%s&action=%s&model=%s&view_type=form' % (
+        payment_tx = request.env['payment.transaction'].sudo()._mollie_form_get_tx_from_data({
+            'reference': tx_reference
+        })
+        webhook_url = '%s/web#id=%s&action=%s&model=%s&view_type=form' % (
             base_url, payment_tx.id,
             'payment.action_payment_transaction', 'payment.transaction')
         payload = {
@@ -108,9 +106,9 @@ class MollieController(http.Controller):
                                                   self._redirect_url,
                                                   tx_reference),
             'metadata': {
-                'OrderId': str(OrderId),
+                'OrderId': str(order.id),
                 'OdooTransactionRef': tx_reference,
-                'webhookUrl': webhookUrl,
+                'webhookUrl': webhook_url,
                 "customer": {
                     "locale": post.get('Language', 'nl_NL'),
                     "last_name": post.get('Name', ''),

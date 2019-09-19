@@ -23,6 +23,7 @@
                 <label>
                     <input type="radio" t-att-data-gateway-id="gateway.id"
                            t-att-data-form-payment="true"
+                           t-att-data-mollie-aq="gateway.id"
                            name="gateway_id" t-attf-value="form_{{gateway.id}}"
                            t-att-checked="gateway_count==1 or acquirers[0] == mollie_aq"/>
                     <span t-field="gateway.image_payment_form" t-att-title="gateway.name"

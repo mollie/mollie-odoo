@@ -21,7 +21,10 @@ class PaymentAcquirer(models.Model):
     mollie_api_key_prod = fields.Char('Mollie Live API key', size=40,
                                       required_if_provider='mollie',
                                       groups='base.group_user')
-    dashboard_url = fields.Char(string="Dashboard URL")
+    create_shipment_notification = fields.Boolean(string="Create shipment Mollie",
+                                                  help="Creates a shipment at Mollie (through the API). This means "
+                                                       "that all the products of the sale order are shipped and "
+                                                       "delivered to the customer (both in Mollie and Odoo)")
     method_ids = fields.One2many('payment.acquirer.method',
                                  'acquirer_id', 'Supported methods')
 
@@ -150,8 +153,9 @@ class PaymentAcquirer(models.Model):
                             'acquirer_id': acquirer.id,
                             'image_small': image,
                             'sequence': i,
+                            'active': True
                         }
-                        method_ids.append((0, _, values))
+                        method_ids.append((0, 0, values))
                         i += 1
                 acquirer.write({'method_ids': method_ids})
                 acquirer.update_payment_icon_ids()

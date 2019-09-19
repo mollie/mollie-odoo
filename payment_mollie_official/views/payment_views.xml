@@ -79,9 +79,6 @@
                     <field name="mollie_api_key_test"/>
                     <field name="mollie_api_key_prod"/>
                 </group>
-                <group attrs="{'required':[('provider', '=', 'mollie')], 'invisible': [('provider', '!=', 'mollie')]}">
-                    <field name="dashboard_url"/>
-                </group>
             </xpath>
             <xpath expr='//field[@name="journal_id"]' position='attributes'>
                 <attribute name="attrs">{'required':[('provider', '=', 'mollie')]}</attribute>
@@ -103,9 +100,8 @@
                                     attrs="{'invisible': [('provider', '!=', 'mollie')]}"/>
                 </group>
                 <group>
-
                   <field name="method_ids" nolabel="1" attrs="{'invisible': [('provider', '!=', 'mollie')]}">
-                   <tree string="Supported method" create="false">
+                   <tree string="Supported method">
                       <field name="sequence" widget="handle"/>
                       <field name="image_small" widget="image" class="oe_avatar" nolabel="1" readonly="1"/>
                       <field name="name" readonly="1"/>
@@ -116,6 +112,9 @@
                       <field name="active" string="Active on website"/>
                    </tree>
                   </field>
+                </group>
+                <group name="api_configurations" string="Mollie configuration">
+                    <field name="create_shipment_notification"/>
                 </group>
             </xpath>
         </field>
