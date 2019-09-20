@@ -213,11 +213,11 @@ var PaymentFormMollie = PaymentForm.extend({
                                     _t("We are not able to redirect you to the payment form.")
                                 );
                             }
-                        }).fail(function (data, event) {
+                        }).guardedCatch(function (error) {
                             self.displayError(
                                 _t('Server Error'),
                                 _t("We are not able to redirect you to the payment form. ") +
-                                   message.data.message
+                                   self._parseError(error)
                             );
                         });
                     }
