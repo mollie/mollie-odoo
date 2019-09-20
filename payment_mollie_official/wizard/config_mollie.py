@@ -46,7 +46,7 @@ class ConfigMollie(models.TransientModel):
         self.acquirer_id.write({
             'mollie_api_key_test': self.mollie_api_key_test,
             'mollie_api_key_prod': self.mollie_api_key_prod,
-            'website_published': True})
+            'state': 'test'})
         self.acquirer_id.update_available_mollie_methods()
         return {
             'name': 'Mollie',

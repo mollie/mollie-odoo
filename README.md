@@ -57,4 +57,5 @@ For updating the available payment Methodp: Go to configuration and click on the
 
 
 ## Changelog
+20/09/2019: add ability to automatically handle shipments in Mollie
 22/08/2019: add option to activate/deactivate payment methods in Odoo and syncing them to Mollie.
