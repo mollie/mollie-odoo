@@ -62,10 +62,10 @@
         <field name="domain">[('origin','=','mollie')]</field>
     </record>
     
-    <menuitem
+    <!-- <menuitem
             action='provider_log_action'
             id='menu_provider_log'
             parent='website_sale.menu_ecommerce_settings'
             groups="base.group_no_one"
-            sequence='25' />
+            sequence='25' /> -->
 </odoo>

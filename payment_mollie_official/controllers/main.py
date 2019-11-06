@@ -1,40 +1,17 @@
 # -*- coding: utf-8 -*-
 
+import hashlib
+import hmac
 import logging
-
 from mollie.api.client import Client
 import phonenumbers
 import werkzeug
 
 from odoo import http
-from odoo.addons.website_sale.controllers.main import WebsiteSale
 from odoo.http import request
-
-PAYLATER_METHODS = ['klarnapaylater']
+from odoo.addons.payment.controllers.portal import WebsitePayment, PaymentProcessing
 
 _logger = logging.getLogger(__name__)
-
-
-class WebsiteSaleMollie(WebsiteSale):
-
-    @http.route(['/shop/cart/update_payment_method_json'], type='json',
-                auth="public", methods=['POST'], website=True, csrf=False)
-    def update_payment_method_json(self, method_id):
-        order = request.website.sale_get_order()
-        if order and method_id != 0:
-            order.acquirer_method = method_id or False
-        elif order and method_id == 0:
-            order.acquirer_method = False
-        return True
-
-    @http.route()
-    def payment(self, **post):
-        """ filter payment methods by location and currency
-        """
-        response = super(WebsiteSaleMollie, self).payment(**post)
-        if response.qcontext.get('website_sale_order', False):
-            response.qcontext['website_sale_order'].acquirer_method = False
-        return response
 
 
 class MollieController(http.Controller):
@@ -67,66 +44,19 @@ class MollieController(http.Controller):
     def mollie_intermediate(self, **post):
         base_url = post['BaseUrl']
         tx_reference = post['Description']
-        currency = post['Currency']
-        amount = post['Amount']
-        order = request.env['sale.order'].sudo().browse(int(post.get('OrderId', '')))
-        method = order.acquirer_method and\
-            order.acquirer_method.acquirer_reference
-        phone = ''
-
-        """
-          Mollie only accepts E164 phone numbers. If the phone number is not in an E164 format Mollie will refuse
-          the payment, resulting in Odoo doing a rollback and the user being 'kicked' to the homepage again.
-          In this try/except we will do a check for it. If there is no valid phone number we'll give back '' which
-          will be accepted by Mollie (no phone number).
-        """
-        try:
-            raw_phone_number = post.get('Phone', '')
-            result = phonenumbers.parse(raw_phone_number, None)
-            if result:
-                phone = phonenumbers.format_number(result, phonenumbers.PhoneNumberFormat.E164)
-        except Exception as error:
-            _logger.warning('The customer filled in a phone number in an invalid format. The phone number is not in '
-                            'the E164 format which Mollie requires. We will not send it to Mollie.')
-            phone = ''
 
         payment_tx = request.env['payment.transaction'].sudo()._mollie_form_get_tx_from_data({
             'reference': tx_reference
         })
+        if post.get("Method", False):
+            payment_tx.update({"acquirer_method": int(post.get("Method", False))})
+
         webhook_url = '%s/web#id=%s&action=%s&model=%s&view_type=form' % (
             base_url, payment_tx.id,
             'payment.action_payment_transaction', 'payment.transaction')
-        payload = {
-            'amount': {
-                'currency': currency,
-                'value': amount
-            },
-            'description': tx_reference,
-            'redirectUrl': "%s%s?reference=%s" % (base_url,
-                                                  self._redirect_url,
-                                                  tx_reference),
-            'metadata': {
-                'OrderId': str(order.id),
-                'OdooTransactionRef': tx_reference,
-                'webhookUrl': webhook_url,
-                "customer": {
-                    "locale": post.get('Language', 'nl_NL'),
-                    "last_name": post.get('Name', ''),
-                    "address": post.get('Address', ''),
-                    "zip_code": post.get('Zip', ''),
-                    "city": post.get('Town', ''),
-                    "country": post.get('Country', ''),
-                    "phone": phone or '',
-                    "email": post.get('Email', '')
-                }
-            },
-            "locale": post.get('Language', 'nl_NL'),
-        }
-        if method:
-            payload.update({'method': method, })
 
         self._mollie_client.set_api_key(post['Key'])
-        order_response = order.mollie_order_sync(tx_reference)
+        order_response = payment_tx.mollie_order_sync()
         if order_response and order_response["status"] == "created":
             if '_embedded' in order_response:
                 embedded = order_response['_embedded']
@@ -138,3 +68,47 @@ class MollieController(http.Controller):
             return werkzeug.utils.redirect(checkout_url)
         return werkzeug.utils.redirect("/")
 
+
+class CustomWebsitePayment(WebsitePayment):
+
+    # Override for the set mollie payment method
+    @http.route(['/website_payment/transaction/<string:reference>/<string:amount>/<string:currency_id>',
+                '/website_payment/transaction/v2/<string:amount>/<string:currency_id>/<path:reference>',
+                '/website_payment/transaction/v2/<string:amount>/<string:currency_id>/<path:reference>/<int:partner_id>'], type='json', auth='public')
+    def transaction(self, acquirer_id, reference, amount, currency_id, partner_id=False, **kwargs):
+        acquirer = request.env['payment.acquirer'].browse(acquirer_id)
+        order_id = kwargs.get('order_id')
+
+        reference_values = order_id and {'sale_order_ids': [(4, order_id)]} or {}
+        reference = request.env['payment.transaction']._compute_reference(values=reference_values, prefix=reference)
+
+        values = {
+            'acquirer_id': int(acquirer_id),
+            'reference': reference,
+            'amount': float(amount),
+            'currency_id': int(currency_id),
+            'partner_id': partner_id,
+            'type': 'form_save' if acquirer.save_token != 'none' and partner_id else 'form',
+        }
+
+        if order_id:
+            values['sale_order_ids'] = [(6, 0, [order_id])]
+
+        reference_values = order_id and {'sale_order_ids': [(4, order_id)]} or {}
+        reference_values.update(acquirer_id=int(acquirer_id))
+        values['reference'] = request.env['payment.transaction']._compute_reference(values=reference_values, prefix=reference)
+        tx = request.env['payment.transaction'].sudo().with_context(lang=None).create(values)
+        tx = request.env['payment.transaction'].sudo().browse(tx.id)
+        secret = request.env['ir.config_parameter'].sudo().get_param('database.secret')
+        token_str = '%s%s%s' % (tx.id, tx.reference, round(tx.amount, tx.currency_id.decimal_places))
+        token = hmac.new(secret.encode('utf-8'), token_str.encode('utf-8'), hashlib.sha256).hexdigest()
+        tx.return_url = '/website_payment/confirm?tx_id=%d&access_token=%s' % (tx.id, token)
+
+        PaymentProcessing.add_payment_transaction(tx)
+        # BizzAppDev Customization Start
+        render_values = {
+            'partner_id': partner_id,
+            'Method': kwargs.get("Method", False)
+        }
+        # BizzAppDev Customization End
+        return acquirer.sudo().render(tx.reference, float(amount), int(currency_id), values=render_values)

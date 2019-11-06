@@ -70,9 +70,7 @@ class PaymentAcquirer(models.Model):
         return {'mollie_form_url': url.get(state, url['test']), }
 
     def mollie_form_generate_values(self, values):
-        self.ensure_one()
-        base_url = self.env['ir.config_parameter'].sudo(
-        ).get_param('web.base.url')
+        base_url = self.get_base_url()
         mollie_api_key = self._get_mollie_api_keys(
             self.state)['mollie_api_key']
         mollie_tx_values = dict(values)
@@ -96,6 +94,7 @@ class PaymentAcquirer(models.Model):
             'Phone': values.get('partner_phone'),
             'webhookUrl': base_url,
             'OrderId': order_id,
+            'Method': values.get("Method", False),
         })
         return mollie_tx_values
 
@@ -173,4 +172,3 @@ class PaymentAcquirer(models.Model):
         if 'mollie_api_key_test' in values or 'mollie_api_key_prod' in values:
             self.update_available_mollie_methods()
         return res
-

@@ -62,3 +62,24 @@ class PaymentIcon(models.Model):
         else:
             self.minimum_amount = 0.01
             self.maximum_amount = 50000.0
+
+    def get_available_methods(self, amount, currency, partner_id):
+        country = self.env['res.partner'].sudo().browse(partner_id).country_id
+        available_list = []
+        for icon in self:
+            if amount > icon.maximum_amount or\
+                    amount < icon.minimum_amount:
+                continue
+            if not icon.currency_ids and not icon.country_ids:
+                available_list.append(icon)
+            elif icon.currency_ids and not icon.country_ids:
+                if currency in icon.currency_ids:
+                    available_list.append(icon)
+            elif not icon.currency_ids and icon.country_ids:
+                if country in icon.country_ids:
+                    available_list.append(icon)
+            else:
+                if currency in icon.currency_ids and\
+                        country in icon.country_ids:
+                    available_list.append(icon)
+        return available_list

@@ -10,8 +10,7 @@
          more efficiently with a solid but easy-to-use payment solution.
          Start growing your business today with effortless payments.
     """,
-    'depends': ["sale", "base", "payment", "website_sale", "website", "web",
-                "sale_stock"],
+    'depends': ["payment"],
     'data': [
         'data/payment_acquirer_data.xml',
         'data/ir_cron.xml',
@@ -21,8 +20,9 @@
         'wizard/config_mollie_view.xml',
         'views/provider_log.xml',
         'views/payment_views.xml',
-        'views/sale_order.xml',
+        # 'views/sale_order.xml',
         'views/payment_templates.xml',
+        "views/assets.xml",
     ],
     'images': ['static/images/main_screenshot.png'],
     'installable': True,

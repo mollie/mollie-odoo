@@ -1,14 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <template id="assets_frontend" inherit_id="website.assets_frontend" name="Mollie Payment Assets FrontEnd" >
-        <xpath expr="." position="inside">
-            <link rel="stylesheet" type="text/css" href="/payment_mollie_official/static/src/css/payment_mollie_official.css"/>
-        </xpath>
-        <xpath expr="script[last()]" position="after">
-            <script type="text/javascript" src="/payment_mollie_official/static/src/js/payment_mollie_official.js"></script>
-        </xpath>
-    </template>
-    
     <template id="assets_backend" name="account assets" inherit_id="web.assets_backend">
         <xpath expr="." position="inside">
             <link rel="stylesheet" type="text/css" href="/payment_mollie_official/static/src/css/payment_mollie_official.css"/>
@@ -16,7 +7,8 @@
     </template>
     
     <template id="mollie_payment_gateway_list" name="Mollie payment gateway list">
-        <t t-set="gateways" t-value="website_sale_order.get_available_methods(mollie_aq.payment_icon_ids)"/>
+        <t t-if="invoice" t-set="gateways" t-value="mollie_aq.payment_icon_ids.get_available_methods(invoice.amount_residual, invoice.currency_id, invoice.partner_id.id)"/>
+        <t t-else="" t-set="gateways" t-value="mollie_aq.payment_icon_ids.get_available_methods(amount, currency, partner_id)"/>
         <t t-set="gateway_count" t-value="len(gateways) if gateways else 0"/>
         <t t-foreach="gateways" t-as="gateway">
             <div class="card-body">
@@ -46,7 +38,7 @@
                     <t t-if="acq.provider == 'mollie'">
                         <t t-set="mollie_aq" t-value="acq"/>
                     </t>
-                    <div t-attf-class="card-body #{'d-none' if acq.provider == 'mollie' else ''}">
+                    <div t-attf-class="card-body #{'d-none' if acq.provider == 'mollie' else ''} o_payment_acquirer_select">
                         <label>
                             <t t-if="acq.payment_flow == 'form'">
                                 <input type="radio" t-att-data-acquirer-id="acq.id"
@@ -62,7 +54,18 @@
                                        name="pm_id" t-attf-value="new_{{acq.id}}"
                                        t-att-class="'d-none' if (acquirers_count==1 and pms_count==0) else ''"/>
                             </t>
-                            <span class="payment_option_name" t-esc="acq.name"/>
+                            <span class="payment_option_name">
+                                <t t-esc="acq.display_as or acq.name"/>
+                                <div t-if="acq.state == 'test'" class="badge-pill badge-warning float-right" style="margin-left:5px">
+                                    Test Mode
+                                </div>
+                            </span>
+                            <t t-if="acq_extra_fees and acq_extra_fees.get(acq)">
+                                <span class="badge badge-pill badge-secondary"> + <t t-esc="acq_extra_fees[acq]" t-options='{"widget": "monetary", "display_currency": acq_extra_fees["currency_id"]}'/> Fee </span>
+                            </t>
+                            <t t-elif="acq.fees_active">
+                                <small class="text-muted">(Some fees may apply)</small>
+                            </t>
                         </label>
                         <ul class="float-right list-inline payment_icon_list" t-if="acq.provider!='mollie'">
                             <t t-set="i" t-value="0"/>
@@ -79,6 +82,7 @@
                                 <t t-set="i" t-value="i+1"/>
                             </t>
                         </ul>
+                        <div t-raw="acq.pre_msg" class="text-muted ml-3"/>
                     </div>
                     <t t-if="acq.payment_flow == 'form'">
                         <div t-attf-id="o_payment_form_acq_{{acq.id}}"
@@ -93,6 +97,7 @@
                         <div t-attf-id="o_payment_add_token_acq_{{acq.id}}"
                              t-attf-class="card-footer {{'d-none' if(acquirers_count &gt; 1 and pms_count==0 and acquirers[0]!=acq) else 'd-none' if pms_count &gt;0 else ''}}">
                             <div class="clearfix">
+                                <input type="hidden" t-if="(verify_validity==True or mode == 'manage') and acq.check_validity" name="verify_validity" t-att-value="acq.check_validity"/>
                                 <t t-call="{{acq.sudo().get_s2s_form_xml_id()}}">
                                     <t t-set="id" t-value="acq.id"/>
                                     <t t-set="partner_id" t-value="partner_id"/>
@@ -102,11 +107,11 @@
                         </div>
                     </t>
                 </t>
-                <t t-if="mollie_aq and website_sale_order">
+                <t t-if="mollie_aq">
                     <t t-call="payment_mollie_official.mollie_payment_gateway_list"/>
                 </t>
                 <t t-foreach="pms" t-as="pm">
-                    <div class="card-body">
+                    <div t-if="not verify_validity or (pm.acquirer_id.check_validity and pm.verified) or not pm.acquirer_id.check_validity" class="card-body o_payment_acquirer_select">
                         <label>
                             <input t-if="mode == 'payment'" type="radio" name="pm_id" t-att-value="pm.id" t-att-checked="checked_pm_id == pm.id"/>
                             <span class="payment_option_name" t-esc="pm.name"/>
@@ -126,10 +131,10 @@
         </xpath>
     </template>
     
-    <template id="mollie_zip_required" name="Mollie address inherit" inherit_id="website_sale.address">
+    <!-- <template id="mollie_zip_required" name="Mollie address inherit" inherit_id="website_sale.address">
         <xpath expr="//input[@name='field_required']" position="attributes">
             <attribute name="t-att-value">'zip'</attribute>
         </xpath>
-    </template>
+    </template> -->
 </odoo>
 
