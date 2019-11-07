@@ -172,6 +172,7 @@ odoo.define('payment_mollie_official.mollie_payment_form', function (require) {
                 else if (this.isFormPaymentRadio(checked_radio)) {
                     var method_id = this.$('input[name="gateway_id"]:checked');
                     var $tx_url = this.$el.find('input[name="prepare_tx_url"]');
+                    var invoice_id = $('input[name="invoice_id"]')
                     // if there's a prepare tx url set
                     if ($tx_url.length === 1) {
                         // if the user wants to save his credit card info
@@ -187,7 +188,8 @@ odoo.define('payment_mollie_official.mollie_payment_form', function (require) {
                                 'error_url': self.options.errorUrl,
                                 'callback_method': self.options.callbackMethod,
                                 'order_id': self.options.orderId,
-                                'Method': method_id.data('gateway-id')
+                                'Method': method_id.data('gateway-id'),
+                                'invoice_id': invoice_id.val(),
                             },
                         }).then(function (result) {
                             if (result) {

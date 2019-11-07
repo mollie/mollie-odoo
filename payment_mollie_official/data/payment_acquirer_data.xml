@@ -29,7 +29,6 @@
             <field name="company_id" ref="base.main_company"/>
             <field name="view_template_id" ref="payment_mollie_official.mollie_form"/>
             <field name="state">test</field>
-            <!-- <field name="dashboard_url">https://www.mollie.com/dashboard</field> -->
             <field name="pre_msg"><![CDATA[
 <p>You will be redirected to the Mollie website after clicking on payment button.</p>]]></field>
             <field name="mollie_api_key_test">mollie api test key</field>

@@ -7,7 +7,10 @@
     </template>
     
     <template id="mollie_payment_gateway_list" name="Mollie payment gateway list">
+        <input type="hidden" t-if="invoice_id" name="invoice_id" t-att-value="invoice_id"/>
         <t t-if="invoice" t-set="gateways" t-value="mollie_aq.payment_icon_ids.get_available_methods(invoice.amount_residual, invoice.currency_id, invoice.partner_id.id)"/>
+        <t t-elif="sale_order" t-set="gateways" t-value="mollie_aq.payment_icon_ids.get_available_methods(sale_order.amount_total, sale_order.currency_id, sale_order.partner_id.id)"/>
+        <t t-elif="website_sale_order" t-set="gateways" t-value="mollie_aq.payment_icon_ids.get_available_methods(website_sale_order.amount_total, website_sale_order.currency_id, website_sale_order.partner_id.id)"/>
         <t t-else="" t-set="gateways" t-value="mollie_aq.payment_icon_ids.get_available_methods(amount, currency, partner_id)"/>
         <t t-set="gateway_count" t-value="len(gateways) if gateways else 0"/>
         <t t-foreach="gateways" t-as="gateway">
@@ -131,10 +134,4 @@
         </xpath>
     </template>
     
-    <!-- <template id="mollie_zip_required" name="Mollie address inherit" inherit_id="website_sale.address">
-        <xpath expr="//input[@name='field_required']" position="attributes">
-            <attribute name="t-att-value">'zip'</attribute>
-        </xpath>
-    </template> -->
 </odoo>
-
