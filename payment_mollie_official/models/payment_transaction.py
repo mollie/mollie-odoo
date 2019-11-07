@@ -151,7 +151,7 @@ class PaymentTransaction(models.Model):
         return lines
 
     def _get_mollie_order_data(self, order):
-        orderNumber = "ODOO%s" % (order.id)
+        orderNumber = "ODOOTX-%s" % (self.reference)
         order_lines = False
         if order._name == "account.move":
             order_lines = order.invoice_line_ids

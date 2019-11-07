@@ -3,7 +3,6 @@
     "name": "Mollie Payments",
     "version": "13.0.1",
     "author": "Mollie",
-    "sequence": 1000,
     "website": "http://www.mollie.com",
     "category": "eCommerce",
     "description": """

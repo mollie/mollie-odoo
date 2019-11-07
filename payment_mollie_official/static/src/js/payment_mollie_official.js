@@ -22,20 +22,13 @@ odoo.define('payment_mollie_official.mollie_payment_form', function (require) {
             'change input[name="gateway_id"]': 'updatePaymenGatewayStatus',
         }),
 
-        getGatewayIdFromRadio: function (element) {
-            return $(element).data('gateway-id');
-        },
         updatePaymenGatewayStatus: function ()
         {
             var checked_radio = this.$('input[name="gateway_id"]:checked');
             if (checked_radio.length !== 1) {
-                // ajax.jsonRpc('/shop/cart/update_payment_method_json/', 'call', {method_id: 0,});
                 return;
             }
-            checked_radio = checked_radio[0];
-            var gateway_id = this.getGatewayIdFromRadio(checked_radio);
             $('input[data-provider="mollie"]').prop("checked", true);
-            // ajax.jsonRpc('/shop/cart/update_payment_method_json/', 'call', {method_id: parseInt(gateway_id, 0),});
         },
     });
 
