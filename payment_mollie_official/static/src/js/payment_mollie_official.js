@@ -7,6 +7,8 @@ odoo.define('payment_mollie_official.mollie_payment_form', function (require) {
     var Dialog = require("web.Dialog");
     var Widget = require("web.Widget");
     var rpc = require("web.rpc");
+    var session = require('web.session');
+
     var _t = core._t;
     var PaymentForm = require('payment.payment_form');
 
@@ -171,6 +173,8 @@ odoo.define('payment_mollie_official.mollie_payment_form', function (require) {
                         // if the user wants to save his credit card info
                         var form_save_token = acquirer_form.find('input[name="o_payment_form_save_token"]').prop('checked');
                         // then we call the route to prepare the transaction
+                        var ctx = this._getContext();
+                        ctx = _.extend({}, ctx, {"method_id": method_id.data('gateway-id')});
                         this._rpc({
                             route: $tx_url[0].value,
                             params: {
@@ -181,7 +185,7 @@ odoo.define('payment_mollie_official.mollie_payment_form', function (require) {
                                 'error_url': self.options.errorUrl,
                                 'callback_method': self.options.callbackMethod,
                                 'order_id': self.options.orderId,
-                                'Method': method_id.data('gateway-id'),
+                                context: ctx,
                                 'invoice_id': invoice_id.val(),
                             },
                         }).then(function (result) {

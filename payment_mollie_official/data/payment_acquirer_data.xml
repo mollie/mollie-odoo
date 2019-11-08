@@ -18,7 +18,7 @@
             <input type="hidden" name="Town" t-att-value="Town"/>
             <input type="hidden" name="Country" t-att-value="Country"/>
             <input type="hidden" name="Phone" t-att-value="Phone"/>
-            <input name="Method" t-att-value="Method"/>
+            <input name="Method" t-att-value="context.get('method_id')"/>
         </template>
     </data>
     <data noupdate="1">

@@ -15,6 +15,7 @@ class AccountMove(models.Model):
     is_mollie_refund = fields.Boolean("Is Mollie Refund")
     is_moliie_payment = fields.Boolean(compute="_compute_is_mollie")
 
+    # check the reversed invoice is payment done by mollie
     def _compute_is_mollie(self):
         for move in self:
             move.is_moliie_payment = (
@@ -24,6 +25,7 @@ class AccountMove(models.Model):
                 )
             )
 
+    # create mollie refund order payment
     def mollie_refund_orders_create(self):
         self.ensure_one()
         provider = (

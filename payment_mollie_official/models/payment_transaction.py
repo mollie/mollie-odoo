@@ -7,7 +7,7 @@ from odoo.addons.payment.models.payment_acquirer import ValidationError
 import logging
 import pprint
 from mollie.api.client import Client
-from odoo.addons.payment_mollie_official.models.payment_acquirer_method import (
+from .payment_acquirer_method import (
     get_base_url,
     get_mollie_provider_key,
 )
@@ -313,7 +313,6 @@ class PaymentTransaction(models.Model):
 
     def mollie_order_sync(self, key=False):
         key = get_mollie_provider_key(self.env)
-
         try:
             self._mollie_client.set_api_key(key)
             response = False

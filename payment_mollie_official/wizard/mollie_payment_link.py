@@ -26,9 +26,10 @@ class MolliePaymentLink(models.TransientModel):
             )
         )
 
+    # Override function for the added invoice_id in payment link
+    # if res_model account.move
     @api.depends("amount", "description", "partner_id", "currency_id")
     def _compute_values(self):
-        """ Override of the base method to add the invoice_id in the link. """
         secret = (
             self.env["ir.config_parameter"].sudo().get_param("database.secret")
         )
@@ -43,7 +44,12 @@ class MolliePaymentLink(models.TransientModel):
                 token_str.encode("utf-8"),
                 hashlib.sha256,
             ).hexdigest()
+            # BizzAppDev Customization Start
             if payment_link.res_model == "account.move":
+                # call custom function to add invoice_id in payment link
+                # if res_model account.move
                 payment_link._custom_generate_link()
             elif payment_link.res_model == "sale.order":
+                # exist function to generate payment link
                 payment_link._generate_link()
+            # BizzAppDev Customization End

@@ -206,7 +206,7 @@ class CustomWebsitePayment(WebsitePayment):
         # BizzAppDev Customization Start
         return request.render("payment.pay", values)
 
-    # Override for the set mollie payment method
+    # Override for the set invoice_id in payment transaction
     @http.route(
         [
             "/website_payment/transaction/<string:reference>/<string:amount>/<string:currency_id>",
@@ -227,13 +227,17 @@ class CustomWebsitePayment(WebsitePayment):
     ):
         acquirer = request.env["payment.acquirer"].browse(acquirer_id)
         order_id = kwargs.get("order_id")
+        # BizzAppDev Customization Start
         invoice_id = kwargs.get("invoice_id")
+        # BizzAppDev Customization End
 
         reference_values = (
             order_id and {"sale_order_ids": [(4, order_id)]} or {}
         )
+        # BizzAppDev Customization Start
         if invoice_id:
             reference_values.update({"invoice_ids": [(4, int(invoice_id))]})
+        # BizzAppDev Customization End
 
         reference = request.env["payment.transaction"]._compute_reference(
             values=reference_values, prefix=reference
@@ -252,10 +256,10 @@ class CustomWebsitePayment(WebsitePayment):
 
         if order_id:
             values["sale_order_ids"] = [(6, 0, [order_id])]
-
+        # BizzAppDev Customization Start
         if invoice_id:
             values["invoice_ids"] = [(6, 0, [invoice_id])]
-
+        # BizzAppDev Customization End
         reference_values = (
             order_id and {"sale_order_ids": [(4, order_id)]} or {}
         )
@@ -293,9 +297,6 @@ class CustomWebsitePayment(WebsitePayment):
         PaymentProcessing.add_payment_transaction(tx)
         render_values = {
             "partner_id": partner_id,
-            # BizzAppDev Customization Start
-            "Method": kwargs.get("Method", False)
-            # BizzAppDev Customization End
         }
         return acquirer.sudo().render(
             tx.reference, float(amount), int(currency_id), values=render_values
