@@ -32,23 +32,22 @@ class AccountMove(models.Model):
         key = provider._get_mollie_api_keys(provider.state)["mollie_api_key"]
         self._mollie_client.set_api_key(key)
 
-        references = self.reversed_entry_id.transaction_ids.mapped(
+        reference = self.reversed_entry_id.transaction_ids.mapped(
             "acquirer_reference"
         )
+        if isinstance(reference and reference[0], bool):
+            return
 
-        for ref in references:
-            if isinstance(ref, bool):
-                continue
-            try:
-                payment = self._mollie_client.payments.get(ref)
-                self._mollie_client.payment_refunds.on(payment).create(
-                    {
-                        "amount": {
-                            "value": str(self.amount_total),
-                            "currency": self.currency_id.name,
-                        }
+        try:
+            payment = self._mollie_client.payments.get(reference[0])
+            self._mollie_client.payment_refunds.on(payment).create(
+                {
+                    "amount": {
+                        "value": "%.2f" % self.amount_total,
+                        "currency": self.currency_id.name,
                     }
-                )
-                self.is_mollie_refund = True
-            except Exception as e:
-                _logger.warning(e)
+                }
+            )
+            self.is_mollie_refund = True
+        except Exception as e:
+            _logger.warning(e)
