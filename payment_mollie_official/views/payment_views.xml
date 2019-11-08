@@ -25,7 +25,7 @@
             </xpath>
         </field>
     </record>
-        
+
     <!-- Payment icons -->
     <record model="ir.ui.view" id="payment_icon_tree_view">
         <field name="name">payment.icon.tree</field>
@@ -44,12 +44,12 @@
         </field>
     </record>
     <record id="mollie_gateways_action" model="ir.actions.act_window">
-	     <field name="name">Gateways</field>
-	     <field name="res_model">payment.icon</field>
-	     <field name="view_id" ref="payment_icon_tree_view"/>
-	     <field name="domain">[('provider','=','mollie')]</field>
-	 </record>
-	    
+         <field name="name">Gateways</field>
+         <field name="res_model">payment.icon</field>
+         <field name="view_id" ref="payment_icon_tree_view"/>
+         <field name="domain">[('provider','=','mollie')]</field>
+     </record>
+
     <record id="acquirer_form_mollie" model="ir.ui.view">
         <field name="name">acquirer.form.mollie</field>
         <field name="model">payment.acquirer</field>
@@ -84,7 +84,7 @@
                 <attribute name="attrs">{'required':[('provider', '=', 'mollie')]}</attribute>
             </xpath>
             <xpath expr='//field[@name="payment_icon_ids"]' position='replace'/>
-            
+
             <xpath expr='//field[@name="journal_id"]' position='after'>
                 <field name="payment_icon_ids" widget="many2many_tags" colspan="4" attrs="{'invisible': [('provider', '=', 'mollie')]}"/>
             </xpath>
@@ -119,7 +119,7 @@
             </xpath>
         </field>
     </record>
-    
+
     <record id="transaction_form_mollie" model="ir.ui.view">
         <field name="name">transaction.form.mollie</field>
         <field name="model">payment.transaction</field>

@@ -6,3 +6,4 @@ from . import payment_icon
 from . import payment_transaction
 from . import provider_log
 from . import res_partner
+from . import account_move

@@ -22,6 +22,7 @@
         "views/payment_views.xml",
         "views/payment_templates.xml",
         "views/assets.xml",
+        "views/account_move_views.xml",
     ],
     "images": ["static/images/main_screenshot.png"],
     "installable": True,
