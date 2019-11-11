@@ -17,17 +17,33 @@ class AccountMove(models.Model):
     # check the reversed invoice is payment done by mollie
     def _compute_is_mollie_refund(self):
         for move in self:
-            if move.type != "out_refund" or move.state != "posted" or move.invoice_payment_state == "paid":
+            if (
+                move.type != "out_refund"
+                or move.state != "posted"
+                or move.invoice_payment_state == "paid"
+            ):
                 move.is_mollie_refund = False
                 continue
 
             provider = (
                 self.env["payment.acquirer"].sudo()._get_main_mollie_provider()
             )
-            key = provider._get_mollie_api_keys(provider.state)["mollie_api_key"]
+            key = provider._get_mollie_api_keys(provider.state)[
+                "mollie_api_key"
+            ]
             self._mollie_client.set_api_key(key)
 
-            reference = move.reversed_entry_id.transaction_ids.mapped("acquirer_reference")
+            if not move.reversed_entry_id.transaction_ids:
+                transaction_ids = (
+                    self.env["payment.transaction"]
+                    .sudo()
+                    .search([("invoice_ids", "in", move.reversed_entry_id.id)])
+                )
+            else:
+                transaction_ids = move.reversed_entry_id.transaction_ids
+
+            reference = transaction_ids.mapped("acquirer_reference")
+
             if isinstance(reference and reference[0], bool) or reference == []:
                 move.is_mollie_refund = False
                 continue
@@ -37,12 +53,9 @@ class AccountMove(models.Model):
                 move.is_mollie_refund = False
                 continue
 
-            move.is_mollie_refund = (
-                "mollie"
-                in move.reversed_entry_id.transaction_ids.acquirer_id.mapped(
-                    "provider"
-                )
-            )
+            move.is_mollie_refund = "mollie" in transaction_ids[
+                0
+            ].acquirer_id.mapped("provider")
 
     # create mollie refund order payment
     def mollie_refund_orders_create(self):
@@ -53,9 +66,16 @@ class AccountMove(models.Model):
         key = provider._get_mollie_api_keys(provider.state)["mollie_api_key"]
         self._mollie_client.set_api_key(key)
 
-        reference = self.reversed_entry_id.transaction_ids.mapped(
-            "acquirer_reference"
-        )
+        if not self.reversed_entry_id.transaction_ids:
+            transaction_ids = (
+                self.env["payment.transaction"]
+                .sudo()
+                .search([("invoice_ids", "in", self.reversed_entry_id.id)])
+            )
+        else:
+            transaction_ids = self.reversed_entry_id.transaction_ids
+
+        reference = transaction_ids.mapped("acquirer_reference")
         if isinstance(reference and reference[0], bool):
             return
 
