@@ -7,9 +7,7 @@
         <field name="arch" type="xml">
             <header position="inside">
                 <field name="is_mollie_refund" invisible="1"/>
-                <field name="is_moliie_payment" invisible="1"/>
-                <button name="mollie_refund_orders_create" string="Mollie Refund" type="object" attrs="{'invisible' : ['|', '|', ('type', '!=', 'out_refund'), ('is_mollie_refund', '=', True), ('is_moliie_payment', '=', False)]}"/>
-                <div t-if="[acq for acq.provider == 'mollie' in record.reversed_entry_id.transaction_ids.mapped(acquirer_id)]"/>
+                <button name="mollie_refund_orders_create" string="Mollie Refund" type="object" attrs="{'invisible' : [('is_mollie_refund', '=', False)]}"/>
             </header>
         </field>
     </record>

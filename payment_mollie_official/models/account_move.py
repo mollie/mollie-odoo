@@ -12,13 +12,32 @@ class AccountMove(models.Model):
 
     _mollie_client = Client()
 
-    is_mollie_refund = fields.Boolean("Is Mollie Refund")
-    is_moliie_payment = fields.Boolean(compute="_compute_is_mollie")
+    is_mollie_refund = fields.Boolean(compute="_compute_is_mollie_refund")
 
     # check the reversed invoice is payment done by mollie
-    def _compute_is_mollie(self):
+    def _compute_is_mollie_refund(self):
         for move in self:
-            move.is_moliie_payment = (
+            if move.type != "out_refund" or move.state != "posted" or move.invoice_payment_state == "paid":
+                move.is_mollie_refund = False
+                continue
+
+            provider = (
+                self.env["payment.acquirer"].sudo()._get_main_mollie_provider()
+            )
+            key = provider._get_mollie_api_keys(provider.state)["mollie_api_key"]
+            self._mollie_client.set_api_key(key)
+
+            reference = move.reversed_entry_id.transaction_ids.mapped("acquirer_reference")
+            if isinstance(reference and reference[0], bool) or reference == []:
+                move.is_mollie_refund = False
+                continue
+
+            payment = self._mollie_client.payments.get(reference[0])
+            if payment.get("_links").get("refunds"):
+                move.is_mollie_refund = False
+                continue
+
+            move.is_mollie_refund = (
                 "mollie"
                 in move.reversed_entry_id.transaction_ids.acquirer_id.mapped(
                     "provider"
@@ -50,6 +69,7 @@ class AccountMove(models.Model):
                     }
                 }
             )
-            self.is_mollie_refund = True
+            self.invoice_payment_state = "paid"
+            self.message_post(body="Mollie payment refund has been generated.")
         except Exception as e:
             _logger.warning(e)
