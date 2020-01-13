@@ -31,7 +31,7 @@
         <field name="view_mode">form</field>
         <field name="target">new</field>
     </record>
-    
+
     <record id="mollie_install_config_set_keys_form" model="ir.ui.view">
         <field name="name">mollie_install_config_set_keys.form</field>
         <field name="model">config.mollie</field>
@@ -43,20 +43,20 @@
                     </div>
                     <article class="c-summary-card">
                         <ul class="c-summary-card__list">
-	                        <li>
-		                       <div class="c-summary-card__item c-developers-api-key-item">
-		                            <span class="c-status c-status-success"></span>
-		                            <span>Live API key</span>
-		                            <span><span> Example: live_Ndppb372zfj79......</span></span>
-		                       </div>
-	                        </li>
-	                        <li>
-	                          <div class="c-summary-card__item c-developers-api-key-item has-key">
-	                                <span class="c-status-pending c-status"></span>
-	                                <span>Test API key</span>
-	                                <span><span> Example: test_Ndppb372zfj79......</span></span>
-	                          </div>
-	                        </li>
+                            <li>
+                                <div class="c-summary-card__item c-developers-api-key-item">
+                                    <span class="c-status c-status-success"></span>
+                                    <span>Live API key</span>
+                                    <span><span> Example: live_Ndppb372zfj79......</span></span>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="c-summary-card__item c-developers-api-key-item has-key">
+                                    <span class="c-status-pending c-status"></span>
+                                    <span>Test API key</span>
+                                    <span><span> Example: test_Ndppb372zfj79......</span></span>
+                                </div>
+                            </li>
                         </ul>
                     </article>
                 </div>
@@ -76,7 +76,7 @@
             </form>
         </field>
     </record>
-    
+
     <record id="mollie_install_config_set_keys_action" model="ir.actions.act_window">
         <field name="name">Mollie configuration</field>
         <field name="res_model">config.mollie</field>

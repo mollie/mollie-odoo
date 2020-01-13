@@ -7,41 +7,34 @@ odoo.define('payment_mollie_official.mollie_payment_form', function (require) {
     var Dialog = require("web.Dialog");
     var Widget = require("web.Widget");
     var rpc = require("web.rpc");
+    var session = require('web.session');
+
     var _t = core._t;
     var PaymentForm = require('payment.payment_form');
-    
-    
-var PaymentFormMollie = PaymentForm.extend({
+
+    var PaymentFormMollie = PaymentForm.extend({
         /*
         TO BE REVIEWD
         custom_events: _.extend({}, PaymentForm.events, {
         'click input[name="gateway_id"]': 'updatePaymenGatewayStatus',
         'click input[name="pm_id"]': 'radioClickEvent',
     }),*/
-        events: {
-            'click #o_payment_form_pay': 'payEvent',
-            'click #o_payment_form_add_pm': 'addPmEvent',
-            'click button[name="delete_pm"]': 'deletePmEvent',
+        events: _.extend({}, PaymentForm.events, {
             'click input[name="pm_id"]': 'radioClickEvent',
-            'click .o_payment_form_pay_icon_more': 'onClickMorePaymentIcon',
             'change input[name="gateway_id"]': 'updatePaymenGatewayStatus',
-        },
-        
-        getGatewayIdFromRadio: function (element) {
-            return $(element).data('gateway-id');
-        },
+        }),
+
         updatePaymenGatewayStatus: function ()
         {
             var checked_radio = this.$('input[name="gateway_id"]:checked');
             if (checked_radio.length !== 1) {
-                ajax.jsonRpc('/shop/cart/update_payment_method_json/', 'call', {method_id: 0,});
                 return;
             }
-            checked_radio = checked_radio[0];
-            var gateway_id = this.getGatewayIdFromRadio(checked_radio);
-            $('input[data-provider="mollie"]').prop( "checked", true );
-            ajax.jsonRpc('/shop/cart/update_payment_method_json/', 'call', {method_id: parseInt(gateway_id, 0),});
+            $('input[data-provider="mollie"]').prop("checked", true);
         },
+    });
+
+    PaymentForm.include({
         updateNewPaymentDisplayStatus: function ()
         {
             var checked_radio = this.$('input[name="pm_id"]:checked');
@@ -66,7 +59,7 @@ var PaymentFormMollie = PaymentForm.extend({
                 this.$('#o_payment_form_acq_' + acquirer_id).removeClass('d-none');
             }
         },
-        
+
         payEvent: function (ev) {
             ev.preventDefault();
             var form = this.el;
@@ -125,14 +118,8 @@ var PaymentFormMollie = PaymentForm.extend({
                     $(button).children('.fa-plus-circle').removeClass('fa-plus-circle')
                     $(button).prepend('<span class="o_loader"><i class="fa fa-refresh fa-spin"></i>&nbsp;</span>');
 
-                    var verify_validity = this.$el.find('input[name="verify_validity"]');
-
-                    if (verify_validity.length>0) {
-                        form_data.verify_validity = verify_validity[0].value === "1";
-                    }
-
                     // do the call to the route stored in the 'data_set' input of the acquirer form, the data must be called 'create-route'
-                    ajax.jsonRpc(ds.dataset.createRoute, 'call', form_data).then(function (data) {
+                    this._rpc({route: ds.dataset.createRoute, params: form_data}).then(function (data) {
                         // if the server has returned true
                         if (data.result) {
                             // and it need a 3DS authentication
@@ -162,7 +149,8 @@ var PaymentFormMollie = PaymentForm.extend({
                         $(button).attr('disabled', false);
                         $(button).children('.fa').addClass('fa-plus-circle')
                         $(button).find('span.o_loader').remove();
-                    }).fail(function (data, event) {
+                    }).guardedCatch(function (error) {
+                        error.event.preventDefault();
                         // if the rpc fails, pretty obvious
                         $(button).attr('disabled', false);
                         $(button).children('.fa').addClass('fa-plus-circle')
@@ -171,26 +159,35 @@ var PaymentFormMollie = PaymentForm.extend({
                         self.displayError(
                             _t('Server Error'),
                             _t("We are not able to add your payment method at the moment.") +
-                               message.data.message
+                               self._parseError(error)
                         );
                     });
                 }
                 // if the user is going to pay with a form payment, then
                 else if (this.isFormPaymentRadio(checked_radio)) {
+                    var method_id = this.$('input[name="gateway_id"]:checked');
                     var $tx_url = this.$el.find('input[name="prepare_tx_url"]');
+                    var invoice_id = $('input[name="invoice_id"]')
                     // if there's a prepare tx url set
                     if ($tx_url.length === 1) {
                         // if the user wants to save his credit card info
                         var form_save_token = acquirer_form.find('input[name="o_payment_form_save_token"]').prop('checked');
                         // then we call the route to prepare the transaction
-                        ajax.jsonRpc($tx_url[0].value, 'call', {
-                            'acquirer_id': parseInt(acquirer_id),
-                            'save_token': form_save_token,
-                            'access_token': self.options.accessToken,
-                            'success_url': self.options.successUrl,
-                            'error_url': self.options.errorUrl,
-                            'callback_method': self.options.callbackMethod,
-                            'order_id': self.options.orderId,
+                        var ctx = this._getContext();
+                        ctx = _.extend({}, ctx, {"method_id": method_id.data('gateway-id')});
+                        this._rpc({
+                            route: $tx_url[0].value,
+                            params: {
+                                'acquirer_id': parseInt(acquirer_id),
+                                'save_token': form_save_token,
+                                'access_token': self.options.accessToken,
+                                'success_url': self.options.successUrl,
+                                'error_url': self.options.errorUrl,
+                                'callback_method': self.options.callbackMethod,
+                                'order_id': self.options.orderId,
+                                context: ctx,
+                                'invoice_id': invoice_id.val(),
+                            },
                         }).then(function (result) {
                             if (result) {
                                 // if the server sent us the html form, we create a form element
@@ -214,17 +211,18 @@ var PaymentFormMollie = PaymentForm.extend({
                                 );
                             }
                         }).guardedCatch(function (error) {
+                            error.event.preventDefault();
                             self.displayError(
                                 _t('Server Error'),
                                 _t("We are not able to redirect you to the payment form. ") +
-                                   self._parseError(error)
+                                    self._parseError(error)
                             );
                         });
                     }
                     else {
                         // we append the form to the body and send it.
                         this.displayError(
-                            _t("Cannot set-up the payment"),
+                            _t("Cannot setup the payment"),
                             _t("We're unable to process your payment.")
                         );
                     }
@@ -246,7 +244,11 @@ var PaymentFormMollie = PaymentForm.extend({
             ev.preventDefault();
             var checked_radio = this.$('input[name="pm_id"]:checked');
             var self = this;
-            var button = ev.target;
+            if (ev.type === 'submit') {
+                var button = $(ev.target).find('*[type="submit"]')[0]
+            } else {
+                var button = ev.target;
+            }
 
             // we check if the user has selected a 'add a new payment' option
             if (checked_radio.length === 1 && this.isNewPaymentRadio(checked_radio[0])) {
@@ -290,11 +292,8 @@ var PaymentFormMollie = PaymentForm.extend({
                 $(button).children('.fa-plus-circle').removeClass('fa-plus-circle')
                 $(button).prepend('<span class="o_loader"><i class="fa fa-refresh fa-spin"></i>&nbsp;</span>');
 
-                // we force the check when adding a card trough here
-                form_data.verify_validity = true;
-
                 // do the call to the route stored in the 'data_set' input of the acquirer form, the data must be called 'create-route'
-                ajax.jsonRpc(ds.dataset.createRoute, 'call', form_data).then( function (data) {
+                this._rpc({route: ds.dataset.createRoute, params: form_data}).then(function (data) {
                     // if the server has returned true
                     if (data.result) {
                         // and it need a 3DS authentication
@@ -327,18 +326,19 @@ var PaymentFormMollie = PaymentForm.extend({
                     }
                     // here we remove the 'processing' icon from the 'add a new payment' button
                     $(button).attr('disabled', false);
-                    $(button).children('.fa').addClass('fa-plus-circle')
+                    $(button).children('.fa').addClass('fa-plus-circle');
                     $(button).find('span.o_loader').remove();
-                }).fail(function (data, event) {
+                }).guardedCatch(function (error) {
+                    error.event.preventDefault();
                     // if the rpc fails, pretty obvious
                     $(button).attr('disabled', false);
-                    $(button).children('.fa').addClass('fa-plus-circle')
+                    $(button).children('.fa').addClass('fa-plus-circle');
                     $(button).find('span.o_loader').remove();
 
                     self.displayError(
                         _t('Server error'),
                         _t("We are not able to add your payment method at the moment.</p>") +
-                           data.data.message
+                            self._parseError(error)
                     );
                 });
             }
@@ -378,9 +378,8 @@ var PaymentFormMollie = PaymentForm.extend({
                 $acquirerForm.append(messageResult);
             }
         },
-        
     });
-    
+
     $(function () {
         // TODO move this to another module, requiring dom_ready and rejecting
         // the returned deferred to get the proper message
