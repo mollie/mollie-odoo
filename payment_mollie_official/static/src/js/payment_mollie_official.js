@@ -1,5 +1,5 @@
 odoo.define('payment_mollie_official.mollie_payment_form', function (require) {
-"use strict";
+    "use strict";
 
     var ajax = require('web.ajax');
     var config = require('web.config');
@@ -9,9 +9,9 @@ odoo.define('payment_mollie_official.mollie_payment_form', function (require) {
     var rpc = require("web.rpc");
     var _t = core._t;
     var PaymentForm = require('payment.payment_form');
-    
-    
-var PaymentFormMollie = PaymentForm.extend({
+
+
+    PaymentForm.include({
         /*
         TO BE REVIEWD
         custom_events: _.extend({}, PaymentForm.events, {
@@ -26,12 +26,11 @@ var PaymentFormMollie = PaymentForm.extend({
             'click .o_payment_form_pay_icon_more': 'onClickMorePaymentIcon',
             'change input[name="gateway_id"]': 'updatePaymenGatewayStatus',
         },
-        
+
         getGatewayIdFromRadio: function (element) {
             return $(element).data('gateway-id');
         },
-        updatePaymenGatewayStatus: function ()
-        {
+        updatePaymenGatewayStatus: function () {
             var checked_radio = this.$('input[name="gateway_id"]:checked');
             if (checked_radio.length !== 1) {
                 ajax.jsonRpc('/shop/cart/update_payment_method_json/', 'call', {method_id: 0,});
@@ -39,15 +38,14 @@ var PaymentFormMollie = PaymentForm.extend({
             }
             checked_radio = checked_radio[0];
             var gateway_id = this.getGatewayIdFromRadio(checked_radio);
-            $('input[data-provider="mollie"]').prop( "checked", true );
+            $('input[data-provider="mollie"]').prop("checked", true);
             ajax.jsonRpc('/shop/cart/update_payment_method_json/', 'call', {method_id: parseInt(gateway_id, 0),});
         },
-        updateNewPaymentDisplayStatus: function ()
-        {
+        updateNewPaymentDisplayStatus: function () {
             var checked_radio = this.$('input[name="pm_id"]:checked');
-            if (checked_radio.data('provider')!=='mollie') {
-               $('input[name="gateway_id"]').prop( "checked", false);
-               $('input[name="gateway_id"]').trigger("change");
+            if (checked_radio.data('provider') !== 'mollie') {
+                $('input[name="gateway_id"]').prop("checked", false);
+                $('input[name="gateway_id"]').trigger("change");
             }
             // we hide all the acquirers form
             this.$('[id*="o_payment_add_token_acq_"]').addClass('d-none');
@@ -61,13 +59,14 @@ var PaymentFormMollie = PaymentForm.extend({
             // if we clicked on an add new payment radio, display its form
             if (this.isNewPaymentRadio(checked_radio)) {
                 this.$('#o_payment_add_token_acq_' + acquirer_id).removeClass('d-none');
-            }
-            else if (this.isFormPaymentRadio(checked_radio)) {
+            } else if (this.isFormPaymentRadio(checked_radio)) {
                 this.$('#o_payment_form_acq_' + acquirer_id).removeClass('d-none');
             }
         },
-        
+
         payEvent: function (ev) {
+
+            ev.stopPropagation();
             ev.preventDefault();
             var form = this.el;
             var checked_radio = this.$('input[name="pm_id"]:checked');
@@ -103,15 +102,14 @@ var PaymentFormMollie = PaymentForm.extend({
                             return true;
                         }
                         $(element).closest('div.form-group').removeClass('o_has_error').find('.form-control, .custom-select').removeClass('is-invalid');
-                        $(element).siblings( ".o_invalid_field" ).remove();
+                        $(element).siblings(".o_invalid_field").remove();
                         //force check of forms validity (useful for Firefox that refill forms automatically on f5)
                         $(element).trigger("focusout");
                         if (element.dataset.isRequired && element.value.length === 0) {
-                                $(element).closest('div.form-group').addClass('o_has_error').find('.form-control, .custom-select').addClass('is-invalid');
-                                $(element).closest('div.form-group').append('<div style="color: red" class="o_invalid_field" aria-invalid="true">' + _.str.escapeHTML("The value is invalid.") + '</div>');
-                                wrong_input = true;
-                        }
-                        else if ($(element).closest('div.form-group').hasClass('o_has_error')) {
+                            $(element).closest('div.form-group').addClass('o_has_error').find('.form-control, .custom-select').addClass('is-invalid');
+                            $(element).closest('div.form-group').append('<div style="color: red" class="o_invalid_field" aria-invalid="true">' + _.str.escapeHTML("The value is invalid.") + '</div>');
+                            wrong_input = true;
+                        } else if ($(element).closest('div.form-group').hasClass('o_has_error')) {
                             wrong_input = true;
                             $(element).closest('div.form-group').append('<div style="color: red" class="o_invalid_field" aria-invalid="true">' + _.str.escapeHTML("The value is invalid.") + '</div>');
                         }
@@ -121,13 +119,13 @@ var PaymentFormMollie = PaymentForm.extend({
                         return;
                     }
 
-                    $(button).attr('disabled', true);
+                    this.disableButton(button);
                     $(button).children('.fa-plus-circle').removeClass('fa-plus-circle')
                     $(button).prepend('<span class="o_loader"><i class="fa fa-refresh fa-spin"></i>&nbsp;</span>');
 
                     var verify_validity = this.$el.find('input[name="verify_validity"]');
 
-                    if (verify_validity.length>0) {
+                    if (verify_validity.length > 0) {
                         form_data.verify_validity = verify_validity[0].value === "1";
                     }
 
@@ -139,8 +137,7 @@ var PaymentFormMollie = PaymentForm.extend({
                             if (data['3d_secure'] !== false) {
                                 // then we display the 3DS page to the user
                                 $("body").html(data['3d_secure']);
-                            }
-                            else {
+                            } else {
                                 checked_radio.value = data.id; // set the radio value to the new card id
                                 form.submit();
                                 return;
@@ -171,12 +168,13 @@ var PaymentFormMollie = PaymentForm.extend({
                         self.displayError(
                             _t('Server Error'),
                             _t("We are not able to add your payment method at the moment.") +
-                               message.data.message
+                            message.data.message
                         );
                     });
                 }
                 // if the user is going to pay with a form payment, then
                 else if (this.isFormPaymentRadio(checked_radio)) {
+                    this.disableButton(button);
                     var $tx_url = this.$el.find('input[name="prepare_tx_url"]');
                     // if there's a prepare tx url set
                     if ($tx_url.length === 1) {
@@ -203,11 +201,10 @@ var PaymentFormMollie = PaymentForm.extend({
                                 newForm.setAttribute("action", action_url); // set the action url
                                 $(document.getElementsByTagName('body')[0]).append(newForm); // append the form to the body
                                 $(newForm).find('input[data-remove-me]').remove(); // remove all the input that should be removed
-                                if(action_url) {
+                                if (action_url) {
                                     newForm.submit(); // and finally submit the form
                                 }
-                            }
-                            else {
+                            } else {
                                 self.displayError(
                                     _t('Server Error'),
                                     _t("We are not able to redirect you to the payment form.")
@@ -217,23 +214,20 @@ var PaymentFormMollie = PaymentForm.extend({
                             self.displayError(
                                 _t('Server Error'),
                                 _t("We are not able to redirect you to the payment form. ") +
-                                   message.data.message
+                                data.message
                             );
                         });
-                    }
-                    else {
+                    } else {
                         // we append the form to the body and send it.
                         this.displayError(
                             _t("Cannot set-up the payment"),
                             _t("We're unable to process your payment.")
                         );
                     }
-                }
-                else {  // if the user is using an old payment then we just submit the form
+                } else {  // if the user is using an old payment then we just submit the form
                     form.submit();
                 }
-            }
-            else {
+            } else {
                 this.displayError(
                     _t('No payment method selected'),
                     _t('Please select a payment method.')
@@ -266,16 +260,15 @@ var PaymentFormMollie = PaymentForm.extend({
                         return true;
                     }
                     $(element).closest('div.form-group').removeClass('o_has_error').find('.form-control, .custom-select').removeClass('is-invalid');
-                    $(element).siblings( ".o_invalid_field" ).remove();
+                    $(element).siblings(".o_invalid_field").remove();
                     //force check of forms validity (useful for Firefox that refill forms automatically on f5)
                     $(element).trigger("focusout");
                     if (element.dataset.isRequired && element.value.length === 0) {
-                            $(element).closest('div.form-group').addClass('o_has_error').find('.form-control, .custom-select').addClass('is-invalid');
-                            var message = '<div style="color: red" class="o_invalid_field" aria-invalid="true">' + _.str.escapeHTML("The value is invalid.") + '</div>';
-                            $(element).closest('div.form-group').append(message);
-                            wrong_input = true;
-                    }
-                    else if ($(element).closest('div.form-group').hasClass('o_has_error')) {
+                        $(element).closest('div.form-group').addClass('o_has_error').find('.form-control, .custom-select').addClass('is-invalid');
+                        var message = '<div style="color: red" class="o_invalid_field" aria-invalid="true">' + _.str.escapeHTML("The value is invalid.") + '</div>';
+                        $(element).closest('div.form-group').append(message);
+                        wrong_input = true;
+                    } else if ($(element).closest('div.form-group').hasClass('o_has_error')) {
                         wrong_input = true;
                         var message = '<div style="color: red" class="o_invalid_field" aria-invalid="true">' + _.str.escapeHTML("The value is invalid.") + '</div>';
                         $(element).closest('div.form-group').append(message);
@@ -294,7 +287,7 @@ var PaymentFormMollie = PaymentForm.extend({
                 form_data.verify_validity = true;
 
                 // do the call to the route stored in the 'data_set' input of the acquirer form, the data must be called 'create-route'
-                ajax.jsonRpc(ds.dataset.createRoute, 'call', form_data).then( function (data) {
+                ajax.jsonRpc(ds.dataset.createRoute, 'call', form_data).then(function (data) {
                     // if the server has returned true
                     if (data.result) {
                         // and it need a 3DS authentication
@@ -307,8 +300,7 @@ var PaymentFormMollie = PaymentForm.extend({
                             // we just go to the return_url or reload the page
                             if (form_data.return_url) {
                                 window.location = form_data.return_url;
-                            }
-                            else {
+                            } else {
                                 window.location.reload();
                             }
                         }
@@ -338,11 +330,10 @@ var PaymentFormMollie = PaymentForm.extend({
                     self.displayError(
                         _t('Server error'),
                         _t("We are not able to add your payment method at the moment.</p>") +
-                           data.data.message
+                        data.data.message
                     );
                 });
-            }
-            else {
+            } else {
                 this.displayError(
                     _t('No payment method selected'),
                     _t('Please select the option to add a new payment method.')
@@ -355,8 +346,7 @@ var PaymentFormMollie = PaymentForm.extend({
             var $acquirerForm;
             if (this.isNewPaymentRadio($checkedRadio[0])) {
                 $acquirerForm = this.$('#o_payment_add_token_acq_' + acquirerID);
-            }
-            else if (this.isFormPaymentRadio($checkedRadio[0])) {
+            } else if (this.isFormPaymentRadio($checkedRadio[0])) {
                 $acquirerForm = this.$('#o_payment_form_acq_' + acquirerID);
             }
 
@@ -364,9 +354,10 @@ var PaymentFormMollie = PaymentForm.extend({
                 return new Dialog(null, {
                     title: _t('Error: ') + _.str.escapeHTML(title),
                     size: 'medium',
-                    $content: "<p>" + (_.str.escapeHTML(message) || "") + "</p>" ,
+                    $content: "<p>" + (_.str.escapeHTML(message) || "") + "</p>",
                     buttons: [
-                    {text: _t('Ok'), close: true}]}).open();
+                        {text: _t('Ok'), close: true}]
+                }).open();
             } else {
                 // removed if exist error message
                 this.$('#payment_error').remove();
@@ -378,9 +369,9 @@ var PaymentFormMollie = PaymentForm.extend({
                 $acquirerForm.append(messageResult);
             }
         },
-        
+
     });
-    
+
     $(function () {
         // TODO move this to another module, requiring dom_ready and rejecting
         // the returned deferred to get the proper message
@@ -388,11 +379,7 @@ var PaymentFormMollie = PaymentForm.extend({
             console.log("DOM doesn't contain '.o_payment_form'");
             return;
         }
-        $('.o_payment_form').each(function () {
-            var $elem = $(this);
-            var form = new PaymentFormMollie(null, $elem.data());
-            form.attachTo($elem);
-        });
+
     });
 
 });
