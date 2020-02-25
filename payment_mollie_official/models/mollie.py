@@ -386,7 +386,7 @@ class TxMollie(models.Model):
             self._set_transaction_done()
             return self.write(res)
 
-        elif status in ["cancelled", "expired", "failed"]:
+        elif status in ["canceled", "expired", "failed"]: # In the v1 API, canceled status was misspelled as cancelled [19430].
             self._set_transaction_cancel()
             return self.write(res)
 
