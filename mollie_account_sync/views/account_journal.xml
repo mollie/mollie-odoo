@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Journal Form View Inherit -->
+    <record id="account_journal_view_form_int" model="ir.ui.view">
+        <field name="name">account.journal.view.form</field>
+        <field name="model">account.journal</field>
+        <field name="inherit_id" ref="account.view_account_journal_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='bank_account']/group" position="inside">
+                <group string="Mollie Configuration " attrs="{'invisible': [('bank_statements_source', '!=', 'mollie_sync')]}">
+                    <field name="mollie_api_key" />
+                    <field name="mollie_transfer_id" string="Mollie transfer journal"/>
+                    <field name="mollie_test" groups="base.group_no_one"/>
+                    <field name="mollie_last_sync" readonly="1"/>
+                    <button name="recheck_all_statements" class="btn btn-danger" type="object" string="Fix Old Statements" confirm="Are you sure you want to resync?" groups="base.group_no_one"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Journal Kanban View Inherit -->
+    <record id="account_journal_dashboard_inherit_mollie_sync" model="ir.ui.view">
+        <field name="name">account.journal.dashboard.inherit.mollie.sync</field>
+        <field name="model">account.journal</field>
+        <field name="inherit_id" ref="account.account_journal_dashboard_kanban_view"/>
+        <field name="arch" type="xml">
+            <field name="kanban_dashboard" position="after">
+                <!-- <field name="next_synchronization"/>
+                <field name="account_online_journal_id"/>
+                <field name="synchronization_status"/> -->
+                <field name="need_transfer_count"/>
+            </field>
+
+            <xpath expr='//div[@name="bank_journal_cta"]' position='inside'>
+                <t t-if="dashboard.bank_statements_source == 'mollie_sync'">
+                    <button type="object" name="action_sync_mollie_statement" class="btn btn-primary">Sync Mollie</button>
+                    <t t-if="record.need_transfer_count.raw_value">
+                        <button type="object" name="action_open_transfers" class="btn btn-warning">
+                            <t t-esc="record.need_transfer_count.raw_value"/> Transter to process
+                        </button>
+                    </t>
+                </t>
+            </xpath>
+
+            <div name="bank_statement_create_button" position='attributes'>
+                <attribute name="t-if"> dashboard.bank_statements_source != 'online_sync' and dashboard.bank_statements_source != 'mollie_sync' </attribute>
+            </div>
+        </field>
+    </record>
+
+</odoo>
