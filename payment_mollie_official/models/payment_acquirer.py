@@ -73,6 +73,7 @@ class PaymentAcquirer(models.Model):
 
     def _get_mollie_api_keys(self, state):
         keys = {
+            "enabled": self.mollie_api_key_prod,
             "prod": self.mollie_api_key_prod,
             "test": self.mollie_api_key_test,
         }
@@ -85,6 +86,7 @@ class PaymentAcquirer(models.Model):
     def _get_mollie_urls(self, state):
         """ Mollie URLS """
         url = {
+            "enabled": "https://api.mollie.com/v2",
             "prod": "https://api.mollie.com/v2",
             "test": "https://api.mollie.com/v2",
         }
