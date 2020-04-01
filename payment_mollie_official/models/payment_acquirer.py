@@ -48,6 +48,7 @@ class PaymentAcquirer(models.Model):
                                 "valid. Should begin with 'live_'", }}
 
     def _get_mollie_api_keys(self, state):
+        api_key = False
         if self.state == 'enabled':
             api_key = self.mollie_api_key_prod
         elif self.state == 'test':
