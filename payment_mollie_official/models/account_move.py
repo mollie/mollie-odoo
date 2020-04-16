@@ -42,7 +42,9 @@ class AccountMove(models.Model):
             else:
                 transaction_ids = move.reversed_entry_id.transaction_ids
 
-            reference = transaction_ids.mapped("acquirer_reference")
+            reference = transaction_ids.filtered(
+                lambda t: t.acquirer_id.provider == "mollie"
+            ).mapped("acquirer_reference")
 
             if isinstance(reference and reference[0], bool) or reference == []:
                 move.is_mollie_refund = False
