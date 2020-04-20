@@ -279,7 +279,7 @@ class AcquirerMollie(models.Model):
         for acquirer in self:
             if acquirer.provider != 'mollie':
                 continue
-            mollie_api_key = self._get_mollie_api_keys(
+            mollie_api_key = acquirer._get_mollie_api_keys(
                 self.environment)['mollie_api_key']
             acquirer.method_ids.unlink()
             try:
