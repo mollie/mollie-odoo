@@ -60,7 +60,10 @@ def get_as_base64(url):
 
 
 def get_base_url(env):
-    base_url = env['ir.config_parameter'].sudo().get_param('web.base.url')
+    base_url = (
+        env['website'].get_current_website().url or
+        env['ir.config_parameter'].sudo().get_param('web.base.url')
+    )
     return base_url
 
 
@@ -213,8 +216,7 @@ class AcquirerMollie(models.Model):
     @api.multi
     def mollie_form_generate_values(self, values):
         self.ensure_one()
-        base_url = self.env['ir.config_parameter'].sudo(
-        ).get_param('web.base.url')
+        base_url = get_base_url(self.env)
         mollie_api_key = self._get_mollie_api_keys(
             self.environment)['mollie_api_key']
         mollie_tx_values = dict(values)

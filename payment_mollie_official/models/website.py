@@ -18,9 +18,14 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
+from odoo import models, fields
 
-from . import mollie
-from . import provider_log
-from . import res_partner
-from . import sale_order
-from . import website
+
+class Website(models.Model):
+    _inherit = 'website'
+
+    url = fields.Char(
+        string='Website URL',
+        help='Base url to use in redirects',
+        default=lambda s: s.env['ir.config_parameter'].sudo().get_param('web.base.url'),
+    )
