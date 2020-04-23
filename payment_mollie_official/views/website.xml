@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record model="ir.ui.view" id="mollie_view_website_form_inherit">
+        <field name="name">mollie.view.website.form.inherit</field>
+        <field name="model">website</field>
+        <field name="inherit_id" ref="website.view_website_form"/>
+        <field name="arch" type="xml">
+            <field name="domain" position="after">
+                <field name="url"/>
+            </field>
+        </field>
+    </record>
+</odoo>
