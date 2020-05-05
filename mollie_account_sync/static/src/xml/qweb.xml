@@ -1,0 +1,29 @@
+<?xml version="1.0" ?>
+<templates>
+    <div t-name="drg_payment_info">
+        <table class="table table-bordered">
+            <t t-call="drg_payment_info_line"/>
+        </table>
+    </div>
+
+    <t t-name="drg_payment_info_line">
+        <t t-foreach="data" t-as="d">
+            <t t-if="_.isObject(data[d])">
+                <t t-call="drg_payment_info_line">
+                    <t t-set="data" t-value="data[d]"/>
+                </t>
+            </t>
+            <t t-else="">
+                <tr>
+                    <td>
+                        <strong> <t t-esc="formatCamelCase(d)"/> </strong> :
+                    </td>
+                    <td>
+                        <t t-esc="data[d]"/>
+                    </td>
+                </tr>
+            </t>
+        </t>
+    </t>
+
+</templates>
