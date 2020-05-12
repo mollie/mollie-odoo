@@ -300,18 +300,18 @@ class SaleOrderLine(models.Model):
         """
         for line in self:
             price = line.price_unit
-            taxes = (
-                line.product_uom_qty and
-                line.tax_id.compute_all(
-                    price,
-                    line.order_id.currency_id,
-                    line.product_uom_qty,
-                    product=line.product_id,
-                    partner=line.order_id.partner_shipping_id
-                ) / line.product_uom_qty
-            ) or 0.0
+            taxes = line.tax_id.compute_all(
+                price,
+                line.order_id.currency_id,
+                line.product_uom_qty,
+                product=line.product_id,
+                partner=line.order_id.partner_shipping_id
+            )
             line.update({
-                'price_unit_taxinc': taxes['total_included'],
+                'price_unit_taxinc': (
+                    line.product_uom_qty and taxes['total_included'] /
+                    line.product_uom_qty
+                ) or 0.0,
             })
 
     price_unit_taxinc = fields.Float(
