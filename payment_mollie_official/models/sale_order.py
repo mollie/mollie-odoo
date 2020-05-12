@@ -314,7 +314,7 @@ class SaleOrderLine(models.Model):
                 ) or 0.0,
             })
 
-    price_unit_taxinc = fields.Float(
+    price_unit_taxinc = fields.Monetary(
         compute='_get_price_unit_tax',
         string='Price Unit Tax inc',
         readonly=True, store=True)
