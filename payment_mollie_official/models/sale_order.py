@@ -303,14 +303,18 @@ class SaleOrderLine(models.Model):
             taxes = line.tax_id.compute_all(
                 price,
                 line.order_id.currency_id,
-                1,
+                line.product_uom_qty,
                 product=line.product_id,
-                partner=line.order_id.partner_shipping_id)
+                partner=line.order_id.partner_shipping_id
+            )
             line.update({
-                'price_unit_taxinc': taxes['total_included'],
+                'price_unit_taxinc': (
+                    line.product_uom_qty and taxes['total_included'] /
+                    line.product_uom_qty
+                ) or 0.0,
             })
 
-    price_unit_taxinc = fields.Float(
+    price_unit_taxinc = fields.Monetary(
         compute='_get_price_unit_tax',
         string='Price Unit Tax inc',
         readonly=True, store=True)
