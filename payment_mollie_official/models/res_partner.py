@@ -35,7 +35,7 @@ class ResPartner(models.Model):
         self.ensure_one()
         name_split = self.name.split(' ')
         givenName = name_split[0]
-        familyName = self.name.replace(name_split[0], '')
+        familyName = self.name.replace(name_split[0], '').strip().replace(" ", "_")
         phone = ''
 
         """
