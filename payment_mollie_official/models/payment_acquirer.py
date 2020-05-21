@@ -112,7 +112,7 @@ class PaymentAcquirer(models.Model):
                 "URL": self._get_mollie_urls(self.state)["mollie_form_url"],
                 "BaseUrl": base_url,
                 "Language": values.get("partner_lang"),
-                "Name": values.get("partner_name"),
+                "Name": values.get("partner_name", ""),
                 "Email": values.get("partner_email"),
                 "Zip": values.get("partner_zip"),
                 "Address": values.get("partner_address"),
