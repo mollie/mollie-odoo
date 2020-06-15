@@ -64,7 +64,8 @@ class MollieController(http.Controller):
 
         payload = {
             "description": description,
-            "amount": amount,
+            "amount": {"value": "%.2f" % float(amount),
++                      "currency": currency},
             #"webhookUrl": base_url + self._notify_url,
             "redirectUrl": "%s%s?reference=%s" % (base_url, self._redirect_url, orderid),
             "metadata": {
@@ -99,7 +100,7 @@ class MollieController(http.Controller):
                 raise ValidationError(error_msg)
             payment_tx.write({"acquirer_reference": mollie_response["id"]})
 
-            payment_url = mollie_response["links"]["paymentUrl"]
+            payment_url = mollie_response["_links"]["checkout"]["href"]
             return werkzeug.utils.redirect(payment_url)
 
         return werkzeug.utils.redirect("/")
