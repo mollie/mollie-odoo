@@ -67,13 +67,17 @@ def get_base_url(env):
     return base_url
 
 
-def get_mollie_provider(env):
-    provider = env['payment.acquirer'].sudo()._get_main_mollie_provider()
+def get_mollie_provider(env, company_id=False):
+    provider = env['payment.acquirer'].sudo().with_context(
+        force_company=company_id
+    )._get_main_mollie_provider()
     return provider
 
 
-def get_mollie_provider_key(env):
-    provider = env['payment.acquirer'].sudo()._get_main_mollie_provider()
+def get_mollie_provider_key(env, company_id=False):
+    provider = env['payment.acquirer'].sudo().with_context(
+        force_company=company_id
+    )._get_main_mollie_provider()
     key = provider._get_mollie_api_keys(provider.environment)['mollie_api_key']
     return key
 
@@ -174,8 +178,10 @@ class AcquirerMollie(models.Model):
 
     @api.model
     def _get_main_mollie_provider(self):
-        return self.sudo().search([('provider', '=', 'mollie')], order="id",
-                                  limit=1) or False
+        return self.sudo().search([
+            ('provider', '=', 'mollie'),
+            ('company_id', '=', self.env.context.get('force_company', False))
+        ], order="sequence, id", limit=1) or False
 
     @api.onchange('mollie_api_key_test')
     def _onchange_mollie_api_key_test(self):
