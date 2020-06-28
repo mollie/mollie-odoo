@@ -3,6 +3,7 @@
     'name': 'Mollie Payment Acquirer',
     'version': '1.11',
     'author': 'Mollie & BeOpen',
+    'license': 'LGPL-3',
     'website': 'http://www.mollie.com',
     'category': 'eCommerce',
     'description': "",
