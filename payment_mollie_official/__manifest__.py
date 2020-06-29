@@ -3,7 +3,7 @@
     "name": "Mollie Payments",
     "version": "13.0.1",
     "author": "Mollie",
-    "license': 'LGPL-3",
+    "license": "LGPL-3",
     "website": "http://www.mollie.com",
     "category": "eCommerce",
     "description": """
