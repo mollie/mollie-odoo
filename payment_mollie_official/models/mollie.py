@@ -46,8 +46,8 @@ class AcquirerMollie(models.Model):
     def _get_mollie_urls(self, environment):
         """ Mollie URLS """
         url = {
-            'prod': 'https://api.mollie.nl/v1/',
-            'test': 'https://api.mollie.nl/v1/', }
+            'prod': 'https://api.mollie.nl/v2/',
+            'test': 'https://api.mollie.nl/v2/', }
 
         return {'mollie_form_url': url.get(environment, url['test']), }
 
@@ -56,7 +56,7 @@ class AcquirerMollie(models.Model):
         self.ensure_one()
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
         currency = self.env['res.currency'].sudo().browse(values['currency_id'])
-        language =  values.get('partner_lang')
+        language = values.get('partner_lang')
         name = values.get('partner_name')
         email = values.get('partner_email')
         zip = values.get('partner_zip')
@@ -75,7 +75,7 @@ class AcquirerMollie(models.Model):
             'Currency': currency.name,
             'Amount': amount,
             'Key': mollie_key, #self._get_mollie_api_keys(self.environment)['mollie_api_key'],
-            'URL' : self._get_mollie_urls(self.environment)['mollie_form_url'],
+            'URL': self._get_mollie_urls(self.environment)['mollie_form_url'],
             'BaseUrl': base_url,
             'Language': language,
             'Name': name,
@@ -132,39 +132,27 @@ class TxMollie(models.Model):
 
         _logger.info('Validated transfer payment for tx %s: set as pending' % (reference))
         mollie_api_key = acquirer._get_mollie_api_keys(acquirer.environment)['mollie_api_key']
-        url = "%s/payments" % (acquirer._get_mollie_urls(acquirer.environment)['mollie_form_url'])
-
-        payload = {
-            "id": transactionId
-        }
-        if acquirer.environment == 'test':
-            payload["testmode"] = True
+        url = "%spayments/%s" % (acquirer._get_mollie_urls(
+            acquirer.environment)['mollie_form_url'], transactionId)
 
         headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + mollie_api_key}
 
-        mollie_response = requests.get(
-            url, data=json.dumps(payload), headers=headers).json()
+        mollie_response = requests.get(url, headers=headers).json()
 
         if self.state == 'done':
             _logger.info('Mollie: trying to validate an already validated tx (ref %s)', reference)
             return True
 
-        data_list = mollie_response["data"]
-        data = {}
-        status = 'undefined'
-        mollie_reference = ''
-        if len(data_list) > 0:
-            data = data_list[0]
+        status = mollie_response.get('status', 'undefined')
+        mollie_reference = mollie_response.get('id', '')
 
-        if "status" in data:
-            status = data["status"]
-        if "id" in data:
-            mollie_reference = data["id"]
 
         if status == "paid":
             vals = {
                 'state': 'done',
-                'date_validate':  fields.datetime.strptime(data["paidDatetime"].replace(".0Z", ""), "%Y-%m-%dT%H:%M:%S"),
+                'date_validate':  fields.datetime.strptime(
+                    mollie_response["paidAt"].replace("+00.00", ""),
+                    "%Y-%m-%dT%H:%M:%S"),
                 'acquirer_reference': mollie_reference,
             }
 
