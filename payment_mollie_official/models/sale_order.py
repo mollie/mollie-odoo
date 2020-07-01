@@ -248,7 +248,9 @@ class SaleOrder(models.Model):
     def mollie_order_sync(self, tx_reference, key=False):
         self.ensure_one()
         if not key:
-            key = get_mollie_provider_key(self.env)
+            key = get_mollie_provider_key(
+                self.env, company_id=self.company_id.id
+            )
         try:
             self._mollie_client.set_api_key(key)
             response = False
