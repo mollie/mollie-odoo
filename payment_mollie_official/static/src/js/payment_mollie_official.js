@@ -70,6 +70,9 @@ odoo.define('payment_mollie_official.mollie_payment_form', function (require) {
             ev.preventDefault();
             var form = this.el;
             var checked_radio = this.$('input[name="pm_id"]:checked');
+            if (checked_radio.data("provider") != 'mollie') {
+                return this._super.apply(this, arguments);
+            }
             var self = this;
             var button = ev.target;
 
