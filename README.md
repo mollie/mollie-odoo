@@ -14,7 +14,7 @@
 You will need two Python packages for using this application.
 You can install both these requirements by running the following command:
 ```
-pip3 install -R requirements.txt
+pip3 install -r requirements.txt
 ```
 Alternatively you can install them manually by doing `pip3 install mollie-api-python==2.2.1` and `pip3 install phonenumbers==8.10.3`
 You can find all the information about the dependencies on the following URL's:
