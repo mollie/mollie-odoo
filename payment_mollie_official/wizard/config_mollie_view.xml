@@ -87,6 +87,6 @@
     <record id="mollie_config_todo" model="ir.actions.todo">
         <field name="action_id" ref="mollie_install_config_todo_action"/>
         <field name="sequence">0</field>
-        <field name="type">automatic</field>
+        <!-- <field name="type">automatic</field> -->
     </record>
 </odoo>
