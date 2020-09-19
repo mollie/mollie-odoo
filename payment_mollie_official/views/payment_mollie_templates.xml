@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="mollie_payment_form">
+    <input type="hidden" name="data_set" t-att-data-action-url="tx_url" data-remove-me=""/>
+    <input type="hidden" name="checkout_url" t-att-value="checkout_url"/>
+    <input type="hidden" name="error_msg" t-att-value="error_msg"/>
+    <input type="hidden" name="status" t-att-data-value="status"/>
+</template>
+
+<template id="assets_frontend" inherit_id="web.assets_frontend">
+    <xpath expr="script[last()]" position="after">
+        <script type="text/javascript" src="/payment_mollie_official/static/src/js/payment_form.js"></script>
+        <link rel="stylesheet" type="text/scss" href="/payment_mollie_official/static/src/scss/payment_form.scss"/>
+    </xpath>
+</template>
+
+<template id="mollie_payment_tokens_list_inh" name="Mollie Payment Tokens list" inherit_id="payment.payment_tokens_list">
+
+    <xpath expr="//t/div[hasclass('o_payment_acquirer_select')][1]" position="attributes">
+        <attribute name="t-if">acq.provider != 'mollie'</attribute>
+    </xpath>
+    <xpath expr="//t/div[hasclass('o_payment_acquirer_select')][1]" position="after">
+        <t t-if="acq.provider == 'mollie'">
+            <t t-call="payment_mollie_official.mollie_payment_acquirer_select"/>
+        </t>
+    </xpath>
+
+    <!-- <xpath expr="//t[@t-if=&quot;acq.save_token == 'always'&quot;]" position="after">
+        
+    </xpath> -->
+</template>
+
+<template id="mollie_payment_acquirer_select">
+    <t t-foreach="acq.mollie_get_active_methods(website_sale_order or invoice)" t-as="payment_method">
+        <div class="card-body o_payment_acquirer_select" >
+            <label>
+                <t t-if="acq.payment_flow == 'form'">
+                    <input type="radio" t-att-data-acquirer-id="acq.id" t-att-data-methodname="payment_method.method_id_code" t-att-data-form-payment="true" t-att-data-provider="acq.provider" name="pm_id" t-attf-value="form_{{acq.id}}" t-att-checked="acquirers_count==1 and pms_count==0 or acquirers[0] == acq"/>
+                </t>
+                <span class="payment_option_name">
+                    <t t-esc="payment_method.name"/>
+                    <div t-if="acq.state == 'test'" class="badge-pill badge-warning float-right" style="margin-left:5px">
+                            Test Mode
+                    </div>
+                </span>
+                <t t-if="acq_extra_fees and acq_extra_fees.get(acq)">
+                    <span class="badge badge-pill badge-secondary"> +                <t t-esc="acq_extra_fees[acq]" t-options='{"widget": "monetary", "display_currency": acq_extra_fees["currency_id"]}'/>
+        Fee </span>
+                </t>
+                <t t-elif="acq.fees_active">
+                    <small class="text-muted">(Some fees may apply)</small>
+                </t>
+            </label>
+            <ul class="float-right list-inline payment_icon_list">
+                <t t-set="i" t-value="0"/>
+                <t t-foreach="payment_method.payment_icon_ids" t-as="pm_icon">
+                    <li t-attf-class="list-inline-item#{'' if (i &lt; MAX_BRAND_LINE) else ' d-none'}">
+                        <span t-field="pm_icon.image_payment_form" t-options='{"widget": "image", "alt-field": "name"}'/>
+                    </li>
+                    <li t-if="i==MAX_BRAND_LINE" style="display:block;" class="list-inline-item">
+                        <span class="float-right more_option text-info">
+                            <a href="#" class="o_payment_form_pay_icon_more" data-toggle="tooltip" t-att-title="', '.join([opt.name for opt in acq.payment_icon_ids[MAX_BRAND_LINE:]])">and more</a>
+                        </span>
+                    </li>
+                    <t t-set="i" t-value="i+1"/>
+                </t>
+            </ul>
+        </div>
+        <t t-if="payment_method.method_id_code == 'creditcard'">
+            <div id="o_payment_form_acq_creditcard" t-attf-class="d-none card-footer">
+                <t t-call="payment_mollie_official.mollie_creditcard_component"/>
+            </div>
+        </t>
+        <t t-if="payment_method.method_id_code == 'ideal'">
+            <div id="o_payment_form_acq_ideal" t-attf-class="d-none card-footer">
+                <t t-call="payment_mollie_official.mollie_creditcard_ideal_issuers_list"/>
+            </div>
+        </t>
+    </t>
+</template>
+
+<template id="mollie_creditcard_component">
+    <div>
+        <div id="o_mollie_component" t-att-data-profile_id="acq.sudo().mollie_profile_id" t-att-data-mode="acq.sudo().state">
+            <div class="form-row o_mollie_form mb-1">
+                <div class="col-md-12">
+                    <label class="label text-muted mb-1" for="mollie-card-holder">Card Holder</label>
+                    <div id="mollie-card-holder" class="mollie_input p-2"></div>
+                    <div id="mollie-card-holder-error" class="text-danger small"></div>
+                </div>
+                <div class="col-md-12">
+                    <label class="label text-muted mb-1 mt-3" for="mollie-card-number">Card Number</label>
+                    <div id="mollie-card-number" class="mollie_input p-2"></div>
+                    <div id="mollie-card-number-error" class="text-danger small"></div>
+                </div>
+                <div class="col-md-6">
+                    <label class="label text-muted mb-1 mt-3" for="mollie-expiry-date">Expiry Date</label>
+                    <div id="mollie-expiry-date" class="mollie_input p-2"></div>
+                    <div id="mollie-expiry-date-error" class="text-danger small"></div>
+                </div>
+                <div class="col-md-6">
+                    <label class="label text-muted mb-1 mt-3" for="mollie-verification-code">Verification code</label>
+                    <div id="mollie-verification-code" class="mollie_input p-2"></div>
+                    <div id="mollie-verification-code-error" class="text-danger small"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<template id="mollie_creditcard_ideal_issuers_list">
+    <div class="row o_issuer_container">
+        <t t-foreach="payment_method.payment_issuer_ids" t-as="issuer">
+            <div class="col-md-6 col-xs-12">
+                <label t-attf-class="bg-white w-100 p-2 border position-relative o_issuer #{issuer_index == 0 and 'active' or '' }" t-att-data-methodname="issuer.issuers_id_code">
+                    <span class="payment_option_name">
+                        <i class="fa fa-check-circle"> </i> <t t-esc="issuer.name"/>
+                    </span>
+                    <ul class="float-right list-inline payment_icon_list">
+                        <t t-foreach="issuer.payment_icon_ids" t-as="pm_icon">
+                            <li t-attf-class="list-inline-item">
+                                <span t-field="pm_icon.image_payment_form" t-options='{"widget": "image", "alt-field": "name"}'/>
+                            </li>
+                        </t>
+                    </ul>
+                </label>
+            </div>
+        </t>
+    </div>
+</template>
+
+</odoo>

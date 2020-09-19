@@ -1,0 +1,29 @@
+div#o_mollie_component {
+    .o_mollie_form{
+        .mollie_input{
+            border: 1px solid #ccc;
+            background: #fff;
+        }
+    }
+}
+
+div.o_issuer_container{
+    label.o_issuer {
+        border-radius: 8px;
+        cursor: pointer;
+        i.fa {
+            color: #ccc;
+        }
+        &.active {
+            border-color: $o-brand-primary !important;
+            i.fa {
+                color: $o-brand-primary !important
+            }
+        }
+    }
+    .payment_icon_list {
+        position: absolute;
+        right: 4px;
+        top:4px;
+    }
+}
