@@ -1,4 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-payment_acquirer_method_user,payment_acquirer_method_user,model_payment_acquirer_method,base.group_user,1,1,1,1
-provider_log_user,provider_log_user,model_provider_log,base.group_user,1,1,1,1
-provider_config_mollie,provider_config_mollie,model_config_mollie,base.group_user,1,1,1,1
+access_mollie_payment_method_user,mollie_payment_method_user,model_mollie_payment_method,base.group_user,1,1,1,1
+access_mollie_payment_method_public,mollie_payment_method_public,model_mollie_payment_method,,1,0,0,0
+access_mollie_payment_issuer_user,mollie_payment_issuer_user,model_mollie_payment_method_issuer,base.group_user,1,1,1,1
+access_mollie_payment_issuer_public,mollie_payment_issuer_public,model_mollie_payment_method_issuer,,1,0,0,0

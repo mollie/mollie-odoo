@@ -1,136 +1,220 @@
-<section class="oe_container">
-    <div class="oe_row oe_spaced">
-        <div class="oe_span12">
-            <h2 class="oe_slogan" style="font-family: 'Calibre',sans-serif;">Official Mollie integration</h2>
-            <h2 class="oe_slogan" style="font-family: 'Calibre',sans-serif;">Installation guidelines</h2>
-        </div>
-        <ol style="font-size:16px; font-family: 'Calibre',sans-serif;color: #111;">
-            <li>
-                Download the module or clone the <a href="https://github.com/mollie/mollie-odoo">
-                Github repository</a> and add it under your custom apps in your Odoo configuration file (found under
-                /etc/).
-            </li>
-            <li>
-                Install all Python packages with pip3 install -r requirements.txt
-            </li>
-            <li>
-                Restart your Odoo service so that Odoo can find and use all required Python packages.
-            </li>
-            <li>
-                Update your apps list from the 'Apps' menu in Odoo.
-            </li>
-            <li>
-                Install the Mollie app from the 'Apps' menu in Odoo.
-            </li>
-        </ol>
+
+<div class="row py-3">
+    <div class="col-md-6 py-3">
+        <img style="align-self: flex-start;"
+            src="img/icon-rect.png">
+        <h1 style="color: #000;font-weight: bold;">
+            Quickly integrate all major payment methods using only
+            <b style="font-weight: bolder;color: #0077ff;">One app</b>
+        </h1>
     </div>
-</section>
-
-<section class="oe_container oe_dark">
-    <div class="oe_row oe_spaced">
-        <div class="oe_span12">
-            <h2 class="oe_slogan" style="font-family: 'Calibre',sans-serif;">Supported payment methods</h2>
-        </div>
-        <ul style="font-size:16px; font-family: 'Calibre',sans-serif;color: #111;">
-            <li>Creditcard</li>
-            <li>SOFORT Banking</li>
-            <li>iDEAL</li>
-            <li>Bancontact</li>
-            <li>Bank transfer</li>
-            <li>SEPA Direct Debit</li>
-            <li>PayPal</li>
-            <li>Bitcoin</li>
-            <li>PODIUM Cadeaukaart</li>
-            <li>paysafecard</li>
-            <li>KBC/CBC Payment Button</li>
-            <li>Belfius Direct Net</li>
-            <li>Gift cards</li>
-        </ul>
+    <div class="col-md-6">
+        <img class="img img-fluid shadow" src="img/hero.png"
+            style="/* background-color: #0f0f0c; *//* padding: 9px 0px; */border-radius: 10px;border: 1px solid #cccccc7a;background-color: #f8f9fa;padding-top: 10px;">
     </div>
-</section>
+</div>
 
+<h1 style="color: #000;font-weight: bold;/* font-size: 50px; */" class="mt-5 text-center mb-0">Key Features</h1>
+<div class="text-center text-muted" style="font-weight:400; margin-bottom:18px">
+    <span style="width:73px;height: 10px;display:inline-block;border-radius: 4px;background-color: #0077ff;"> </span>
+</div>
 
-<section class="oe_container">
-    <div class="oe_row oe_spaced">
-        <div class="oe_span12">
-            <h2 class="oe_slogan" style="font-family: 'Calibre',sans-serif;">Configuration</h2>
-        </div>
-        <p style="font-size:16px; font-family: 'Calibre',sans-serif;color: #111;">
-            Go to Invoicing > Payments > Payment Acquirers -> Mollie and add the API keys (test and/or live) from your
-            Mollie account here:
-        </p>
-        <div class="oe_row oe_spaced text-center">
-            <div class="oe_span12 oe_row_img oe_centered">
-                <img src="api_configuration_example.jpg" class="img img-responsive"/>
-            </div>
-        </div>
-        <p style="font-size:16px; font-family: 'Calibre',sans-serif;color: #111;">
-            Depending on the button at the top you can choose if you want to use Mollie for testing purposes (with the
-            test API) or if you want to use it for production (with the live API key).
-            Make sure that you activate the payment method too as it is not activated by default.
-        </p>
-        <p style="font-size:16px; font-family: 'Calibre',sans-serif;color: #111;">
-            When the Mollie payment acquirer is configured correctly, you can see the Mollie payment option at the
-            time of checkout. You will not see Mollie as long as there are no payment methods configured on the payment
-            acquirer. You will first have to add payment methods to your account on the Mollie website and then
-            configure it under the tab "Configuration" of the payment method Mollie in Odoo.
-            The customer will be redirected to the Mollie payment methods screen after choosing Mollie in the webshop.
-        </p>
-        <p style="font-size:16px; font-family: 'Calibre',sans-serif;color: #111;">
-            Mollie will automatically redirect the customer after the payment to Odoo and a payment is made on the sale
-            order:
-        </p>
-        <div class="oe_row_img oe_centered">
-            <img src="transaction_example.jpg" class="img img-responsive"/>
-        </div>
+<div class="row py-3">
+    <div class="col-md-6 py-3 d-flex flex-column justify-content-center">
+        <h1 style="font-weight: bold;">All online payment methods</h1>
+        <p class="lead pr-4" style="color: #000;font-size: 20px;font-weight: 300;font-family: lato;">Mollie supports all
+            known online payment methods. Growing internationally or focusing on a specific market, with Mollie you let
+            your company grow where you want.</p>
     </div>
-</section>
+    <div class="col-md-6">
+        <img class="img img-fluid shadow"
+            src="img/payments.gif"
+            style="background-color: #0f0f0c;padding: 9px 0px;border-radius: 10px;">
+    </div>
 
+</div>
 
-<section class="oe_container oe_dark">
-    <div class="oe_row oe_spaced">
-        <div class="oe_span12">
-            <h2 class="oe_slogan" style="font-family: 'Calibre',sans-serif;">Installing the Python package</h2>
-        </div>
-        <p style="font-size:16px; font-family: 'Calibre',sans-serif;color: #111;">
-            You will need the Python package "mollie-api-python" for using this application.
-            You can install this requirement from the requirements.txt file or from the command line. <br/>
-            From the requirements.txt file:<br/>
-            <code>
-                sudo pip3 install -R requirements.txt
-            </code>
-            <br/>
-            From the terminal:<br/>
-            <code>
-                sudo pip3 install mollie-api-python==2.1.0<br/>
-                sudo pip3 install phonenumbers==8.10.3
-            </code>
+<div class="row py-3">
+    <div class="col-md-6">
+        <img class="img img-fluid shadow"
+            src="img/inline-card.png"
+            style="border-radius: 10px;border: 1px solid #cccccc7a;background-color: #ffffff;padding: 10px;">
+    </div>
+    <div class="col-md-6 py-3 d-flex flex-column justify-content-center">
+        <h1 style="font-weight: bold;">Inline Credit Card Payment</h1>
+        <p class="lead pr-4" style="color: #000;font-size: 20px;font-weight: 300;font-family: lato;">
+            Capture credit card payment directly from payment screen. No need to redirect user to portal to make payment*. 
+        </p>
+        <small style="color: #b3b3b3;"> * unless card needs 3-D Secure authentication </small>
+    </div>
+
+</div>
+
+<div class="row py-3">
+    <div class="col-md-6 py-3 d-flex flex-column justify-content-center">
+        <h1 style="font-weight: bold;">Inline Issuer Selector</h1>
+        <p class="lead pr-4" style="color: #000;font-size: 20px;font-weight: 300;font-family: lato;">
+            Inline issuer selector shows available issuer in Odoo itself.
+            It reduces one step at payment portal and make checkout faster.
         </p>
     </div>
-</section>
+    <div class="col-md-6">
+        <img class="img img-fluid shadow"
+            src="img/ideal.png"
+            style="border-radius: 10px;border: 1px solid #cccccc7a;background-color: #ffffff;padding: 10px;">
+    </div>
+</div>
 
+<h1 style="color: #000;font-weight: bold;/* font-size: 50px; */" class="mt-5 text-center mb-0">Other Features</h1>
+<div class="text-center text-muted" style="font-weight:400; margin-bottom:18px">
+    <span style="width:73px;height: 10px;display:inline-block;border-radius: 4px;background-color: #0077ff;"> </span>
+</div>
 
-<section class="oe_container oe_spaced">
-    <div class="oe_row oe_spaced">
-        <div class="oe_span12">
-            <h2 class="oe_slogan" style="font-family: 'Calibre',sans-serif;">Questions / support</h2>
-        </div>
-        <div class="row mb64" style=" display: block; margin: 0 auto; text-align: center;
-      ">
-            <div class="mt32" style="display: inline-block;margin:0px 10px;">
-                <a href="https://help.mollie.com/hc" target="_blank" style="font-family: 'Calibre',sans-serif;">
-                    <h4 class="mt16 mb0"
-                        style="padding: 16px 45px;font-family: 'Calibre',sans-serif;text-transform: uppercase;background: linear-gradient(to right, #2f8df9, #07f);text-align: center;box-shadow: 2px 1px 12px 3px #ece6e6;border-radius: 10px;color: #fff;font-weight: 700;">
-                        Contact Us</h4>
-                </a>
-            </div>
-            <div class="mt32" style="display: inline-block;margin:0px 10px;">
-                <a href="https://github.com/mollie/mollie-odoo/issues" target="_blank">
-                    <h4 class="mt16 mb0"
-                        style="background: linear-gradient(to right,  #2f8df9, #07f);padding: 16px 45px;font-family: 'Calibre',sans-serif;text-transform: uppercase;text-align: center;box-shadow: 2px 1px 12px 3px #ece6e6;border-radius: 10px;color: #fff;font-weight: 700;">
-                        Report an issue</h4>
-                </a>
+<div class="row py-3">
+    <div class="col-md-6 py-3">
+        <div class="card shadow">
+            <div class="card-body text-center">
+                <i class="fa fa-book mb-2" style="
+            color: white;
+            background-color: #0076fe;
+            padding: 12px;
+            border-radius: 25px;
+            font-size: 22px;
+        "></i>
+                <h5> Separate/Common Account Journal for payment methods </h5>
             </div>
         </div>
     </div>
-</section>
+    <div class="col-md-6 py-3">
+        <div class="card shadow">
+            <div class="card-body text-center">
+                <i class="fa fa-toggle-on mb-2" style="
+                color: white;
+                background-color: #0076fe;
+                padding: 12px;
+                border-radius: 25px;
+                font-size: 22px;
+            "></i>
+                <h5> Enable/Disable payment methods any time </h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 py-3">
+        <div class="card shadow">
+            <div class="card-body text-center">
+                <i class="fa fa-file-text mb-2" style="
+                    color: white;
+                    background-color: #0076fe;
+                    padding: 12px;
+                    border-radius: 25px;
+                    font-size: 22px;
+                "></i>
+                <h5> Portal invoice payment (works without eCommerce) </h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 py-3">
+        <div class="card shadow">
+            <div class="card-body text-center">
+                <i class="fa fa-hand-pointer-o mb-2" style="
+                    color: white;
+                    background-color: #0076fe;
+                    padding: 12px;
+                    border-radius: 25px;
+                    font-size: 22px;
+                "></i>
+                <h5> Can be tested with Test mode </h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 py-3">
+        <div class="card shadow">
+            <div class="card-body text-center">
+                <i class="fa fa-anchor mb-2" style="
+                        color: white;
+                        background-color: #0076fe;
+                        padding: 12px;
+                        border-radius: 25px;
+                        font-size: 22px;
+                    "></i>
+                <h5> Webhooks for delayed payments. </h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 py-3">
+        <div class="card shadow">
+            <div class="card-body text-center">
+                <i class="fa fa-commenting-o mb-2" style="
+                            color: white;
+                            background-color: #0076fe;
+                            padding: 12px;
+                            border-radius: 25px;
+                            font-size: 22px;
+                        "></i>
+                <h5> Clear alert messages for customer. </h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h1 style="color: #000;font-weight: bold;/* font-size: 50px; */" class="mt-5 text-center mb-0">How to configure</h1>
+<div class="text-center text-muted" style="font-weight:400; margin-bottom:18px">
+    <span style="width:73px;height: 10px;display:inline-block;border-radius: 4px;background-color: #0077ff;"> </span>
+</div>
+
+<h3>
+    <span class="badge badge-pill mr-2"
+        style="background-color: #0077ff;color: #fff;padding: 5px 17px;font-size: 14px;"> Step 1 </span><span
+        style="display: inline-block;font-size: 19px;"> Download the module and place the module in apps folder. </span>
+</h3>
+<h3>
+    <span class="badge badge-pill mr-2"
+        style="background-color: #0077ff;color: #fff;padding: 5px 17px;font-size: 14px;"> Step 2 </span><span
+        style="display: inline-block;font-size: 19px;"> Install python dependencies (it is listed in requirements.txt file in module) </span>
+</h3>
+<span style="background: #424242;color: white;padding: 8px 28px;display: inline-block;margin-left: 85px;border-radius: 6px;margin-bottom: 16px;">
+    pip3 install -r requirements.txt
+</span>
+
+<h3>
+    <span class="badge badge-pill mr-2"
+        style="background-color: #0077ff;color: #fff;padding: 5px 17px;font-size: 14px;"> Step 3 </span><span
+        style="display: inline-block;font-size: 19px;"> 
+        Install this module in your Odoo instance.
+        </span>
+</h3>
+
+<h3>
+    <span class="badge badge-pill mr-2"
+        style="background-color: #0077ff;color: #fff;padding: 5px 17px;font-size: 14px;"> Step 4 </span><span
+        style="display: inline-block;font-size: 19px;"> Open 
+            <span style="color:#0077ff;"> Website > Configuration > Payment Acquirers </span>
+            And open acquirers
+        </span>
+</h3>
+
+<h3>
+    <span class="badge badge-pill mr-2"
+        style="background-color: #0077ff;color: #fff;padding: 5px 17px;font-size: 14px;"> Step 5 </span><span
+        style="display: inline-block;font-size: 19px;"> Fill the API keys and credentials. (You will these keys from your mollie dashboard.)
+    </span>
+</h3>
+<img class="img img-fluid shadow" src="img/drgl-enter-keys.png"
+    style="border-radius: 10px;border: 1px solid #cccccc7a;background-color: #ffffff;padding: 10px;margin-left: 85px;">
+
+<h3>
+    <span class="badge badge-pill mr-2"
+        style="background-color: #0077ff;color: #fff;padding: 5px 17px;font-size: 14px;"> Step 6 </span><span
+        style="display: inline-block;font-size: 19px;"> Click on <span style="color:#0077ff;">Mollie Payment Methods</span> tab and click on <span style="color:#0077ff;">sync payment method</span> button.
+    </span>
+</h3>
+<img class="img img-fluid shadow" src="img/drgl-sync.png"
+    style="border-radius: 10px;border: 1px solid #cccccc7a;background-color: #ffffff;padding: 10px;margin-left: 85px;">
+
+<h3 class="mt-3">
+    <span class="badge badge-pill mr-2"
+        style="background-color: #1ab5b2;color: #fff;padding: 5px 17px;font-size: 14px;"> <i class="fa fa-thumbs-up"> </i> DONE </span><span
+        style="display: inline-block;font-size: 19px;">
+            That's it you are ready to accept payments.
+    </span>
+</h3>
