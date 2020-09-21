@@ -5,7 +5,7 @@
 
         <record id="payment_acquirer_mollie" model="payment.acquirer">
             <field name="name">Mollie</field>
-            <field name="image_128" type="base64" file="payment_mollie_official/static/description/mollie_icon.png"/>
+            <field name="image_128" type="base64" file="payment_mollie_official/static/description/icon.png"/>
             <field name="provider">mollie</field>
             <field name="company_id" ref="base.main_company"/>
             <field name="view_template_id" ref="mollie_payment_form"/>
