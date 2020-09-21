@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import logging
 import phonenumbers
+import logging
 
-from odoo import models
+from odoo import _, api, fields, models
 
 _logger = logging.getLogger(__name__)
 
@@ -11,46 +11,48 @@ _logger = logging.getLogger(__name__)
 class ResPartner(models.Model):
     _inherit = "res.partner"
 
-    def _get_mollie_address(self):
+    def _prepare_mollie_address(self):
         self.ensure_one()
-        name_split = self.name.split(" ")
-        givenName = name_split[0]
-        familyName = self.name.replace(name_split[0], "").strip().replace(" ", "_")
-        phone = ""
+        result = {}
 
-        """
-          Mollie only accepts E164 phone numbers. If the phone number is not
-          in an E164 format Mollie will refuse the payment, resulting in Odoo
-          doing a rollback and the user being 'kicked' to the homepage again.
-          In this try/except we will do a check for it. If there is no valid
-          phone number we'll give back '' which
-          will be accepted by Mollie (no phone number).
-        """
-        try:
-            raw_phone_number = self.phone
-            result = phonenumbers.parse(raw_phone_number, None)
-            if result:
-                phone = phonenumbers.format_number(
-                    result, phonenumbers.PhoneNumberFormat.E164
-                )
-        except Exception:
-            _logger.warning(
-                "The customer filled in an invalid phone number format. "
-                "The phone number is not in the E164 "
-                "format which Mollie requires. We will not send it to Mollie."
-            )
-            phone = ""
+        # Name
+        name_parts = self.name.split(" ")
+        result['givenName'] = name_parts[0]
+        result['familyName'] = ' '.join(name_parts[1:]) if len(name_parts) > 1 else result['givenName']
 
-        res = {
-            "givenName": givenName,
-            "familyName": familyName or givenName,
-            "streetAndNumber": "%s %s"
-            % ((self.street or ""), (self.street2 or "")),
-            "city": self.city or "",
-            "postalCode": self.zip or "",
-            "country": (self.country_id and self.country_id.code) or "nl",
-            "email": self.email,
-            # Will set the phone if there is one, otherwise it gives back '' (no phone)
-            "phone": phone or "",
-        }
-        return res
+        # Phone
+        phone = self._mollie_phone_format(self.phone)
+        if not phone:
+            phone = self._mollie_phone_format(self.mobile)
+        if phone:
+            result['phone'] = phone
+        result['email'] = self.email
+
+        # Address
+        street = []
+        if self.street:
+            street.append(self.street)
+        if self.street2:
+            street.append(self.street2)
+
+        result["streetAndNumber"] = ' '.join(street) or ' '
+        result["postalCode"] = self.zip or ' '
+        result["city"] = self.city or ' '
+        result["country"] = self.country_id and self.country_id.code or "BE"
+
+        return result
+
+    @api.model
+    def _mollie_phone_format(self, phone):
+        """ Only E164 phone number is allowed in mollie """
+        phone = False
+        if phone:
+            try:
+                parse_phone = phonenumbers.parse(self.phone, None)
+                if parse_phone:
+                    phone = phonenumbers.format_number(
+                        parse_phone, phonenumbers.PhoneNumberFormat.E164
+                    )
+            except Exception:
+                _logger.warning("Can not format customer phone number for mollie")
+        return phone

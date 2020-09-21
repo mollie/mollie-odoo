@@ -1,0 +1,4 @@
+mollie-api-python==2.2.3
+phonenumbers==8.10.19
+
+# Placed this file in module too for app store
