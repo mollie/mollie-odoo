@@ -324,6 +324,27 @@ class PaymentAcquirerMollie(models.Model):
 
         return result
 
+    def _api_mollie_refund(self, amount, currency, transection_reference):
+        payment_record = self._mollie_get_payment_data(transection_reference)
+        transection_id = False
+        if payment_record['resource'] == 'order':
+            payments = payment_record.get('_embedded', {}).get('payments', [])
+            if payments:
+                # TODO: handle multiple payment for same order
+                transection_id = payments[0]['id']
+        elif payment_record['resource'] == 'payment':
+            transection_id = payment_record['id']
+
+        mollie_client = self._api_mollie_get_client()
+        payment_rec = mollie_client.payments.get(transection_id)
+        refund = mollie_client.payment_refunds.on(payment_rec).create({
+            'amount': {
+                'value': "%.2f" % amount,
+                'currency': currency.name
+            }
+        })
+        return refund
+
     # -----------------------------------------------
     # Methods that create mollie order payload
     # -----------------------------------------------
