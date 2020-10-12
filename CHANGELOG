@@ -1,5 +1,5 @@
 # Changelog
 
-## [13.0.1.1] payment_mollie_official - 2020-09-18
+## [14.0.0.1] payment_mollie_official - 2020-10-14
 ### Added
-- Added new module written from scratch.
+- Migrated module from v13

@@ -13,11 +13,11 @@
                     name="mollie_process_refund" type="object"
                     attrs="{'invisible' : ['|', ('valid_for_mollie_refund', '=', False), ('mollie_refund_reference', '!=' ,False)]}"/>
             </header>
-            <field name="journal_id" position="after">
+            <xpath expr="//div[@name='journal_div']" position="after">
                 <field name="mollie_refund_reference" attrs="{'invisible' : [('mollie_refund_reference', '=' ,False)]}" groups="base.group_no_one"/>
                 <span attrs="{'invisible' : [('mollie_refund_reference', '=' ,False)]}"> </span>
                 <span attrs="{'invisible' : [('mollie_refund_reference', '=' ,False)]}" class="badge badge-success"> <span class="fa fa-check"/> Amount refunded in mollie </span>
-            </field>
+            </xpath>
         </field>
     </record>
 

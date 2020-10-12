@@ -104,11 +104,11 @@ class PaymentTransaction(models.Model):
 
         return True
 
-    def _prepare_account_payment_vals(self):
+    def _create_payment(self, add_payment_vals={}):
         """ Set diffrent journal based on payment method"""
-        result = super()._prepare_account_payment_vals()
+        add_payment_vals = add_payment_vals or {}
         if self.acquirer_id.provider == 'mollie':
             method = self.acquirer_id.mollie_methods_ids.filtered(lambda m: m.method_id_code == self.mollie_payment_method)
             if method and method.journal_id:
-                result['journal_id'] = method.journal_id.id
-        return result
+                add_payment_vals['journal_id'] = method.journal_id.id
+        return super()._create_payment(add_payment_vals=add_payment_vals)
