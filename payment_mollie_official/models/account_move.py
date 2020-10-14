@@ -16,7 +16,7 @@ class AccountMove(models.Model):
     def _compute_valid_for_mollie_refund(self):
         for move in self:
             has_mollie_tx = False
-            if move.type == 'out_refund' and move._find_valid_mollie_transactions() and move.state == "posted" and move.invoice_payment_state != 'paid':
+            if move.move_type == 'out_refund' and move._find_valid_mollie_transactions() and move.state == "posted" and move.payment_state != 'paid':
                 has_mollie_tx = True
             move.valid_for_mollie_refund = has_mollie_tx
 
@@ -31,12 +31,12 @@ class AccountMove(models.Model):
         if mollie_transactions:
 
             # Create payment record and post the payment
-            AccountPayment = self.env['account.payment'].with_context(active_ids=self.ids, active_model='account.move', active_id=self.id)
-            payment_obj = AccountPayment.create({
+            AccountPaymentRegister = self.env['account.payment.register'].with_context(active_ids=self.ids, active_model='account.move')
+            payment_obj = AccountPaymentRegister.create({
                 'journal_id': mollie_transactions.payment_id.journal_id.id,
                 'payment_method_id': mollie_transactions.payment_id.payment_method_id.id
             })
-            payment_obj.post()
+            payment_obj.action_create_payments()
 
             # Create refund in mollie via API
             refund = mollie_transactions.acquirer_id._api_mollie_refund(self.amount_total, self.currency_id, mollie_transactions.acquirer_reference)

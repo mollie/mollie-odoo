@@ -19,7 +19,7 @@ _logger = logging.getLogger(__name__)
 class PaymentAcquirerMollie(models.Model):
     _inherit = 'payment.acquirer'
 
-    provider = fields.Selection(selection_add=[('mollie', 'Mollie')])
+    provider = fields.Selection(selection_add=[('mollie', 'Mollie')], ondelete={'mollie': 'set default'})
     mollie_api_key_test = fields.Char("Mollie Test API key", required_if_provider="mollie", groups="base.group_user")
     mollie_api_key_prod = fields.Char("Mollie Live API key", required_if_provider="mollie", groups="base.group_user")
     mollie_profile_id = fields.Char("Mollie Profile ID", groups="base.group_user")
