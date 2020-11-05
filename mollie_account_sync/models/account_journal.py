@@ -158,11 +158,17 @@ class AccountJournal(models.Model):
                 continue
             statement_line = {
                 'date': self._format_mollie_date(refund['createdAt']),
-                'name': self._generate_payment_ref(refund['metadata']) or refund['description'],
+                'name': self._generate_payment_ref(refund['metadata']) or (refund['description']+" ori payment: " + refund['paymentId']),
                 'ref': refund['description'],
                 'amount': float(refund['settlementAmount']['value']),
                 'mollie_transaction_id': refund['id'],
             }
+            ori_payment = self._api_get_payment(refund['paymentId'])
+            json_info = {}
+            json_info.update(ori_payment['metadata'])
+            if len(json_info.keys()):
+                statement_line['mollie_json_info'] = json.dumps(json_info)
+
             statement_lines.append((0, 0, statement_line))
         for fee_line in self.get_payment_fees_lines(settlement_data)['lines']:
             statement_lines.append((0, 0, fee_line))
@@ -294,6 +300,11 @@ class AccountJournal(models.Model):
         api_endpoint = "https://api.mollie.com/v2/settlements"
         if limit:
             api_endpoint += '?limit=' + str(limit)
+        return self._mollie_api_call(api_endpoint)
+    
+    def _api_get_payment(self, payment_id):
+        """ Fetch payment data from mollie api"""
+        api_endpoint = "https://api.mollie.com/v2/payments/%s" % payment_id
         return self._mollie_api_call(api_endpoint)
 
     def _api_get_settlement_payments(self, settlement_id):
