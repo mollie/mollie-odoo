@@ -38,4 +38,18 @@
         </field>
     </record>
 
+    <record id="transaction_form_inherit_mollie" model="ir.ui.view">
+        <field name="name">payment.transaction.form.inherit.mollie</field>
+        <field name="model">payment.transaction</field>
+        <field name="inherit_id" ref="payment.transaction_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <field name="is_processed" invisible="1"/>
+                <button name="mollie_manual_payment_validation" type="object" string="Process Mollie Transection" class="oe_highlight"
+                    attrs="{'invisible': ['|', '|', ('is_processed', '=', True), ('provider', '!=', 'mollie'), ('state', 'not in', ['draft', 'pending'])]}">
+                </button>
+            </xpath>
+        </field>
+    </record>
+
 </odoo>
