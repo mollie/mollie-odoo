@@ -112,3 +112,15 @@ class PaymentTransaction(models.Model):
             if method and method.journal_id:
                 add_payment_vals['journal_id'] = method.journal_id.id
         return super()._create_payment(add_payment_vals=add_payment_vals)
+
+    def mollie_manual_payment_validation(self):
+        """ This method helps when you want to process
+            delayed transections manually. This method
+            will be called from transection form view.
+        """
+        self.ensure_one()
+        if self.state not in ['done', 'cancel']:
+            data = self.acquirer_id._mollie_get_payment_data(self.acquirer_reference)
+            self.form_feedback(data, "mollie")
+        if self.state == 'done' and not self.is_processed:
+            self._post_process_after_done()
