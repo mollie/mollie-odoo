@@ -108,9 +108,9 @@ class PaymentAcquirerMollie(models.Model):
 
         # Hide methods if order amount is higher then method limits
         if order and order._name == 'sale.order':
-            methods = methods.filtered(lambda m: order.amount_total >= m.min_amount and (order.amount_total <= m.max_amount or not m.max_amount))
+            methods = methods.filtered(lambda m: order.amount_total >= m.min_amount and (order.amount_total <= m.max_amount or not m.max_amount)).sorted(key=lambda m: m.sequence)
         if order and order._name == 'account.invoice':
-            methods = methods.filtered(lambda m: order.residual >= m.min_amount and (order.residual <= m.max_amount or not m.max_amount))
+            methods = methods.filtered(lambda m: order.residual >= m.min_amount and (order.residual <= m.max_amount or not m.max_amount)).sorted(key=lambda m: m.sequence)
 
         return methods
 
