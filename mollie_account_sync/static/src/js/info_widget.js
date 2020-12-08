@@ -17,7 +17,20 @@ odoo.define('drgl.payment_info.widget', function (require) {
 
         _renderReadonly: function () {
             this._super();
-            this.$el.append('<button type="button" class="btn btn-sm fa fa-info d_more_info" title="Info"></button>');
+            if (this.value) {
+                var data = JSON.parse(this.value);
+                var content = '<button type="button" class="btn btn-sm fa fa-info d_more_info" title="Info"></button>';
+                if (data.MollieType == "Payment") {
+                    content = _.str.sprintf('<button type="button" style="background-color: #d4e9de; " class="btn btn-sm py-0 %s d_more_info" title="Info"><i class="fa fa-info-circle"></i> %s</button>', 'text-success', data.MollieType);
+                } else if (data.MollieType == "Refund") {
+                    content = _.str.sprintf('<button type="button" style="background-color: #eedada; " class="btn btn-sm py-0 %s d_more_info" title="Info"><i class="fa fa-info-circle"></i> %s</button>', 'text-danger', data.MollieType);
+                } else if (data.MollieType == "Capture") {
+                    content = _.str.sprintf('<button type="button" style="color: #2196F3 !important; background-color: #d7e9fd;" class="btn btn-sm py-0 %s d_more_info" title="Info"><i class="fa fa-info-circle"></i> %s</button>', 'text-info', data.MollieType);
+                } else if (data.MollieType == "Chargeback") {
+                    content = _.str.sprintf('<button type="button" style="background-color: #eedada;" class="btn btn-sm py-0 %s d_more_info" title="Info"><i class="fa fa-info-circle"></i> %s</button>', 'text-danger', data.MollieType);
+                }
+                this.$el.append(content);
+            }
         },
         _onClickInfo: function (ev) {
             ev.stopPropagation();
