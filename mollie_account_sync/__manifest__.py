@@ -2,7 +2,7 @@
 
 {
     'name': 'Mollie Settlement Sync',
-    'version': '13.0.1.0',
+    'version': '14.0.1.1',
     'description': '',
     'summary': 'This module settlements from mollie',
     'author': 'Mollie',
@@ -16,7 +16,8 @@
         'views/account_journal.xml',
         'views/bank_statement.xml',
         'views/templates.xml',
-        'wizard/mollie_init_views.xml'
+        'wizard/mollie_init_views.xml',
+        'security/ir.model.access.csv'
     ],
     "qweb": ['static/src/xml/*.xml'],
 }

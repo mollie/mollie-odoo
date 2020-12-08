@@ -7,13 +7,12 @@
         <field name="model">account.bank.statement</field>
         <field name="inherit_id" ref="account.view_bank_statement_form"/>
         <field name="arch" type="xml">
-            <field name="accounting_date" position="after">
+            <field name="date" position="after">
                 <field name="journal_sync_type" invisible="1"/>
                 <field name="mollie_internal_transfer_id" redonly="1" attrs="{'invisible': [('journal_sync_type', '!=', 'mollie_sync')]}"/>
             </field>
-            <xpath expr="//field[@name='line_ids']/tree/field[@name='bank_account_id']" position="after">
-                <field name="mollie_json_info" widget="payment_info" string="Mollie Info" attrs="{'column_invisible': [('parent.journal_sync_type', '!=', 'mollie_sync')]}"/>
-                <field name="journal_id" invisible="1"/>
+            <xpath expr="//field[@name='line_ids']/tree/field[@name='amount']" position="after">
+                <field name="mollie_json_info" widget="payment_info" string=" " attrs="{'column_invisible': [('parent.journal_sync_type', '!=', 'mollie_sync')]}"/>
             </xpath>
         </field>
     </record>

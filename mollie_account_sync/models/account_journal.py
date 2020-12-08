@@ -22,20 +22,6 @@ class AccountJournal(models.Model):
     mollie_api_key = fields.Char()
     mollie_test = fields.Boolean()
     mollie_last_sync = fields.Datetime()
-    mollie_init_done = fields.Boolean()
-    mollie_transfer_id = fields.Many2one('account.journal')
-    need_transfer_count = fields.Integer(compute='_compute_transfer_count')
-
-    def _compute_transfer_count(self):
-        for journal in self:
-            if journal.bank_statements_source == 'mollie_sync':
-                journal.need_transfer_count = self.env['account.payment'].search_count([
-                    ('payment_type', '=', 'transfer'),
-                    ('journal_id', '=', journal.id),
-                    ('state', '=', 'draft')
-                ])
-            else:
-                journal.need_transfer_count = 0
 
     def __get_bank_statements_available_sources(self):
         """ Adding new source for statement """
@@ -116,9 +102,11 @@ class AccountJournal(models.Model):
                 continue
             payment_data = self._api_get_settlement_payments(settlement['id'])
             refund_data = self._api_get_settlement_refunds(settlement['id'])
-            self._create_bank_statements(payment_data, refund_data, settlement)
+            capture_data = self._api_get_settlement_captures(settlement['id'])
+            chargeback_data = self._api_get_settlement_chargebacks(settlement['id'])
+            self._create_bank_statements(payment_data, refund_data, capture_data, chargeback_data, settlement)
 
-    def _create_bank_statements(self, payment_data, refund_data, settlement_data, return_lines=False):
+    def _create_bank_statements(self, payment_data, refund_data, capture_data, chargeback_data, settlement_data, return_lines=False):
         """ Create new bank statement based on settlement, settlement payments and settlement refunds.
 
             This method also try to guess the partner for statement.
@@ -127,163 +115,94 @@ class AccountJournal(models.Model):
             :param refund_data: list of refund data for given settlement.
             :param settlement_data: settlement information.
         """
-        mollie_acquirer = self.env.ref('payment_mollie_official.payment_acquirer_mollie')
         BankStatement = self.env['account.bank.statement']
         statement_lines = []
+
         for payment in payment_data:
             if not payment.get('settlementAmount'):
                 continue
-            json_info = {}
             statement_line = {
                 'date': self._format_mollie_date(payment['createdAt']),
-                'name': self._generate_payment_ref(payment['metadata']) or payment['description'],
-                'ref': payment['description'],
+                'payment_ref': self._generate_payment_ref(payment['metadata']) or payment['description'],
                 'amount': float(payment['settlementAmount']['value']),
                 'mollie_transaction_id': payment['id'],
-
             }
-            if payment.get('metadata'):
-                json_info.update(payment['metadata'])
-            if payment.get('orderId'):
-                json_info['mollie_order_id'] = payment.get('orderId')
-            if len(json_info.keys()):
-                statement_line['mollie_json_info'] = json.dumps(json_info)
-
-            transaction = self.env['payment.transaction'].search([('acquirer_reference', '=', payment['id']), ('acquirer_id', '=', mollie_acquirer.id)], limit=1)
-            if transaction and transaction.partner_id:
-                statement_line['partner_id'] = transaction.partner_id.id
+            statement_line.update(self._parse_payment_metadata(payment, 'Payment'))
             statement_lines.append((0, 0, statement_line))
+
         for refund in refund_data:
             if not refund.get('settlementAmount'):
                 continue
             statement_line = {
                 'date': self._format_mollie_date(refund['createdAt']),
-                'name': self._generate_payment_ref(refund['metadata']) or refund['description'],
-                'ref': refund['description'],
+                'payment_ref': self._generate_payment_ref(refund.get('metadata')) or refund.get('description') or ('Refund for %s' % refund['id']),
                 'amount': float(refund['settlementAmount']['value']),
                 'mollie_transaction_id': refund['id'],
             }
+            if refund.get('_embedded') and refund['_embedded'].get('payment'):
+                statement_line.update(self._parse_payment_metadata(refund['_embedded']['payment'], 'Refund'))
             statement_lines.append((0, 0, statement_line))
         for fee_line in self.get_payment_fees_lines(settlement_data)['lines']:
             statement_lines.append((0, 0, fee_line))
+
+        for capture in capture_data:
+            if not capture.get('settlementAmount'):
+                continue
+            statement_line = {
+                'date': self._format_mollie_date(capture['createdAt']),
+                'payment_ref': capture.get('description') or "Klarna capture for Payment Ref: %s" % capture.get('paymentId'),
+                'amount': float(capture['settlementAmount']['value']),
+                'mollie_transaction_id': capture['id'],
+            }
+            if capture.get('_embedded') and capture['_embedded'].get('payment'):
+                statement_line.update(self._parse_payment_metadata(capture['_embedded']['payment'], 'Capture'))
+            statement_lines.append((0, 0, statement_line))
+
+        for chargeback in chargeback_data:
+            if not chargeback.get('settlementAmount'):
+                continue
+            statement_line = {
+                'date': self._format_mollie_date(chargeback['createdAt']),
+                'payment_ref': chargeback.get('description') or "Chargeback for Payment Ref: %s" % chargeback.get('paymentId'),
+                'amount': float(chargeback['settlementAmount']['value']),
+                'mollie_transaction_id': chargeback['id'],
+            }
+            if chargeback.get('_embedded') and chargeback['_embedded'].get('payment'):
+                statement_line.update(self._parse_payment_metadata(chargeback['_embedded']['payment'], 'Chargeback'))
+            statement_lines.append((0, 0, statement_line))
+
+        # Add full statement amount as minus so statement difference is 0
+        # and end user will need to internal transfer same account
+        statement_lines.append((0, 0, {
+            'date': self._format_mollie_date(settlement_data['createdAt']),
+            'payment_ref': 'MOLLIE PAYMENTS REF %s (for Internal Transfer)' % (settlement_data['reference']),
+            'amount': - float(settlement_data['amount']['value']),
+        }))
 
         statement_vals = {
             'name': settlement_data['reference'],
             'date': self._format_mollie_date(settlement_data['createdAt']),
             'journal_id': self.id,
             'line_ids': statement_lines,
-            'balance_start': self.env["account.bank.statement"]._get_opening_balance(self.id),
             'mollie_settlement_id': settlement_data['id'],
         }
 
-        if self.mollie_transfer_id:
-            manual_method = self.outbound_payment_method_ids.filtered(lambda m: m.code == 'manual')
-            if not manual_method:
-                raise UserError(_('Please enable Outgoing Payments mehtod "Manual" for this journal.'))
-            manual_method = manual_method[0]
-
-            statement_lines.append((0, 0, {
-                'date': self._format_mollie_date(settlement_data['createdAt']),
-                'name': 'MOLLIE PAYMENTS REF %s (for Internal Transfer)' % (settlement_data['reference']),
-                'ref': 'MOLLIE PAYMENTS REF %s' % (settlement_data['reference']),
-                'amount': - float(settlement_data['amount']['value']),
-            }))
-
-            transfer_id = self.env['account.payment'].create({
-                'name': 'Internal Transfer Mollie ref: %s' % (settlement_data['reference']),
-                'payment_type': 'transfer',
-                'amount': float(settlement_data['amount']['value']),
-                'journal_id': self.id,
-                'destination_journal_id': self.mollie_transfer_id.id,
-                'communication': 'Internal Transfer Mollie ref: %s' % (settlement_data['reference']),
-                'payment_method_id': manual_method.id
-            })
-            statement_vals['mollie_internal_transfer_id'] = transfer_id.id
-        if return_lines:
-            return statement_vals
         statement = BankStatement.create(statement_vals)
         statement.balance_end_real = statement.balance_end
 
-        # FIX Rounding issues
+        # This FIXes Rounding issues
         diff = statement.balance_start - statement.balance_end_real
         if diff >= -0.05 and diff <= 0.05 and diff != 0:
             line_data = [(4, l.id, 0) for l in statement.line_ids]
             last_line = statement.line_ids[-1]
             line_data.append((0, 0, {
                 'date': last_line.date,
-                'name': 'Mollie rounding difference',
+                'payment_ref': 'Mollie rounding difference',
                 'ref': 'Mollie rounding difference',
                 'amount': diff
             }))
             statement.line_ids = line_data
             statement.balance_end_real = statement.balance_end
-
-    def recheck_all_statements(self):
-        '''Just to migrate old data to new one'''
-        settlements_data = self._api_get_settlements(limit=25)
-        if settlements_data['count'] == 0:
-            return []
-        settlement_dict = {}
-        for settlement in settlements_data['_embedded']['settlements']:
-            settlement_dict[settlement['id']] = settlement
-        statements = self.env['account.bank.statement'].search([('journal_id', '=', self.id)]).sorted('date')
-        previous_statement_amount = 0
-        for stat in statements:
-            if stat.line_ids.filtered(lambda s: (s.name).startswith('Fees ')):
-                stat.balance_start = previous_statement_amount
-                stat.balance_end_real = stat.balance_end
-                previous_statement_amount = stat.balance_end_real
-                continue
-            settelement_data = settlement_dict.get(stat.mollie_settlement_id)
-            if settelement_data:
-                payment_data = self._api_get_settlement_payments(settelement_data['id'])
-                refund_data = self._api_get_settlement_refunds(settelement_data['id'])
-                mollie_transaction_ids = []
-                new_lines = []
-
-                # USD fix
-                usd_lines = []
-                for payment in payment_data:
-                    if payment.get('amount', {}).get('currency') == 'USD':
-                        usd_lines.append(payment['id'])
-
-                for line in self._create_bank_statements(payment_data, refund_data, settelement_data, return_lines=True).get('line_ids', []):
-                    if line[2].get('mollie_transaction_id') and line[2].get('mollie_transaction_id') not in usd_lines:
-                        mollie_transaction_ids.append(line[2]['mollie_transaction_id'])
-                    else:
-                        new_lines.append(line)
-
-                valid_lines = []
-                for s_line in stat.line_ids:
-                    if s_line.mollie_transaction_id and s_line.mollie_transaction_id not in mollie_transaction_ids:
-                        if s_line.state != 'confirm' and s_line.journal_entry_ids:
-                            s_line.button_cancel_reconciliation()
-                        s_line.unlink()
-                    else:
-                        valid_lines.append(s_line.id)
-
-                line_data = [(4, l, 0) for l in valid_lines]
-                line_data.extend(new_lines)
-                stat.line_ids = line_data
-                stat.balance_start = previous_statement_amount
-                stat.balance_end_real = stat.balance_end
-
-                # FIX Rounding issues
-                diff = stat.balance_start - stat.balance_end_real
-                if diff >= -0.05 and diff <= 0.05 and diff != 0:
-                    line_data = [(4, l, 0) for l in stat.line_ids.ids]
-                    last_line = stat.line_ids[-1]
-                    line_data.append((0, 0, {
-                        'date': last_line.date,
-                        'name': 'Mollie rounding difference',
-                        'ref': 'Mollie rounding difference',
-                        'amount': diff
-                    }))
-                    stat.line_ids = line_data
-                    stat.balance_start = previous_statement_amount
-                    stat.balance_end_real = stat.balance_end
-
-            previous_statement_amount = stat.balance_end_real
 
     # =================
     # API CALLS METHODS
@@ -296,9 +215,11 @@ class AccountJournal(models.Model):
             api_endpoint += '?limit=' + str(limit)
         return self._mollie_api_call(api_endpoint)
 
+    # TODO: settlement payments, refund, capture, and chargeback can merged in one method
+    # Fetch data for settlement payment
     def _api_get_settlement_payments(self, settlement_id):
         """ Fetch settlements data from mollie api"""
-        api_endpoint = "https://api.mollie.com/v2/settlements/%s/payments" % settlement_id
+        api_endpoint = "https://api.mollie.com/v2/settlements/%s/payments?limit=250" % settlement_id
         payment_data = self._api_call_payments_recursive(api_endpoint)
         return payment_data
 
@@ -312,9 +233,10 @@ class AccountJournal(models.Model):
             payments.extend(next_payments)
         return payments
 
+    # Fetch data for settlement refund
     def _api_get_settlement_refunds(self, settlement_id):
         """ Fetch settlements data from mollie api"""
-        api_endpoint = "https://api.mollie.com/v2/settlements/%s/refunds" % settlement_id
+        api_endpoint = "https://api.mollie.com/v2/settlements/%s/refunds?embed=payment&limit=250" % settlement_id
         refund_data = self._api_call_refunds_recursive(api_endpoint)
         return refund_data
 
@@ -327,6 +249,40 @@ class AccountJournal(models.Model):
             next_refunds = self._api_call_refunds_recursive(refund_data["_links"]['next']['href'])
             refunds.extend(next_refunds)
         return refunds
+
+    # Fetch data for settlement capture
+    def _api_get_settlement_captures(self, settlement_id):
+        """ Fetch settlements data from mollie api"""
+        api_endpoint = "https://api.mollie.com/v2/settlements/%s/captures?embed=payment" % settlement_id
+        capture_data = self._api_call_captures_recursive(api_endpoint)
+        return capture_data
+
+    def _api_call_captures_recursive(self, api_endpoint):
+        captures = []
+        capture_data = self._mollie_api_call(api_endpoint)
+        if capture_data and capture_data['count'] > 0:
+            captures.extend(capture_data['_embedded']['captures'])
+        if capture_data["_links"]['next']:
+            next_captures = self._api_call_captures_recursive(capture_data["_links"]['next']['href'])
+            captures.extend(next_captures)
+        return captures
+
+    # Fetch data for settlement chargeback
+    def _api_get_settlement_chargebacks(self, settlement_id):
+        """ Fetch settlements data from mollie api"""
+        api_endpoint = "https://api.mollie.com/v2/settlements/%s/chargebacks?embed=payment&limit=250" % settlement_id
+        capture_data = self._api_call_chargebacks_recursive(api_endpoint)
+        return capture_data
+
+    def _api_call_chargebacks_recursive(self, api_endpoint):
+        chargebacks = []
+        chargeback_data = self._mollie_api_call(api_endpoint)
+        if chargeback_data and chargeback_data['count'] > 0:
+            chargebacks.extend(chargeback_data['_embedded']['chargebacks'])
+        if chargeback_data["_links"]['next']:
+            next_chargebacks = self._api_call_chargebacks_recursive(chargeback_data["_links"]['next']['href'])
+            chargebacks.extend(next_chargebacks)
+        return chargebacks
 
     def _api_call_get_order_meta(self, order_id):
         api_endpoint = "https://api.mollie.com/v2/orders/%s" % order_id
@@ -399,8 +355,8 @@ class AccountJournal(models.Model):
                     amount = - float(fee['amountGross']['value'])
                     lines.append({
                         'date': '%s-%s-01' % (year, month),
-                        'name': line_name,
-                        'ref': line_name,
+                        'payment_ref': line_name,
+                        # 'ref': line_name,
                         'amount': l_round(amount)
                     })
                     total += l_round(amount)
@@ -408,6 +364,29 @@ class AccountJournal(models.Model):
             'amount': total,
             'lines': lines
         }
+
+    def _parse_payment_metadata(self, payment, tx_type):
+
+        json_info = {}
+        mollie_acquirer = self.env.ref('payment_mollie_official.payment_acquirer_mollie', raise_if_not_found=False)
+        statement_line_data = {}
+
+        if payment.get('metadata'):
+            json_info.update(payment['metadata'])
+        if payment.get('orderId'):
+            json_info['mollie_order_id'] = payment.get('orderId')
+        if len(json_info.keys()):
+            json_info['MollieType'] = tx_type
+            statement_line_data['mollie_json_info'] = json.dumps(json_info)
+
+        domain = [('acquirer_reference', '=', payment['id'])]
+        if mollie_acquirer:
+            domain += [('acquirer_id', '=', mollie_acquirer.id)]
+        transaction = self.env['payment.transaction'].search(domain, limit=1)
+        if transaction and transaction.partner_id:
+            statement_line_data['partner_id'] = transaction.partner_id.id
+
+        return statement_line_data
 
 
 class AccountBankStatement(models.Model):

@@ -34,7 +34,7 @@
                     <div class="my-5" attrs="{'invisible': [('settlement_lines', '!=', [])]}">
 
                         <div class="text-center text-beta">
-                            <span class="fa fa-exclamation-triangle fa-5x"/>
+                            <span class="fa fa-exclamation-triangle fa-5x" title="Warning"/>
                         </div>
                         <h1 class="text-center">
                             There are no new statement to sync.
