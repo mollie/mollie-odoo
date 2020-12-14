@@ -19,4 +19,8 @@
         'wizard/mollie_init_views.xml'
     ],
     "qweb": ['static/src/xml/*.xml'],
+
+    'images': [
+        'static/description/cover.png',
+    ],
 }
