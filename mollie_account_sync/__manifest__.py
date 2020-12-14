@@ -4,7 +4,7 @@
     'name': 'Mollie Settlement Sync',
     'version': '14.0.1.1',
     'description': '',
-    'summary': 'This module settlements from mollie',
+    'summary': 'This module sync settlements from mollie',
     'author': 'Mollie',
     'maintainer': 'Applix',
     'license': 'LGPL-3',
@@ -20,4 +20,8 @@
         'security/ir.model.access.csv'
     ],
     "qweb": ['static/src/xml/*.xml'],
+
+    'images': [
+        'static/description/cover.png',
+    ],
 }
