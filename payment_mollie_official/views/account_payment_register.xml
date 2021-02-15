@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="account_payment_register_form_view_mollie" model="ir.ui.view">
+        <field name="name">account.payment.register.form.view.mollie</field>
+        <field name="model">account.payment.register</field>
+        <field name="inherit_id" ref="account.view_account_payment_register_form"/>
+        <field name="arch" type="xml">
+            <field name="company_currency_id" position="after">
+                <field name="is_mollie_refund" invisible="1"/>
+                <field name="mollie_transecion_id" invisible="1"/>
+                <div class="alert alert-warning" attrs="{'invisible': [('is_mollie_refund', '=', False)]}">
+                    <b> Note: </b> Creating payment from here will refund the amount from mollie too.
+                    <div class="float-right">
+                        Maximum Amount you can refund is <b><field name="max_mollie_amount" readonly="1" /> </b>
+                    </div>
+                </div>
+            </field>
+        </field>
+    </record>
+
+    <record id="account_payment_form_view_mollie" model="ir.ui.view">
+        <field name="name">account.payment.form.view.mollie</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_form"/>
+        <field name="arch" type="xml">
+            <field name="partner_bank_id" position="after">
+                <field name="mollie_refund_reference" attrs="{'invisible': [('mollie_refund_reference', '=', False)]}"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>

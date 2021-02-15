@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <function model="payment.acquirer" name="_mollie_update_hook"/>
+
+</odoo>
