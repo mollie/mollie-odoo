@@ -2,7 +2,7 @@
 
 {
     'name': 'Mollie Payments',
-    'version': '13.0.1.3',
+    'version': '13.0.1.4',
     'category': 'eCommerce',
     'license': 'LGPL-3',
     'author': 'Mollie',
@@ -27,7 +27,10 @@
         'views/payment_views.xml',
         'views/payment_mollie_templates.xml',
         'views/account_move_view.xml',
+        'views/product_views.xml',
         'data/payment_acquirer_data.xml',
+        'data/update_hook.xml',
+        'views/account_payment.xml',
     ],
 
     'images': [

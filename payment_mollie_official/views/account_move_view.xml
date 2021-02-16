@@ -9,9 +9,8 @@
             <header position="inside">
                 <field name="valid_for_mollie_refund" invisible="1"/>
                 <button string="Mollie Refund"
-                    confirm="Are you sure you want to refund? (This will refund the amount from mollie too)"
-                    name="mollie_process_refund" type="object"
-                    attrs="{'invisible' : ['|', ('valid_for_mollie_refund', '=', False), ('mollie_refund_reference', '!=' ,False)]}"/>
+                    name="action_invoice_register_refund_payment" type="object"
+                    attrs="{'invisible' : [('valid_for_mollie_refund', '=', False)]}"/>
             </header>
             <field name="journal_id" position="after">
                 <field name="mollie_refund_reference" attrs="{'invisible' : [('mollie_refund_reference', '=' ,False)]}" groups="base.group_no_one"/>
