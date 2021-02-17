@@ -125,7 +125,7 @@ class TxMollie(models.Model):
 
         tx = self._mollie_form_get_tx_from_data(data)
 
-        transactionId = tx['acquirer_reference']
+        transactionId = tx.acquirer_reference
 
         _logger.info('Validated transfer payment for tx %s: set as pending' % (reference))
         mollie_api_key = acquirer._get_mollie_api_keys(acquirer.environment)['mollie_api_key']
@@ -149,20 +149,20 @@ class TxMollie(models.Model):
         data_list = mollie_response["data"]
         data = {}
         status = 'undefined'
-        mollie_reference = ''
-        if len(data_list) > 0:
-            data = data_list[0]
+        for x in data_list:
+            if isinstance(x, dict) and x.get('id', False) and x['id'] == \
+                    transactionId:
+                data = x
+                break
 
         if "status" in data:
             status = data["status"]
-        if "id" in data:
-            mollie_reference = data["id"]
 
         if status == "paid":
             vals = {
                 'state': 'done',
                 'date_validate':  fields.datetime.strptime(data["paidDatetime"].replace(".0Z", ""), "%Y-%m-%dT%H:%M:%S"),
-                'acquirer_reference': mollie_reference,
+                'acquirer_reference': transactionId,
             }
 
             self.write(vals)
@@ -171,22 +171,18 @@ class TxMollie(models.Model):
         elif status in ["cancelled", "expired", "failed"]:
             self.write({
                 'state': 'cancel',
-                'acquirer_reference': mollie_reference,
+                'acquirer_reference': transactionId,
             })
             return False
         elif status in ["open", "pending"]:
             self.write({
                 'state': 'pending',
-                'acquirer_reference': mollie_reference,
+                'acquirer_reference': transactionId,
             })
             return False
         else:
             self.write({
                 'state': 'error',
-                'acquirer_reference': mollie_reference,
+                'acquirer_reference': transactionId,
             })
             return False
-
-
-
-
