@@ -131,6 +131,10 @@ class PaymentAcquirerMollie(models.Model):
         if remove_voucher_method:
             methods = methods.filtered(lambda m: m.method_id_code != 'voucher')
 
+        # Hide only order type methods from transection links
+        if request and request.httprequest.path == '/website_payment/pay':
+            methods = methods.filtered(lambda m: m.supports_payment_api == True)
+
         return methods
 
     def mollie_form_generate_values(self, tx_values):
@@ -269,7 +273,7 @@ class PaymentAcquirerMollie(models.Model):
 
         # Add if transection has issuer
         if transaction.mollie_payment_issuer:
-            payment_data['payment'] = {'issuer': transaction.mollie_payment_issuer}
+            payment_data['issuer'] = transaction.mollie_payment_issuer
 
         result = self._api_mollie_create_payment(payment_data)
 
