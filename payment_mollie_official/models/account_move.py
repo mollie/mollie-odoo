@@ -70,14 +70,16 @@ class AccountMove(models.Model):
     def action_invoice_register_refund_payment(self):
         result = self.action_invoice_register_payment()
         payment_record, mollie_transactions = self._get_mollie_payment_data_for_refund()
-        if payment_record:
+
+        # We will not get `amountRemaining` key if payment is not paid (only authorized)
+        if payment_record and payment_record.get('amountRemaining'):
             # TO-DO: check the case where amount is refunded in another currency or raise warning
             remaining_amount = float(payment_record['amountRemaining']['value'])
             if remaining_amount:
                 context = {
                     'default_journal_id': mollie_transactions.payment_id.journal_id.id,
                     'default_payment_method_id': mollie_transactions.payment_id.payment_method_id.id,
-                    'default_amount': remaining_amount,
+                    'default_amount': min(self.amount_residual, remaining_amount),
                     'default_is_mollie_refund': True,
                     'default_max_mollie_amount': remaining_amount,
                     'default_mollie_transecion_id': mollie_transactions.id
