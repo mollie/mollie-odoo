@@ -55,7 +55,7 @@
         <h1 style="font-weight: bold;">Inline Issuer Selector</h1>
         <p class="lead pr-4" style="color: #000;font-size: 20px;font-weight: 300;font-family: lato;">
             Inline issuer selector shows available issuer in Odoo itself.
-            It reduces one step at payment portal and make checkout faster.
+            It reduces one step at payment portal and makes checkout faster.
         </p>
     </div>
     <div class="col-md-6">
@@ -116,42 +116,42 @@
     <div class="col-md-6 py-3">
         <div class="card shadow">
             <div class="card-body text-center">
-                <i class="fa fa-hand-pointer-o mb-2" style="
+                <i class="fa fa-dashboard mb-2" style="
                     color: white;
                     background-color: #0076fe;
                     padding: 12px;
                     border-radius: 25px;
                     font-size: 22px;
                 "></i>
-                <h5> Can be tested with Test mode </h5>
+                <h5> Real-time data and insights from your free Dashboard </h5>
             </div>
         </div>
     </div>
     <div class="col-md-6 py-3">
         <div class="card shadow">
             <div class="card-body text-center">
-                <i class="fa fa-anchor mb-2" style="
+                <i class="fa fa-reply-all mb-2" style="
                         color: white;
                         background-color: #0076fe;
                         padding: 12px;
                         border-radius: 25px;
                         font-size: 22px;
                     "></i>
-                <h5> Webhooks for delayed payments. </h5>
+                <h5> Convenient tools for refunds and chargebacks. </h5>
             </div>
         </div>
     </div>
     <div class="col-md-6 py-3">
         <div class="card shadow">
             <div class="card-body text-center">
-                <i class="fa fa-commenting-o mb-2" style="
+                <i class="fa fa-life-ring mb-2" style="
                             color: white;
                             background-color: #0076fe;
                             padding: 12px;
                             border-radius: 25px;
                             font-size: 22px;
                         "></i>
-                <h5> Clear alert messages for customer. </h5>
+                <h5> In-house support teams, extensive documentation. </h5>
             </div>
         </div>
     </div>
@@ -170,7 +170,7 @@
 <h3>
     <span class="badge badge-pill mr-2"
         style="background-color: #0077ff;color: #fff;padding: 5px 17px;font-size: 14px;"> Step 2 </span><span
-        style="display: inline-block;font-size: 19px;"> Install python dependencies (it is listed in requirements.txt file in module) </span>
+        style="display: inline-block;font-size: 19px;"> Install python dependencies (it is listed in requirements.txt file in module). </span>
 </h3>
 <span style="background-color: #424242;color: white;padding: 8px 28px;display: inline-block;margin-left: 85px;border-radius: 6px;margin-bottom: 16px;">
     pip3 install -r requirements.txt
@@ -189,14 +189,14 @@
         style="background-color: #0077ff;color: #fff;padding: 5px 17px;font-size: 14px;"> Step 4 </span><span
         style="display: inline-block;font-size: 19px;"> Open 
             <span style="color:#0077ff;"> Website > Configuration > Payment Acquirers </span>
-            And open acquirers
+            and open acquirers
         </span>
 </h3>
 
 <h3>
     <span class="badge badge-pill mr-2"
         style="background-color: #0077ff;color: #fff;padding: 5px 17px;font-size: 14px;"> Step 5 </span><span
-        style="display: inline-block;font-size: 19px;"> Fill the API keys and credentials. (You will find these keys from your mollie dashboard.)
+        style="display: inline-block;font-size: 19px;"> Fill the API keys and credentials. (You will find these keys from your Mollie dashboard.)
     </span>
 </h3>
 <img class="img img-fluid shadow" src="img/drgl-enter-keys.png"
@@ -222,6 +222,23 @@
 <h1 style="color: #000;font-weight: bold;/* font-size: 50px; */" class="mt-5 text-center mb-0">Changelog</h1>
 <div class="text-center text-muted" style="font-weight:400; margin-bottom:18px">
     <span style="width:73px;height: 10px;display:inline-block;border-radius: 4px;background-color: #0077ff;"> </span>
+</div>
+
+<div class="card mx-auto w-md-75">
+    <div class="card-header bg-200">
+        <h4 class="m-0">v12.0.1.4</h4>
+    </div>
+    <div class="card-body">
+        <div> <b class="text-success"> NEW </b> Added vouchers support. </div>
+        <div> <b class="text-success"> NEW </b> Configure vouchers categories at products and product categories. </div>
+        <div> <b class="text-success"> NEW </b> Manage mollie refunds via credit notes. </div>
+        <div> <b class="text-success"> NEW </b> Restrict user from over refund. </div>
+        <div> <b class="text-warning"> UPDATE </b> Better management of API fallbacks. </div>
+        <div> <b class="text-warning"> UPDATE </b> Show only payment api type methods for payment links. </div>
+        <div> <b class="text-danger"> FIX </b> Deactivate inghomepay option. </div>
+        <div> <b class="text-danger"> FIX </b> Hide the credit card option if profile is not configured. </div>
+        <div> <b class="text-danger"> FIX </b> Other Minor bug fixes. </div>
+    </div>
 </div>
 
 <div class="card mx-auto w-md-75">

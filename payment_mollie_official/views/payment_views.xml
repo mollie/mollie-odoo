@@ -10,6 +10,9 @@
                     <field name="mollie_api_key_test" attrs="{'required':[ ('provider', '=', 'mollie'), ('environment', '=', 'test')]}" password="True"/>
                     <field name="mollie_api_key_prod" attrs="{'required':[ ('provider', '=', 'mollie'), ('environment', '=', 'enabled')]}" password="True"/>
                     <field name="mollie_profile_id" attrs="{'required':[ ('provider', '=', 'mollie'), ('environment', '=', 'enabled')]}" password="True"/>
+                    <field name="mollie_voucher_enabled" invisible="1"/>
+                    <label string=" " for="mollie_profile_id"></label>
+                    <small class="text-muted oe_edit_only"> Credit card option will not be displayed without profile ID. </small>
                 </group>
             </xpath>
             <page name="acquirer_credentials" position="after">
@@ -34,6 +37,14 @@
                         <span><i class="fa fa-refresh"></i> Sync payment methods </span>
                     </button>
                 </page>
+                <page string="Voucher Configuration" attrs="{'invisible': [('mollie_voucher_enabled', '=', False)]}">
+                    <field name="mollie_voucher_ids">
+                        <tree editable="bottom">
+                            <field name="category_id"/>
+                            <field name="mollie_voucher_category"/>
+                        </tree>
+                    </field>
+                </page>
             </page>
         </field>
     </record>
@@ -49,6 +60,9 @@
                     attrs="{'invisible': ['|', '|', ('is_processed', '=', True), ('provider', '!=', 'mollie'), ('state', 'not in', ['draft', 'pending'])]}">
                 </button>
             </xpath>
+            <field name="payment_id" position="after">
+                <field name="mollie_reminder_payment_id" attrs="{'invisible': [('mollie_reminder_payment_id', '=', False)]}"/>
+            </field>
         </field>
     </record>
 

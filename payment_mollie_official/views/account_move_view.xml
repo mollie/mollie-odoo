@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="account_invoice_form_view_mollie" model="ir.ui.view">
+        <field name="name">account.invoice.form.view.mollie</field>
+        <field name="model">account.invoice</field>
+        <field name="inherit_id" ref="account.invoice_form"/>
+        <field name="arch" type="xml">
+            <header position="inside">
+                <field name="valid_for_mollie_refund" invisible="1"/>
+                <button string="Mollie Refund"
+                    name="action_invoice_register_refund_payment" type="object"
+                    attrs="{'invisible' : [('valid_for_mollie_refund', '=', False)]}"/>
+            </header>
+            <field name="user_id" position="after">
+                <field name="mollie_refund_reference" attrs="{'invisible' : [('mollie_refund_reference', '=' ,False)]}" groups="base.group_no_one"/>
+                <span attrs="{'invisible' : [('mollie_refund_reference', '=' ,False)]}"> </span>
+                <span attrs="{'invisible' : [('mollie_refund_reference', '=' ,False)]}" class="badge badge-success"> <span class="fa fa-check"/> Amount refunded in mollie </span>
+            </field>
+        </field>
+    </record>
+
+</odoo>
