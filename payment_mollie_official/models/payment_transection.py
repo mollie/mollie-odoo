@@ -3,8 +3,9 @@
 import logging
 import pytz
 import dateutil.parser
+from collections import defaultdict
 
-from odoo import http
+from odoo import http, tools
 from odoo.http import request
 from odoo.exceptions import ValidationError
 from odoo.tools import float_is_zero, float_compare
@@ -20,6 +21,7 @@ class PaymentTransaction(models.Model):
     mollie_payment_token = fields.Char()
     mollie_payment_method = fields.Char()
     mollie_payment_issuer = fields.Char()
+    mollie_reminder_payment_id = fields.Many2one('account.payment', string='Reminder Payment', readonly=True)
 
     def mollie_create(self, vals):
         create_vals = {}
@@ -111,7 +113,58 @@ class PaymentTransaction(models.Model):
             method = self.acquirer_id.mollie_methods_ids.filtered(lambda m: m.method_id_code == self.mollie_payment_method)
             if method and method.journal_id:
                 result['journal_id'] = method.journal_id.id
+
+            # handle special cases for vouchers
+            if method.method_id_code == 'voucher':
+
+                # We need to get payment information because transection with "voucher" method
+                # might paid with multiple payment method. So we need to payment data to check
+                # how payment is done.
+                mollie_payment = self.acquirer_id._mollie_get_payment_data(self.acquirer_reference)
+
+                # When payment is done via order API
+                if mollie_payment.get('resource') == 'order' and mollie_payment.get('_embedded'):
+                    payment_list = mollie_payment['_embedded'].get('payments', [])
+                    if len(payment_list):
+                        mollie_payment = payment_list[0]
+
+                remainder_method_code = mollie_payment['details'].get('remainderMethod')
+                if remainder_method_code:  # if there is remainder amount
+                    primary_journal = method.journal_id or self.acquirer_id.journal_id
+                    remainder_method = self.acquirer_id.mollie_methods_ids.filtered(lambda m: m.method_id_code == remainder_method_code)
+                    remainder_journal = remainder_method.journal_id or self.acquirer_id.journal_id
+
+                    # if both journals are diffrent then we need to split the payment
+                    if primary_journal != remainder_journal:
+                        voucher_amount = sum([float(voucher['amount']['value']) for voucher in mollie_payment['details']['vouchers']])
+                        voucher_amount = tools.float_round(voucher_amount, precision_digits=2)
+
+                        result['amount'] = voucher_amount
+
+                        splited_data = result.copy()
+                        splited_data['amount'] = float(mollie_payment['details']['remainderAmount']['value'])
+                        splited_data['journal_id'] = remainder_journal.id
+                        self._reconcile_splitted_transaction(splited_data)
+
         return result
+
+    def _reconcile_splitted_transaction(self, payment_vals):
+        # Create & Post the payments.
+        payments = defaultdict(lambda: self.env['account.payment'])
+        invoices = self.mapped('invoice_ids').filtered(lambda inv: inv.state == 'draft')
+        invoices.action_invoice_open()
+
+        for trans in self:
+            if trans.payment_id:
+                payments[trans.acquirer_id.company_id.id] += trans.payment_id
+                continue
+
+            payment = self.env['account.payment'].create(payment_vals)
+            trans.mollie_reminder_payment_id = payment
+            payments[trans.acquirer_id.company_id.id] += payment
+
+        for company in payments:
+            payments[company].with_context(force_company=company, company_id=company).post()
 
     def mollie_manual_payment_validation(self):
         """ This method helps when you want to process
