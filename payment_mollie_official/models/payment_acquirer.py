@@ -135,6 +135,12 @@ class PaymentAcquirerMollie(models.Model):
         if request and request.httprequest.path == '/website_payment/pay':
             methods = methods.filtered(lambda m: m.supports_payment_api == True)
 
+        # Hide based on country
+        if request:
+            country_code = request.session.geoip and request.session.geoip.get('country_code') or False
+            if country_code:
+                methods = methods.filtered(lambda m: not m.country_ids or country_code in m.country_ids.mapped('code'))
+
         return methods
 
     def mollie_form_generate_values(self, tx_values):
@@ -313,7 +319,7 @@ class PaymentAcquirerMollie(models.Model):
     # -----------------------------------------------
 
     def _api_mollie_get_client(self):
-        mollie_client = MollieClient()
+        mollie_client = MollieClient(timeout=5)
         # TODO: [PGA] Add partical validation for keys e.g. production key should start from live_
 
         if self.state == 'enabled':
@@ -488,6 +494,12 @@ class PaymentAcquirerMollie(models.Model):
         if line.product_id and 'website_url' in line.product_id._fields:
             base_url = self.get_base_url()
             product_data['productUrl'] = urls.url_join(base_url, line.product_id.website_url)
+
+        # Metadata - used to sync delivery data with shipment API
+        product_data['metadata'] = {
+            'line_id': line.id,
+            'product_id': line.product_id.id
+        }
 
         return product_data
 
