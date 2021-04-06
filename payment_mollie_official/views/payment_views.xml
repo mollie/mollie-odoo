@@ -11,8 +11,13 @@
                     <field name="mollie_api_key_prod" attrs="{'required':[ ('provider', '=', 'mollie'), ('environment', '=', 'enabled')]}" password="True"/>
                     <field name="mollie_profile_id" attrs="{'required':[ ('provider', '=', 'mollie'), ('environment', '=', 'enabled')]}" password="True"/>
                     <field name="mollie_voucher_enabled" invisible="1"/>
-                    <label string=" " for="mollie_profile_id"></label>
-                    <small class="text-muted oe_edit_only"> Credit card option will not be displayed without profile ID. </small>
+                    <label string=" " for="mollie_profile_id"> </label>
+                    <small class="text-muted"> Credit card option will not be displayed without profile ID.
+                        <br/>
+                        <b><a href="https://www.mollie.com/dashboard/developers/api-keys" target="_new"> Get your API keys <i class="fa fa-arrow-right"> </i> </a></b>
+                        <br/>
+                        <br/>
+                    </small>
                 </group>
             </xpath>
             <page name="acquirer_credentials" position="after">
@@ -26,6 +31,7 @@
                             <field name="active" invisible="1"/>
                             <field name="journal_id" />
                             <field name="active_on_shop" widget="boolean_toggle"/>
+                            <field name="country_ids" widget="many2many_tags"/>
                             <field name="min_amount" invisible="1"/>
                             <field name="min_amount" invisible="1"/>
                             <field name="supports_order_api" invisible="1"/>
