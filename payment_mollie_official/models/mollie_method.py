@@ -25,7 +25,9 @@ class MolliePaymentMethod(models.Model):
     min_amount = fields.Float()
     max_amount = fields.Float()
 
-    supports_order_api = fields.Boolean()
-    supports_payment_api = fields.Boolean()
+    supports_order_api = fields.Boolean(string="Supports Order API")
+    supports_payment_api = fields.Boolean(string="Supports Payment API")
 
     payment_issuer_ids = fields.Many2many('mollie.payment.method.issuer', string='Issuers')
+
+    country_ids = fields.Many2many('res.country', string='Country Availability')

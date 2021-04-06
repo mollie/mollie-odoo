@@ -50,7 +50,18 @@ class AccountMove(models.Model):
 
     def _find_valid_mollie_transactions(self):
         self.ensure_one()
-        return self.reversed_entry_id.transaction_ids.filtered(lambda tx: tx.state == 'done' and tx.acquirer_id.provider == 'mollie')
+
+        # CASE 1: For the credit notes generated from invoice
+        transections = self.reversed_entry_id.transaction_ids.filtered(lambda tx: tx.state == 'done' and tx.acquirer_id.provider == 'mollie')
+
+        # CASE 2: For the credit note generated due to returns of delivery
+        # TODO: In this case credit note is generated from Sale order and so both invoice are not linked as reversal move.
+        # this module does not have direct dependencies on the sales module. We are checking fields in move line to check sale order is linked.
+        # and we get transections info from sale order. May be, we can create glue module for this.
+        if not transections and 'sale_line_ids' in  self.invoice_line_ids._fields:
+            transections = self.invoice_line_ids.mapped('sale_line_ids.order_id.transaction_ids')
+
+        return transections
 
     def post(self):
         """ Vouchers might create extra payment record for reminder amount
