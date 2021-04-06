@@ -12,7 +12,12 @@
                     <field name="mollie_profile_id" attrs="{'required':[ ('provider', '=', 'mollie'), ('state', '=', 'enabled')]}" password="True"/>
                     <field name="mollie_voucher_enabled" invisible="1"/>
                     <label string=" " for="mollie_profile_id"> </label>
-                    <small class="text-muted oe_edit_only"> Credit card option will not be displayed without profile ID. </small>
+                    <small class="text-muted"> Credit card option will not be displayed without profile ID.
+                        <br/>
+                        <b><a href="https://www.mollie.com/dashboard/developers/api-keys" target="_new"> Get your API keys <i class="fa fa-arrow-right"> </i> </a></b>
+                        <br/>
+                        <br/>
+                    </small>
                 </group>
             </xpath>
             <page name="acquirer_credentials" position="after">
@@ -21,11 +26,12 @@
                         <tree create="0" editable="bottom">
                             <field name="sequence" widget="handle"/>
                             <field name="name" />
-                            <field name="method_id_code"/>
+                            <field name="method_id_code" optional="hide"/>
                             <field name="payment_icon_ids" widget="many2many_tags"/>
                             <field name="active" invisible="1"/>
                             <field name="journal_id" />
                             <field name="active_on_shop" widget="boolean_toggle"/>
+                            <field name="country_ids" widget="many2many_tags" optional="hide"/>
                             <field name="min_amount" invisible="1"/>
                             <field name="min_amount" invisible="1"/>
                             <field name="supports_order_api" invisible="1"/>
