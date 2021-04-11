@@ -9,6 +9,7 @@ _logger = logging.getLogger(__name__)
 
 class MollieVoucherLines(models.Model):
     _name = 'mollie.voucher.line'
+    _description = 'Mollie Voucher Line'
 
     def _default_voucher_category(self):
         """ We moved field from acquirer to method line.
