@@ -9,6 +9,7 @@ _logger = logging.getLogger(__name__)
 
 class MollieVoucherLines(models.Model):
     _name = 'mollie.voucher.line'
+    _description = 'Mollie Voucher Line'
 
     category_id = fields.Many2one('product.category')
     mollie_voucher_category = fields.Selection(related="category_id.mollie_voucher_category", readonly=False)
