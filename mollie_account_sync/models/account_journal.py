@@ -19,7 +19,7 @@ class AccountJournal(models.Model):
 
     _inherit = "account.journal"
 
-    mollie_api_key = fields.Char()
+    mollie_api_key = fields.Char(string="Mollie Organisation Access token")
     mollie_test = fields.Boolean()
     mollie_last_sync = fields.Datetime()
 

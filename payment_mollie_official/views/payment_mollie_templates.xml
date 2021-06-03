@@ -36,7 +36,7 @@
         <div class="card-body o_payment_acquirer_select" >
             <label>
                 <t t-if="acq.payment_flow == 'form'">
-                    <input type="radio" t-att-data-acquirer-id="acq.id" t-att-data-methodname="payment_method.method_id_code" t-att-data-form-payment="true" t-att-data-provider="acq.provider" name="pm_id" t-attf-value="form_{{acq.id}}" t-att-checked="acquirers_count==1 and pms_count==0 or acquirers[0] == acq"/>
+                    <input type="radio" t-att-data-acquirer-id="acq.id" t-att-data-methodname="payment_method.method_id_code" t-att-data-form-payment="true" t-att-data-provider="acq.provider" name="pm_id" t-attf-value="form_{{acq.id}}" t-att-checked="(acquirers_count==1 and pms_count==0 or acquirers[0] == acq) and payment_method_index == 0"/>
                 </t>
                 <span class="payment_option_name">
                     <t t-esc="payment_method.name"/>
@@ -44,12 +44,8 @@
                             Test Mode
                     </div>
                 </span>
-                <t t-if="acq_extra_fees and acq_extra_fees.get(acq)">
-                    <span class="badge badge-pill badge-secondary"> +                <t t-esc="acq_extra_fees[acq]" t-options='{"widget": "monetary", "display_currency": acq_extra_fees["currency_id"]}'/>
-        Fee </span>
-                </t>
-                <t t-elif="acq.fees_active">
-                    <small class="text-muted">(Some fees may apply)</small>
+                <t t-if="acq_extra_fees and acq_extra_fees.get(acq) and acq_extra_fees[acq].get(payment_method.method_id_code)">
+                    <span class="badge badge-pill badge-secondary"> + <t t-esc="acq_extra_fees[acq][payment_method.method_id_code]" t-options='{"widget": "monetary", "display_currency": acq_extra_fees["currency_id"]}'/> Fee </span>
                 </t>
             </label>
             <ul class="float-right list-inline payment_icon_list">
