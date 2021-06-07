@@ -499,10 +499,10 @@ class PaymentAcquirerMollie(models.Model):
                 'currency': transaction.currency_id.name,
                 'value': "%.2f" % transaction.fees
             },
-            'vatRate': 0,
+            'vatRate': "%.2f" % 0,
             'vatAmount': {
                 'currency': transaction.currency_id.name,
-                'value': 0,
+                'value': "%.2f" % 0,
             }
         }
 
