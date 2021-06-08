@@ -126,7 +126,7 @@ class PaymentAcquirerMollie(models.Model):
             remove_voucher_method = not any(map(lambda p: p._get_mollie_voucher_category(), order.mapped('order_line.product_id.product_tmpl_id')))
         if order and order._name == 'account.invoice':
             methods = methods.filtered(lambda m: order.residual >= m.min_amount and (order.residual <= m.max_amount or not m.max_amount)).sorted(key=lambda m: m.sequence)
-            remove_voucher_method = not any(map(lambda p: p._get_mollie_voucher_category(), order.mapped('order_line.product_id.product_tmpl_id')))
+            remove_voucher_method = not any(map(lambda p: p._get_mollie_voucher_category(), order.mapped('invoice_line_ids.product_id.product_tmpl_id')))
 
         if remove_voucher_method:
             methods = methods.filtered(lambda m: m.method_id_code != 'voucher')
