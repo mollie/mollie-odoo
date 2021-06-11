@@ -35,6 +35,10 @@ class PaymentTransaction(models.Model):
         if request and request.params.get('mollie_issuer'):
             create_vals['mollie_payment_issuer'] = request.params.get('mollie_issuer')
 
+        if vals.get('fees') and isinstance(vals['fees'], dict):
+            payment_method = create_vals.get('mollie_payment_method')
+            vals['fees'] = vals['fees'].get(payment_method, 0)
+
         return create_vals
 
     def _mollie_form_get_tx_from_data(self, data):
@@ -59,7 +63,7 @@ class PaymentTransaction(models.Model):
 
         # Check what transection is with same amount
         amount = data.get('amount')
-        if amount and float_compare(float(amount.get('value', '0.0')), self.amount, 2) != 0:
+        if amount and float_compare(float(amount.get('value', '0.0')), self.amount + self.fees, 2) != 0:
             invalid_parameters.append(('Amount', amount.get('value'), '%.2f' % self.amount))
         if amount.get('currency') != self.currency_id.name:
             invalid_parameters.append(('Currency', data.get('currency'), self.currency_id.name))

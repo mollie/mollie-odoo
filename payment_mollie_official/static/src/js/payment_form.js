@@ -8,6 +8,7 @@ var Dialog = require('web.Dialog');
 var PaymentForm = require('payment.payment_form');
 
 var ajax = require('web.ajax');
+var weContext = require('web_editor.context');
 
 var _t = core._t;
 
@@ -34,6 +35,18 @@ PaymentForm.include({
         return this._super.apply(this, arguments).then(function () {
             return self.libPromise;
         });
+    },
+
+    /**
+     * @override
+     */
+    start: function () {
+        var self = this;
+        if (!window.ApplePaySession || !ApplePaySession.canMakePayments()) {
+            self.$('input[data-methodname="applepay"]').closest('.card-body').hide();
+            return;
+        }
+        return this._super.apply(this, arguments);
     },
 
     // ---------------------------------
@@ -113,7 +126,8 @@ PaymentForm.include({
     _loadMollieComponent: function () {
         var mollieProfileId = this.$('#o_mollie_component').data('profile_id');
         var mollieTestMode = this.$('#o_mollie_component').data('mode') === 'test';
-        this.mollieComponent = Mollie(mollieProfileId, { locale: 'en_US', testmode: mollieTestMode });
+        var lang = weContext.get().lang || 'en_US';
+        this.mollieComponent = Mollie(mollieProfileId, { locale: lang, testmode: mollieTestMode });
         this._bindMollieInputs();
     },
     /**
