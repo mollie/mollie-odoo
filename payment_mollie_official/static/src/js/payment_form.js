@@ -35,6 +35,20 @@ publicWidget.registry.PaymentForm.include({
         });
     },
 
+    /**
+     * @override
+     */
+    start: function () {
+        var self = this;
+        return this._super.apply(this, arguments).then(function () {
+            // Hide the option if Apple Pay is not available
+            if (!window.ApplePaySession || !ApplePaySession.canMakePayments()) {
+                self.$('input[data-methodname="applepay"]').closest('.o_payment_acquirer_select').hide();
+                return;
+            }
+        });
+    },
+
     // ---------------------------------
     // Existing Overridden methods
     // ---------------------------------
@@ -112,7 +126,15 @@ publicWidget.registry.PaymentForm.include({
     _loadMollieComponent: function () {
         var mollieProfileId = this.$('#o_mollie_component').data('profile_id');
         var mollieTestMode = this.$('#o_mollie_component').data('mode') === 'test';
-        this.mollieComponent = Mollie(mollieProfileId, { locale: 'en_US', testmode: mollieTestMode });
+
+        var context;
+        this.trigger_up('context_get', {
+            callback: function (ctx) {
+                context = ctx;
+            },
+        });
+        var lang = context.lang || 'en_US';
+        this.mollieComponent = Mollie(mollieProfileId, { locale: lang, testmode: mollieTestMode });
         this._bindMollieInputs();
     },
     /**
