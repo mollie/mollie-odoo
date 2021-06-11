@@ -9,7 +9,7 @@
             <field name="id" position="after">
                 <field name="is_mollie_refund" invisible="1"/>
                 <field name="mollie_transecion_id" invisible="1"/>
-                <div class="alert alert-warning" attrs="{'invisible': [('is_mollie_refund', '=', False)]}">
+                <div class="alert alert-warning" role="alert" attrs="{'invisible': [('is_mollie_refund', '=', False)]}">
                     <b> Note: </b> Creating payment from here will refund the amount from mollie too.
                     <div class="float-right">
                         Maximum Amount you can refund is <b>
