@@ -19,7 +19,7 @@
         'data/cron.xml'
     ],
 
-    # 'images': [
-    #     'static/description/cover.png',
-    # ],
+    'images': [
+        'static/description/cover.png',
+    ],
 }
