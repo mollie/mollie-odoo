@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 
+import json
 import base64
 import logging
 import requests
 from werkzeug import urls
-from mollie.api.client import Client as MollieClient
-from mollie.api.error import UnprocessableEntityError
 
-from odoo import _, api, fields, models, service
+from odoo import _, fields, models, service, api
 from odoo.exceptions import ValidationError
 from odoo.http import request
 
-from odoo.addons.payment_mollie_official.controllers.main import MollieController
 
 _logger = logging.getLogger(__name__)
 
@@ -19,64 +17,147 @@ _logger = logging.getLogger(__name__)
 class PaymentAcquirerMollie(models.Model):
     _inherit = 'payment.acquirer'
 
-    provider = fields.Selection(selection_add=[('mollie', 'Mollie')], ondelete={'mollie': 'set default'})
-    mollie_api_key_test = fields.Char("Mollie Test API key", required_if_provider="mollie", groups="base.group_user")
-    mollie_api_key_prod = fields.Char("Mollie Live API key", required_if_provider="mollie", groups="base.group_user")
+    # removed required_if_provider becasue we do not want to add production key during testing
+    mollie_api_key = fields.Char(string="Mollie API Key", required_if_provider=False, help="The Test or Live API Key depending on the configuration of the acquirer", groups="base.group_system")
+    mollie_api_key_test = fields.Char(string="Test API key", groups="base.group_user")
     mollie_profile_id = fields.Char("Mollie Profile ID", groups="base.group_user")
-    mollie_methods_ids = fields.One2many('mollie.payment.method', 'parent_id', string='Mollie Payment Methods')
-    mollie_voucher_ids = fields.One2many('mollie.voucher.line', 'acquirer_id', string='Mollie Voucher Config')
-    mollie_voucher_enabled = fields.Boolean(compute="_compute_mollie_voucher_enabled")
+    mollie_methods_ids = fields.One2many('mollie.payment.method', 'acquirer_id', string='Mollie Payment Methods')
 
-    def _get_feature_support(self):
-        res = super(PaymentAcquirerMollie, self)._get_feature_support()
-        res['fees'].append('mollie')
-        return res
+    mollie_use_components = fields.Boolean(string='Mollie Components')
+    mollie_show_save_card = fields.Boolean(string='Single-Click payments')
 
-    def mollie_compute_fees(self, amount, currency_id, country_id):
-        fees = {}
-
-        if self.fees_active:
-            for method in self.mollie_methods_ids:
-                if method.fees_active:
-                    fees[method.method_id_code] = self._mollie_compute_record_fees(amount, method, country_id)  # method fees
-                else:
-                    fees[method.method_id_code] = self._mollie_compute_record_fees(amount, self, country_id)  # global fees
-
-        # TO-DO: Find alternative way for this. Currently, this is simpleset solution as
-        # this method is used at shop, order portal and invoice portal. The full dictionary
-        # is used in payment acquirer list but we send usual fees when we get request from
-        # particular payment method.
-        if request and request.params.get('paymentmethod'):
-            fees = fees.get(request.params.get('paymentmethod'), 0.0)
-
-        return fees
-
-    def _mollie_compute_record_fees(self, amount, record, country_id):
-        country = self.env['res.country'].browse(country_id)
-        if country and self.company_id.sudo().country_id.id == country.id:
-            percentage = record.fees_dom_var
-            fixed = record.fees_dom_fixed
-        else:
-            percentage = record.fees_int_var
-            fixed = record.fees_int_fixed
-        fees = (percentage / 100.0 * amount + fixed) / (1 - percentage / 100.0)
-        return fees
-
-    @api.depends('mollie_methods_ids')
-    def _compute_mollie_voucher_enabled(self):
-        for acquirer in self:
-            acquirer.mollie_voucher_enabled = False
-            if acquirer.provider == 'mollie':
-                if acquirer.mollie_methods_ids.filtered(lambda m: m.method_id_code == 'voucher' and m.active_on_shop):
-                    acquirer.mollie_voucher_enabled = True
+    # --------------
+    # ACTION METHODS
+    # --------------
 
     def action_mollie_sync_methods(self):
+        """ This method will sync mollie methods and translations via API """
         methods = self._api_mollie_get_active_payment_methods()
         if methods:
             self._sync_mollie_methods(methods)
-            self._create_method_translations(methods)
+            self._create_method_translations()
 
-    def _create_method_translations(self, english_methods):
+    # ----------------
+    # Fees METHODs
+    # ----------------
+
+    def _compute_mollie_method_fees(self, fees_by_acquirer, invoice=None, order=None, amount=None, currency=None, partner_id=None):
+        """ This method adds fees for mollie's methods in Odoo's fees_by_acquirer.
+
+        :param dict fees_by_acquirer: fees and payment methods mepping
+        :param recordset order: order recordset to fetch amount currency or partner
+        :param float amount: total amount to pay
+        :param recordset currency: The currency of the transaction, as a `res.currency` record
+        :param recordset country: The customer country, as a `res.country` record
+        :return: fees map for the mollie method and payment acquirer (here values are fees)
+        :rtype: dict
+        """
+        mollie_acquirer = self.filtered(lambda acq: acq.provider == 'mollie')
+
+        if not mollie_acquirer or not (order or (amount and currency and partner_id)):
+            return fees_by_acquirer
+
+        country_id = False
+        if order:
+            amount = order.amount_total
+            currency = order.currency_id
+            country_id = order.partner_id.country_id
+        elif partner_id:
+            country_id = self.sudo().env['res.partner'].browse(partner_id).country_id
+
+        global_fees = mollie_acquirer._compute_fees(amount, currency, country_id)
+        for mollie_method in mollie_acquirer.mollie_methods_ids:
+            fees_by_acquirer[mollie_method] = global_fees
+
+            # this way method can override global fees (it can even removes global fees)
+            if mollie_method.fees_active:
+                fees_by_acquirer[mollie_method] = mollie_method._compute_fees(amount, currency, country_id)
+        return fees_by_acquirer
+
+    # --------------------------------------------------------
+    # TO SYNC ACTIVE MOLLIE METHODS, ISSUSER AND TRANSLATIONS
+    # --------------------------------------------------------
+
+    def _sync_mollie_methods(self, methods_data):
+        """ Create/Update the mollie payment methods based on configuration
+        in the mollie.com. This will automatically activate/deactivate methods
+        based on your configurateion on the mollie.com
+        :param dict methods_data: Mollie's method data received from api
+        """
+
+        # Activate/Deactivate existing methods
+        existing_methods = self.with_context(active_test=False).mollie_methods_ids
+        for method in existing_methods:
+            method.active = method.method_code in methods_data.keys()
+
+        # Create New methods
+        MolliePaymentMethod = self.env['mollie.payment.method']
+        methods_to_create = methods_data.keys() - set(existing_methods.mapped('method_code'))
+        for method in methods_to_create:
+            method_info = methods_data[method]
+            create_vals = {
+                'name': method_info['description'],
+                'method_code': method_info['id'],
+                'acquirer_id': self.id,
+                'supports_order_api': method_info.get('support_order_api', False),
+                'supports_payment_api': method_info.get('support_payment_api', False)
+            }
+
+            # Manage issuer for the method
+            issuers_data = method_info.get('issuers')
+            if issuers_data:
+                issuer_ids = self._get_issuers_ids(issuers_data)
+                if issuer_ids:
+                    create_vals['payment_issuer_ids'] = [(6, 0, issuer_ids)]
+
+            # Manage icons for methods
+            icon = self.env['payment.icon'].search([('name', '=', method_info['description'])], limit=1)
+            image_url = method_info.get('image', {}).get('size2x')
+            if not icon and image_url:
+                icon = self.env['payment.icon'].create({
+                    'name': method_info['description'],
+                    'image': self._mollie_fetch_image_by_url(image_url)
+                })
+            if icon:
+                create_vals['payment_icon_ids'] = [(6, 0, [icon.id])]
+            MolliePaymentMethod.create(create_vals)
+
+    def _get_issuers_ids(self, issuers_data):
+        """ Create/Update the mollie issuers based on issuers data received from
+        mollie api.
+        :param list issuers_data: Mollie's issuers data received from api
+        :return: list of issuers ids
+        :rtype: list
+        """
+        issuer_ids = []
+        for issuer_data in issuers_data:
+            MollieIssuer = self.env['mollie.payment.method.issuer']
+            issuer = MollieIssuer.search([('issuers_code', '=', issuer_data['id'])], limit=1)
+            if not issuer:
+                issuer_create_vals = {
+                    'name': issuer_data['name'],
+                    'issuers_code': issuer_data['id'],
+                }
+                icon = self.env['payment.icon'].search([('name', '=', issuer_data['name'])], limit=1)
+                image_url = issuer_data.get('image', {}).get('size2x')
+                if not icon and image_url:
+                    icon = self.env['payment.icon'].create({
+                        'name': issuer_data['name'],
+                        'image': self._mollie_fetch_image_by_url(image_url)
+                    })
+                issuer_create_vals['payment_icon_ids'] = [(6, 0, [icon.id])]
+                issuer = MollieIssuer.create(issuer_create_vals)
+            issuer_ids.append(issuer.id)
+        return issuer_ids
+
+    def _create_method_translations(self):
+        """ This method add translated terms for the method names. These translations
+        are provided by mollie locale.
+        This is required as the method names are stored in fields. Luckily mollie provides
+        translated values so we create the translation terms from mollie.
+        Note: We only create the terms if it is not present because user might have enterd
+        his own translation values,
+        """
         IrTranslation = self.env['ir.translation']
         supported_locale = self._mollie_get_supported_locale()
         supported_locale.remove('en_US')  # en_US is default
@@ -91,12 +172,12 @@ class PaymentAcquirerMollie(models.Model):
                 if method.id not in translated_method_ids:
                     method_to_translate.append(method.id)
 
-            # This will avoid unnessesorry network calls
+            # We only create the terms if it is not present
             if method_to_translate:
                 methods_data = self._api_mollie_get_active_payment_methods(extra_params={'locale': lang.code})
                 for method_id in method_to_translate:
                     mollie_method = mollie_methods.filtered(lambda m: m.id == method_id)
-                    translated_value = methods_data.get(mollie_method.method_id_code, {}).get('description')
+                    translated_value = methods_data.get(mollie_method.method_code, {}).get('description')
                     if translated_value:
                         IrTranslation.create({
                             'type': 'model',
@@ -108,105 +189,48 @@ class PaymentAcquirerMollie(models.Model):
                             'state': 'translated',
                         })
 
-    def _sync_mollie_methods(self, methods_dict):
+    # -----------------------------------
+    # TO FILTER METHODS ON CHECKOUT FORMS
+    # -----------------------------------
 
-        existing_methods = self.with_context(active_test=False).mollie_methods_ids
-
-        for method in existing_methods:
-            if method.method_id_code in methods_dict.keys():
-                # Update method
-                data = methods_dict[method.method_id_code]
-                method.write({
-                    'min_amount': data['minimumAmount'] and data['minimumAmount']['value'] or 0,
-                    'max_amount': data['maximumAmount'] and data['maximumAmount']['value'] or 0,
-                    'active': True,
-                    'supports_order_api': data.get('support_order_api', False),
-                    'supports_payment_api': data.get('support_payment_api', False)
-                })
-            else:
-                # Deactivate Method
-                method.active = False
-
-        # Create New methods
-        methods_to_create = methods_dict.keys() - set(existing_methods.mapped('method_id_code'))
-        MolliePaymentMethod = self.env['mollie.payment.method']
-        for method in methods_to_create:
-            data = methods_dict[method]
-
-            create_vals = {
-                'name': data['description'],
-                'method_id_code': data['id'],
-                'parent_id': self.id,
-                'min_amount': data['minimumAmount'] and data['minimumAmount']['value'] or 0,
-                'max_amount': data['maximumAmount'] and data['maximumAmount']['value'] or 0,
-                'supports_order_api': data.get('support_order_api', False),
-                'supports_payment_api': data.get('support_payment_api', False)
-            }
-
-            # Manage issuer for the method
-            if data.get('issuers'):
-                issuer_ids = []
-                for issuer_data in data['issuers']:
-                    MollieIssuer = self.env['mollie.payment.method.issuer']
-                    issuer = MollieIssuer.search([('issuers_id_code', '=', issuer_data['id'])], limit=1)
-                    if not issuer:
-                        issuer_create_vals = {
-                            'name': issuer_data['name'],
-                            'issuers_id_code': issuer_data['id'],
-                        }
-                        icon = self.env['payment.icon'].search([('name', '=', issuer_data['name'])], limit=1)
-                        image_url = issuer_data.get('image', {}).get('size2x')
-                        if not icon and image_url:
-                            icon = self.env['payment.icon'].create({
-                                'name': issuer_data['name'],
-                                'image': base64.b64encode(requests.get(image_url).content)
-                            })
-                        issuer_create_vals['payment_icon_ids'] = [(6, 0, [icon.id])]
-                        issuer = MollieIssuer.create(issuer_create_vals)
-                    issuer_ids.append(issuer.id)
-                if issuer_ids:
-                    create_vals['payment_issuer_ids'] = [(6, 0, issuer_ids)]
-
-            # Manage icon for method
-            icon = self.env['payment.icon'].search([('name', '=', data['description'])], limit=1)
-            image_url = data.get('image', {}).get('size2x')
-            if not icon and image_url:
-                icon = self.env['payment.icon'].create({
-                    'name': data['description'],
-                    'image': base64.b64encode(requests.get(image_url).content)
-                })
-            if icon:
-                create_vals['payment_icon_ids'] = [(6, 0, [icon.id])]
-
-            MolliePaymentMethod.create(create_vals)
-
-    def mollie_get_active_methods(self, order=None):
-        # TODO: [PGA] Check currency is supported. Hard coded filter can be applied based on https://docs.mollie.com/payments/multicurrency
+    def _mollie_get_supported_methods(self, order, invoice, amount, currency, partner_id):
+        """ Mollie provides multiple payment methods in single payment acquirer.
+            Support of these varies based on based amount, currency and billing country.
+            So this method will filters the mollie's supported payment method based amount,
+            currency and billing country.
+            Note: we also filter the methods based on geoip and voucher configurations.
+            :param dict order: order record for which this transaction is generated
+            :return details of supported methods
+            :rtype: dict
+        """
         methods = self.mollie_methods_ids.filtered(lambda m: m.active and m.active_on_shop)
 
-        if not self.sudo().mollie_profile_id:
-            methods = methods.filtered(lambda m: m.method_id_code != 'creditcard')
-
-        # Hide methods if order amount is higher then method limits
-        remove_voucher_method, extra_params = True, {}
-        if order and order._name == 'sale.order':
-            methods = methods.filtered(lambda m: order.amount_total >= m.min_amount and (order.amount_total <= m.max_amount or not m.max_amount))
-            remove_voucher_method = not any(map(lambda p: p._get_mollie_voucher_category(), order.mapped('order_line.product_id.product_tmpl_id')))
+        # Prepare extra params to filter methods via mollie API
+        has_voucher_line, extra_params = False, {}
+        if order:
             extra_params['amount'] = {'value': "%.2f" % order.amount_total, 'currency': order.currency_id.name}
+            has_voucher_line = order.mapped('order_line.product_id.product_tmpl_id')._get_mollie_voucher_category()
             if order.partner_invoice_id.country_id:
                 extra_params['billingCountry'] = order.partner_invoice_id.country_id.code
-        if order and order._name == 'account.move':
-            methods = methods.filtered(lambda m: order.amount_residual >= m.min_amount and (order.amount_residual <= m.max_amount or not m.max_amount))
-            remove_voucher_method = not any(map(lambda p: p._get_mollie_voucher_category(), order.mapped('invoice_line_ids.product_id.product_tmpl_id')))
-            extra_params['amount'] = {'value': "%.2f" % order.amount_residual, 'currency': order.currency_id.name}
-            if order.partner_id.country_id:
-                extra_params['billingCountry'] = order.partner_id.country_id.code
-        if remove_voucher_method:
-            methods = methods.filtered(lambda m: m.method_id_code != 'voucher')
+        else:
+            # Hide the mollie methods that only supports order api
+            methods = methods.filtered(lambda m: m.supports_payment_api)
 
-        # Hide only order type methods from transection links
-        if request and request.httprequest.path == '/website_payment/pay':
-            methods = methods.filtered(lambda m: m.supports_payment_api == True)
+        if invoice and invoice._name == 'account.move':
+            extra_params['amount'] = {'value': "%.2f" % invoice.amount_residual, 'currency': invoice.currency_id.name}
+            if invoice.partner_id.country_id:
+                extra_params['billingCountry'] = invoice.partner_id.country_id.code
+
+        if amount and currency:
+            extra_params['amount'] = {'value': "%.2f" % amount, 'currency': currency.name}
+
+        if not extra_params.get('billingCountry') and partner_id:
+            partner = self.sudo().env['res.partner'].browse(partner_id).exists()
+            if partner and partner.country_id:
+                extra_params['billingCountry'] = partner.country_id.code
+
+        if not has_voucher_line:
+            methods = methods.filtered(lambda m: m.method_code != 'voucher')
 
         # Hide based on country
         if request:
@@ -214,402 +238,176 @@ class PaymentAcquirerMollie(models.Model):
             if country_code:
                 methods = methods.filtered(lambda m: not m.country_ids or country_code in m.country_ids.mapped('code'))
 
-        # Hide methods if mollie does not supports them
-        suppported_methods = self.sudo()._api_mollie_get_active_payment_methods(extra_params=extra_params)   # sudo as public user do not have access
-        methods = methods.filtered(lambda m: m.method_id_code in suppported_methods.keys())
+        # Hide methods if mollie does not supports them (checks via api call)
+        supported_methods = self.sudo()._api_mollie_get_active_payment_methods(extra_params=extra_params)  # sudo as public user do not have access to keys
+        methods = methods.filtered(lambda m: m.method_code in supported_methods.keys())
 
         return methods
 
-    def mollie_form_generate_values(self, tx_values):
+    # -----------
+    # API methods
+    # -----------
+
+    def _mollie_make_request(self, endpoint, params=None, data=None, method='POST', silent_errors=False):
+        """
+        Overriden method to manage 'params' rest of the things works as it is.
+
+        We are not using super as we want diffrent User-Agent for all requests.
+        We also want to use separate test api key in test mode.
+
+        Note: self.ensure_one()
+        :param str endpoint: The endpoint to be reached by the request
+        :param dict params: The querystring of the request
+        :param dict data: The payload of the request
+        :param str method: The HTTP method of the request
+        :return The JSON-formatted content of the response
+        :rtype: dict
+        :raise: ValidationError if an HTTP error occurs
+        """
         self.ensure_one()
-        tx_reference = tx_values.get('reference')
-        if not tx_reference:
-            error_msg = _('Mollie: received data with missing tx reference (%s)') % (tx_reference)
-            _logger.info(error_msg)
-            raise ValidationError(error_msg)
 
-        transaction = self.env['payment.transaction'].sudo().search([('reference', '=', tx_reference)])
-        base_url = self.get_base_url()
-        tx_values['base_url'] = base_url
-        tx_values['checkout_url'] = False
-        tx_values['error_msg'] = False
-        tx_values['status'] = False
+        endpoint = f'/v2/{endpoint.strip("/")}'
+        url = urls.url_join('https://api.mollie.com/', endpoint)
+        params = self._mollie_generate_querystring(params)
 
-        if transaction:
+        # User agent strings used by mollie to find issues in integration
+        odoo_version = service.common.exp_version()['server_version']
+        mollie_extended_app_version = self.env.ref('base.module_payment_mollie_official').installed_version
+        mollie_api_key = self.mollie_api_key_test if self.state == 'test' else self.mollie_api_key
 
-            result = None
+        headers = {
+            "Accept": "application/json",
+            "Authorization": f'Bearer {mollie_api_key}',
+            "Content-Type": "application/json",
+            "User-Agent": f'Odoo/{odoo_version} MollieOdoo/{mollie_extended_app_version}',
+        }
 
-            # check if order api is supportable by selected mehtod
-            method_record = self._mollie_get_method_record(transaction.mollie_payment_method)
-            if method_record.supports_order_api:
-                result = self._mollie_create_order(transaction)
+        error_msg, result = _("Could not establish the connection to the API."), False
+        if data:
+            data = json.dumps(data)
 
-            # Fallback to payment method
-            # Case: When invoice is partially paid or partner have credit note
-            # then mollie can not create order because orderline and total amount is diffrent
-            # in that case we have fall back on payment method.
-            if (result and result.get('error') or result is None) and method_record.supports_payment_api:
-                if result and result.get('error'):
-                    _logger.warning("Can not use order api due to '%s' fallback on payment" % (result.get('error')))
-                result = self._mollie_create_payment(transaction)
-
-            if result.get('error'):
-                tx_values['error_msg'] = result['error']
-                self.env.cr.rollback()    # Roll back if there is error
-                return tx_values
-
-            if result.get('status') == 'paid':
-                transaction.form_feedback(result, "mollie")
+        try:
+            response = requests.request(method, url, params=params, data=data, headers=headers, timeout=60)
+            result = response.json()
+            if response.status_code == 204:
+                return True  # returned no content
+            if response.status_code not in [200, 201]:  # doc reference https://docs.mollie.com/overview/handling-errors
+                error_msg = f"Error[{response.status_code}]: {result.get('title')} - {result.get('detail')}"
+                _logger.exception("Error from mollie: %s", result)
+            response.raise_for_status()
+        except requests.exceptions.RequestException:
+            if silent_errors:
+                return response.json()
             else:
-                tx_values['checkout_url'] = result["_links"]["checkout"]["href"]
-            tx_values['status'] = result.get('status')
-        return tx_values
-
-    def mollie_get_form_action_url(self):
-        return "/payment/mollie/action"
-
-    def _mollie_create_order(self, transaction):
-        order_source = False
-        if transaction.invoice_ids:
-            order_source = transaction.invoice_ids[0]
-        elif transaction.sale_order_ids:
-            order_source = transaction.sale_order_ids[0]
-
-        if not order_source:
-            return None
-
-        order_type = 'Sale Order' if order_source._name == 'sale.order' else 'Invoice'
-
-        payment_data = {
-            'method': transaction.mollie_payment_method,
-            'amount': {
-                'currency': transaction.currency_id.name,
-                'value': "%.2f" % (transaction.amount + transaction.fees)
-            },
-
-            'billingAddress': order_source.partner_id._prepare_mollie_address(),
-            "orderNumber": "%s (%s)" % (order_type, transaction.reference),
-            'lines': self._mollie_get_order_lines(order_source, transaction),
-
-            'metadata': {
-                'transaction_id': transaction.id,
-                'reference': transaction.reference,
-                'type': order_type,
-
-                # V12 fallback
-                "order_id": "ODOO-%s" % (transaction.reference),
-                "description": order_source.name
-            },
-
-            'locale': self._mollie_user_locale(),
-            'redirectUrl': self._mollie_redirect_url(transaction.id),
-        }
-
-        # Mollie throws error with local URL
-        webhook_url = self._mollie_webhook_url(transaction.id)
-        if "://localhost" not in webhook_url and "://192.168." not in webhook_url:
-            payment_data['webhookUrl'] = webhook_url
-
-        # Add if transection has cardToken
-        if transaction.mollie_payment_token:
-            payment_data['payment'] = {'cardToken': transaction.mollie_payment_token}
-
-        # Add if transection has issuer
-        if transaction.mollie_payment_issuer:
-            payment_data['payment'] = {'issuer': transaction.mollie_payment_issuer}
-
-        result = self._api_mollie_create_order(payment_data)
-
-        # We are setting acquirer reference as we are receiving it before 3DS payment
-        # So we can identify transaction with mollie respose
-        if result and result.get('id'):
-            transaction.acquirer_reference = result.get('id')
+                raise ValidationError("Mollie: " + error_msg)
         return result
 
-    def _mollie_create_payment(self, transaction):
-        """ This method is used as fallback. When order method fails. """
-        payment_data = {
-            'method': transaction.mollie_payment_method,
-            'amount': {
-                'currency': transaction.currency_id.name,
-                'value': "%.2f" % (transaction.amount + transaction.fees)
-            },
-            'description': transaction.reference,
+    def _api_mollie_get_active_payment_methods(self, extra_params=None):
+        """ Get method data from the mollie. It will return the methods
+        that are enabled in the Mollie.
+        :param dict extra_params: Optional parameters which are passed to mollie during API call
+        :return: details of enabled methods
+        :rtype: dict
+        """
+        result = {}
+        extra_params = extra_params or {}
+        params = {'include': 'issuers', 'includeWallets': 'applepay', **extra_params}
 
-            'metadata': {
-                'transaction_id': transaction.id,
-                'reference': transaction.reference,
-            },
+        # get payment api methods
+        payemnt_api_methods = self._mollie_make_request('/methods', params=params, method="GET", silent_errors=True)
+        if payemnt_api_methods and payemnt_api_methods.get('count'):
+            for method in payemnt_api_methods['_embedded']['methods']:
+                method['support_payment_api'] = True
+                result[method['id']] = method
 
-            'locale': self._mollie_user_locale(),
-            'redirectUrl': self._mollie_redirect_url(transaction.id),
-        }
+        # get order api methods
+        params['resource'] = 'orders'
+        order_api_methods = self._mollie_make_request('/methods', params=params, method="GET", silent_errors=True)
+        if order_api_methods and order_api_methods.get('count'):
+            for method in order_api_methods['_embedded']['methods']:
+                if method['id'] in result:
+                    result[method['id']]['support_order_api'] = True
+                else:
+                    method['support_order_api'] = True
+                    result[method['id']] = method
+        return result or {}
 
-        # Mollie throws error with local URL
-        webhook_url = self._mollie_webhook_url(transaction.id)
-        if "://localhost" not in webhook_url and "://192.168." not in webhook_url:
-            payment_data['webhookUrl'] = webhook_url
+    def _api_mollie_create_payment_record(self, api_type, payment_data, silent_errors=False):
+        """ Create the payment records on the mollie. It calls payment or order
+        API based on 'api_type' param.
+        :param str api_type: api is selected based on this parameter
+        :param dict payment_data: payment data
+        :return: details of created payment record
+        :rtype: dict
+        """
+        endpoint = '/orders' if api_type == 'order' else '/payments'
+        return self._mollie_make_request(endpoint, data=payment_data, method="POST", silent_errors=silent_errors)
 
-        # Add if transection has cardToken
-        if transaction.mollie_payment_token:
-            payment_data['cardToken'] = transaction.mollie_payment_token
-
-        # Add if transection has issuer
-        if transaction.mollie_payment_issuer:
-            payment_data['issuer'] = transaction.mollie_payment_issuer
-
-        result = self._api_mollie_create_payment(payment_data)
-
-        # We are setting acquirer reference as we are receiving it before 3DS payment
-        # So we can identify transaction with mollie respose
-        if result and result.get('id'):
-            transaction.acquirer_reference = result.get('id')
-        return result
-
-    def _mollie_get_payment_data(self, transection_reference, force_payment=False):
-        """ Sending force_payment=True will send payment data even if transection_reference is for order api """
-        mollie_data = False
-        if transection_reference.startswith('ord_'):
-            mollie_data = self._api_mollie_get_order(transection_reference)
-        if transection_reference.startswith('tr_'):    # This is not used
-            mollie_data = self._api_mollie_get_payment(transection_reference)
-
+    def _api_mollie_get_payment_data(self, transaction_reference, force_payment=False):
+        """ Fetch the payment records based `transaction_reference`. It is used
+        to varify transaction's state after the payment.
+        :param str transaction_reference: transaction reference
+        :return: details of payment record
+        :rtype: dict
+        """
+        mollie_data = {}
+        if transaction_reference.startswith('ord_'):
+            mollie_data = self._mollie_make_request(f'/orders/{transaction_reference}', params={'embed': 'payments'}, method="GET")
+        if transaction_reference.startswith('tr_'):    # This is not used
+            mollie_data = self._mollie_make_request(f'/payments/{transaction_reference}', method="GET")
         if not force_payment:
             return mollie_data
 
-        transection_id = False
         if mollie_data['resource'] == 'order':
             payments = mollie_data.get('_embedded', {}).get('payments', [])
             if payments:
-                # TODO: handle multiple payment for same order
-                transection_id = payments[0]['id']
-        elif mollie_data['resource'] == 'payment':
-            transection_id = mollie_data['id']
+                # No need to handle multiple payment for same order as we create new order for each failed transaction
+                payment_id = payments[0]['id']
+                mollie_data = self._mollie_make_request(f'/payments/{payment_id}', method="GET")
+        return mollie_data
 
-        mollie_client = self._api_mollie_get_client()
-
-        # TO-DO: check if mollie_data is same as below line
-        return mollie_client.payments.get(transection_id)
-
-    # -----------------------------------------------
-    # Methods that uses to mollie python lib
-    # -----------------------------------------------
-
-    def _api_mollie_get_client(self):
-        mollie_client = MollieClient(timeout=5)
-        # TODO: [PGA] Add partical validation for keys e.g. production key should start from live_
-
-        if self.state == 'enabled':
-            mollie_client.set_api_key(self.mollie_api_key_prod)
-        elif self.state == 'test':
-            mollie_client.set_api_key(self.mollie_api_key_test)
-
-        mollie_client.set_user_agent_component('Odoo', service.common.exp_version()['server_version'])
-        mollie_client.set_user_agent_component('MollieOdoo', self.env.ref('base.module_payment_mollie_official').installed_version)
-        return mollie_client
-
-    def _api_mollie_create_payment(self, payment_data):
-        mollie_client = self._api_mollie_get_client()
-        try:
-            result = mollie_client.payments.create(payment_data)
-        except UnprocessableEntityError as e:
-            return {'error': str(e)}
-        return result
-
-    def _api_mollie_create_order(self, payment_data):
-        mollie_client = self._api_mollie_get_client()
-        try:
-            result = mollie_client.orders.create(payment_data)
-        except UnprocessableEntityError as e:
-            return {'error': str(e)}
-        return result
-
-    def _api_mollie_get_payment(self, tx_id):
-        mollie_client = self._api_mollie_get_client()
-        return mollie_client.payments.get(tx_id)
-
-    def _api_mollie_get_order(self, tx_id):
-        mollie_client = self._api_mollie_get_client()
-        return mollie_client.orders.get(tx_id, embed="payments")
-
-    def _api_mollie_get_active_payment_methods(self, api_type=None, extra_params={}):
-        result = {}
-
-        mollie_client = self._api_mollie_get_client()
-        params = {'include': 'issuers', 'includeWallets': 'applepay', **extra_params}
-        order_methods = mollie_client.methods.list(resource="orders", **params)
-        payment_methods = mollie_client.methods.list(**params)
-
-        # Order api will always have more methods then payment api
-        if order_methods.get('count'):
-            for method in order_methods['_embedded']['methods']:
-                method['support_order_api'] = True
-                result[method['id']] = method
-
-        if payment_methods.get('count'):
-            for method in payment_methods['_embedded']['methods']:
-                if method['id'] in result:
-                    result[method['id']]['support_payment_api'] = True
-                else:
-                    method['support_payment_api'] = True
-                    result[method['id']] = method
-
-        return result
-
-    def _api_mollie_refund(self, amount, currency, payment_record):
-        mollie_client = self._api_mollie_get_client()
-        refund = mollie_client.payment_refunds.on(payment_record).create({
-            'amount': {
-                'value': "%.2f" % amount,
-                'currency': currency.name
-            }
-        })
-        return refund
-
-    # -----------------------------------------------
-    # Methods that create mollie order payload
-    # -----------------------------------------------
-
-    def _mollie_get_order_lines(self, order, transaction):
-        lines = []
-        if order._name == "sale.order":
-            order_lines = order.order_line.filtered(lambda l: not l.display_type)  # ignore notes and section lines
-            lines = self._mollie_prepare_so_lines(order_lines, transaction)
-        if order._name == "account.move":
-            order_lines = order.invoice_line_ids.filtered(lambda l: not l.display_type)  # ignore notes and section lines
-            lines = self._mollie_prepare_invoice_lines(order_lines, transaction)
-        if transaction.fees:    # Fees or Surcharge (if configured)
-            fees_line = self._mollie_prepare_fees_line(transaction)
-            lines.append(fees_line)
-        return lines
-
-    def _mollie_prepare_fees_line(self, transaction):
-        return {
-            'name': _('Acquirer Fees'),
-            'type': 'surcharge',
-            'metadata': {
-                "type": 'surcharge'
-            },
-            'quantity': 1,
-            'unitPrice': {
-                'currency': transaction.currency_id.name,
-                'value': "%.2f" % transaction.fees
-            },
-            'totalAmount': {
-                'currency': transaction.currency_id.name,
-                'value': "%.2f" % transaction.fees
-            },
-            'vatRate': "%.2f" % 0,
-            'vatAmount': {
-                'currency': transaction.currency_id.name,
-                'value': "%.2f" % 0,
-            }
-        }
-
-    def _mollie_prepare_so_lines(self, lines, transaction):
-        result = []
-        for line in lines:
-            line_data = self._mollie_prepare_lines_common(line)
-            line_data.update({
-                'quantity': int(line.product_uom_qty),    # TODO: Mollie does not support float. Test with float amount
-                'unitPrice': {
-                    'currency': line.currency_id.name,
-                    'value': "%.2f" % line.price_reduce_taxinc
-                },
-                'totalAmount': {
-                    'currency': line.currency_id.name,
-                    'value': "%.2f" % line.price_total,
-                },
-                'vatRate': "%.2f" % sum(line.tax_id.mapped('amount')),
-                'vatAmount': {
-                    'currency': line.currency_id.name,
-                    'value': "%.2f" % line.price_tax,
-                }
-            })
-
-            if transaction.mollie_payment_method == 'voucher':
-                category = line.product_template_id._get_mollie_voucher_category()
-                if category:
-                    line_data.update({
-                        'category': category
-                    })
-
-            result.append(line_data)
-        return result
-
-    def _mollie_prepare_invoice_lines(self, lines, transaction):
+    def _api_mollie_create_customer_id(self):
+        """ Create the customer id for currunt user inside the mollie.
+        :return: customer id
+        :rtype: cuatomer_data
         """
-            Note: Line pricing calculation
-            Mollie need 1 unit price with tax included (with discount if any).
-            Sale order line we have field for tax included/excluded unit price. But
-            Invoice does not have such fields so we need to compute it manually with
-            given calculation.
+        sudo_user = self.env.user.sudo()
+        customer_data = {'name': sudo_user.name, 'metadata': {'odoo_user_id': self.env.user.id}}
+        if sudo_user.email:
+            customer_data['email'] = sudo_user.email
+        return self._mollie_make_request('/customers', data=customer_data, method="POST")
 
-            Mollie needed fields and calculation (Descount is applied all unit price)
-            unitPrice: tax included price for single unit
-                unitPrice = total_price_tax_included / qty
-                totalAmount = total_price_tax_included
-                vatRate = total of tax percentage
-                vatAmount = total_price_tax_included - total_price_tax_excluded
+    def _api_mollie_refund(self, amount, currency, payment_reference):
+        """ Create the customer id for currunt user inside the mollie.
+        :param str amount: amount to refund
+        :param str currency: refund curruncy
+        :param str payment_reference: transaction reference for refund
+        :return: details of payment record
+        :rtype: dict
         """
-        result = []
-        for line in lines:
-            line_data = self._mollie_prepare_lines_common(line)
-            line_data.update({
-                'quantity': int(line.quantity),    # TODO: Mollie does not support float. Test with float amount
-                'unitPrice': {
-                    'currency': line.currency_id.name,
-                    'value': "%.2f" % (line.price_total / int(line.quantity))
-                },
-                'totalAmount': {
-                    'currency': line.currency_id.name,
-                    'value': "%.2f" % line.price_total,
-                },
-                'vatRate': "%.2f" % sum(line.tax_ids.mapped('amount')),
-                'vatAmount': {
-                    'currency': line.currency_id.name,
-                    'value': "%.2f" % (line.price_total - line.price_subtotal),
-                }
-            })
+        refund_data = {'amount': {'value': "%.2f" % amount, 'currency': currency}}
+        data = self._mollie_make_request(f'/payments/{payment_reference}/refunds', data=refund_data, method="POST")
+        return data
 
-            if transaction.mollie_payment_method == 'voucher':
-                category = line.product_id.product_tmpl_id._get_mollie_voucher_category()
-                if category:
-                    line_data.update({
-                        'category': category
-                    })
-            result.append(line_data)
+    def _api_mollie_refund_data(self, payment_reference, refund_reference):
+        """ Get data for the refund from mollie.
+        :param str refund_reference: refund record reference
+        :param str payment_reference: refund payment reference
+        :return: details of refund record
+        :rtype: dict
+        """
+        return self._mollie_make_request(f'/payments/{payment_reference}/refunds/{refund_reference}', method="GET")
 
-        return result
+    def _api_get_customer_data(self, customer_id, silent_errors=False):
+        """ Create the customer id for currunt user inside the mollie.
+        :param str customer_id: customer_id in mollie
+        :rtype: dict
+        """
+        return self._mollie_make_request(f'/customers/{customer_id}', method="GET", silent_errors=silent_errors)
 
-    def _mollie_prepare_lines_common(self, line):
-
-        product_data = {
-            'name': line.name,
-            "type": "physical",
-        }
-
-        if line.product_id.type == 'service':
-            product_data['type'] = 'digital'  # We are considering service product as digital as we don't do shipping for it.
-
-        if 'is_delivery' in line._fields and line.is_delivery:
-            product_data['type'] = 'shipping_fee'
-
-        if line.product_id and 'website_url' in line.product_id._fields:
-            base_url = self.get_base_url()
-            product_data['productUrl'] = urls.url_join(base_url, line.product_id.website_url)
-
-        # Metadata - used to sync delivery data with shipment API
-        product_data['metadata'] = {
-            'line_id': line.id,
-            'product_id': line.product_id.id
-        }
-
-        return product_data
-
-    # -----------------------------------------------
+    # -------------------------
     # Helper methods for mollie
-    # -----------------------------------------------
+    # -------------------------
 
     def _mollie_user_locale(self):
         user_lang = self.env.context.get('lang')
@@ -625,27 +423,31 @@ class PaymentAcquirerMollie(models.Model):
             'is_IS', 'hu_HU', 'pl_PL', 'lv_LV',
             'lt_LT']
 
-    def _mollie_redirect_url(self, tx_id):
-        base_url = self.get_base_url()
-        redirect_url = urls.url_join(base_url, MollieController._redirect_url)
-        return "%s?tx=%s" % (redirect_url, tx_id)
+    def _mollie_fetch_image_by_url(self, image_url):
+        image_base64 = False
+        try:
+            image_base64 = base64.b64encode(requests.get(image_url).content)
+        except Exception:
+            _logger.warning('Can not import mollie image %s', image_url)
+        return image_base64
 
-    def _mollie_webhook_url(self, tx_id):
-        base_url = self.get_base_url()
-        redirect_url = urls.url_join(base_url, MollieController._notify_url)
-        return "%s?tx=%s" % (redirect_url, tx_id)
-
-    def _mollie_get_method_record(self, method_code):
-        return self.env['mollie.payment.method'].search([('method_id_code', '=', method_code)], limit=1)
-
-    # -----------------------------------------------
-    # Updates related fixes
-    # -----------------------------------------------
-
-    @api.model
-    def _mollie_update_hook(self):
-        # Mollie no longer supporing inghomepay
-        _logger.info("Mollie update hook called")
-        inghomepay_method = self.env['mollie.payment.method'].search([('method_id_code', '=', 'inghomepay')])
-        if inghomepay_method:
-            inghomepay_method.write({'active': False})
+    def _mollie_generate_querystring(self, params):
+        """ Mollie uses dictionaries in querystrings with square brackets like this
+        https://api.mollie.com/v2/methods?amount[value]=125.91&amount[currency]=EUR
+        :param dict params: parameters which needs to be converted in mollie format
+        :return: querystring in mollie's format
+        :rtype: string
+        """
+        if not params:
+            return None
+        parts = []
+        for param, value in sorted(params.items()):
+            if not isinstance(value, dict):
+                parts.append(urls.url_encode({param: value}))
+            else:
+                # encode dictionary with square brackets
+                for key, sub_value in sorted(value.items()):
+                    composed = f"{param}[{key}]"
+                    parts.append(urls.url_encode({composed: sub_value}))
+        if parts:
+            return "&".join(parts)

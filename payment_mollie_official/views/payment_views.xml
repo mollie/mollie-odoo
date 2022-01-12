@@ -3,38 +3,32 @@
     <record id="acquirer_form_view_mollie" model="ir.ui.view">
         <field name="name">payment.acquirer.form.inherit</field>
         <field name="model">payment.acquirer</field>
-        <field name="inherit_id" ref="payment.acquirer_form"/>
+        <field name="inherit_id" ref="payment_mollie.payment_acquirer_form"/>
         <field name="priority">20</field>
         <field name="arch" type="xml">
-            <xpath expr='//group[@name="acquirer"]' position='inside'>
-                <group attrs="{'invisible': [('provider', '!=', 'mollie')]}">
-                    <field name="mollie_api_key_test" attrs="{'required':[ ('provider', '=', 'mollie'), ('state', '=', 'test')]}" password="True"/>
-                    <field name="mollie_api_key_prod" attrs="{'required':[ ('provider', '=', 'mollie'), ('state', '=', 'enabled')]}" password="True"/>
-                    <field name="mollie_profile_id" attrs="{'required':[ ('provider', '=', 'mollie'), ('state', '=', 'enabled')]}" password="True"/>
-                    <field name="mollie_voucher_enabled" invisible="1"/>
-                    <label string=" " for="mollie_profile_id"> </label>
-                    <small class="text-muted"> Credit card option will not be displayed without profile ID.
-                        <br/>
-                        <b><a href="https://www.mollie.com/dashboard/developers/api-keys" target="_new"> Get your API keys <i class="fa fa-arrow-right"> </i> </a></b>
-                        <br/>
-                        <br/>
-                    </small>
-                </group>
-            </xpath>
+            <field name="mollie_api_key" position="replace">
+                <field name="mollie_api_key" string="API Key" attrs="{'required': [('provider', '=', 'mollie'), ('state', '=', 'enabled')]}" password="True"/>
+                <field name="mollie_api_key_test" attrs="{'required': [('provider', '=', 'mollie'), ('state', '=', 'test')]}" password="True"/>
+                <field name="mollie_use_components" />
+                <field name="mollie_profile_id" password="True" attrs="{'invisible': [('mollie_use_components', '=', False)], 'required':  [('mollie_use_components', '=', True)]}"/>
+                <label string=" " for="mollie_profile_id" attrs="{'invisible': [('mollie_use_components', '=', False)]}"> </label>
+                <small class="text-muted" attrs="{'invisible': [('mollie_use_components', '=', False)]}"> Credit card option will not be displayed without profile ID.
+                    <br/>
+                    <b><a href="https://www.mollie.com/dashboard/developers/api-keys" target="_new"> Get your API keys <i class="fa fa-arrow-right"> </i> </a></b>
+                </small>
+                <field name="mollie_show_save_card" />
+            </field>
             <page name="acquirer_credentials" position="after">
                 <page string="Mollie Payment Methods" attrs="{'invisible': [('provider', '!=', 'mollie')]}">
                     <field name="mollie_methods_ids" >
                         <tree create="0">
                             <field name="sequence" widget="handle"/>
                             <field name="name" />
-                            <field name="method_id_code" optional="hide"/>
+                            <field name="method_code" optional="hide"/>
                             <field name="payment_icon_ids" widget="many2many_tags"/>
                             <field name="active" invisible="1"/>
-                            <field name="journal_id" />
                             <field name="active_on_shop" widget="boolean_toggle"/>
-                            <field name="country_ids" widget="many2many_tags" optional="hide"/>
-                            <field name="min_amount" invisible="1"/>
-                            <field name="min_amount" invisible="1"/>
+                            <field name="country_ids" widget="many2many_tags"/>
                             <field name="supports_order_api" invisible="1"/>
                             <field name="supports_payment_api" invisible="1"/>
                             <field name="payment_issuer_ids" widget="many2many_tags" invisible="1"/>
@@ -45,7 +39,7 @@
                                     <field name="name" placeholder="Name"/>
                                 </h1>
                                 <group>
-                                    <field name="method_id_code" readonly="1"/>
+                                    <field name="method_code" readonly="1"/>
                                 </group>
                             </div>
                             <notebook>
@@ -55,6 +49,7 @@
                                             <field name="active" invisible="1"/>
                                             <field name="active_on_shop" widget="boolean_toggle"/>
                                             <field name="journal_id"/>
+                                            <field name="company_id" invisible="1"/>
                                         </group>
                                         <group>
                                             <field name="payment_icon_ids" widget="many2many_tags"/>
@@ -62,24 +57,23 @@
                                         </group>
                                     </group>
                                 </page>
-                                <page string="Fees" name="method_fees" attrs="{'invisible': [('parent.fees_active', '=', False)]}">
-                                    <group>
-                                        <group name="method_payment_fees">
-                                            <field name="fees_active"/>
-                                            <field name="fees_dom_fixed" attrs="{'invisible': [('fees_active', '=', False)]}"/>
-                                            <field name="fees_dom_var" attrs="{'invisible': [('fees_active', '=', False)]}"/>
-                                            <field name="fees_int_fixed" attrs="{'invisible': [('fees_active', '=', False)]}"/>
-                                            <field name="fees_int_var" attrs="{'invisible': [('fees_active', '=', False)]}"/>
-                                        </group>
-                                    </group>
-                                </page>
-                                <page string="Voucher Configuration" name="voucher_config" attrs="{'invisible': [('method_id_code', '!=', 'voucher')]}">
+                                <page string="Voucher Configuration" name="voucher_config" attrs="{'invisible': [('method_code', '!=', 'voucher')]}">
                                     <field name="mollie_voucher_ids">
                                         <tree editable="bottom">
-                                            <field name="category_id"/>
                                             <field name="mollie_voucher_category"/>
+                                            <field name="category_ids" widget="many2many_tags"/>
+                                            <field name="product_ids" widget="many2many_tags"/>
                                         </tree>
                                     </field>
+                                </page>
+                                <page string="Fees" name="mollie_fees">
+                                    <group name="payment_fees">
+                                        <field name="fees_active"/>
+                                        <field name="fees_dom_fixed" attrs="{'invisible': [('fees_active', '=', False)]}"/>
+                                        <field name="fees_dom_var" attrs="{'invisible': [('fees_active', '=', False)]}"/>
+                                        <field name="fees_int_fixed" attrs="{'invisible': [('fees_active', '=', False)]}"/>
+                                        <field name="fees_int_var" attrs="{'invisible': [('fees_active', '=', False)]}"/>
+                                    </group>
                                 </page>
                             </notebook>
                         </form>
@@ -89,23 +83,6 @@
                     </button>
                 </page>
             </page>
-        </field>
-    </record>
-
-    <record id="transaction_form_inherit_mollie" model="ir.ui.view">
-        <field name="name">payment.transaction.form.inherit.mollie</field>
-        <field name="model">payment.transaction</field>
-        <field name="inherit_id" ref="payment.transaction_form"/>
-        <field name="arch" type="xml">
-            <xpath expr="//header" position="inside">
-                <field name="is_processed" invisible="1"/>
-                <button name="mollie_manual_payment_validation" type="object" string="Process Mollie Transection" class="oe_highlight"
-                    attrs="{'invisible': ['|', '|', ('is_processed', '=', True), ('provider', '!=', 'mollie'), ('state', 'not in', ['draft', 'pending'])]}">
-                </button>
-            </xpath>
-            <field name="payment_id" position="after">
-                <field name="mollie_reminder_payment_id" attrs="{'invisible': [('mollie_reminder_payment_id', '=', False)]}"/>
-            </field>
         </field>
     </record>
 

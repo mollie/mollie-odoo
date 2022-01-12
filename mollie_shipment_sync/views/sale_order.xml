@@ -7,7 +7,7 @@
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
             <field name="state" position="before">
-                <button name="mollie_sync_shipment_data" attrs="{'invisible': [('mollie_payment', '=', False)]}" type="object" string="Sync Shipment"/>
+                <button name="mollie_sync_shipment_data"  type="object" string="Sync Shipment"/>
                 <field name="mollie_payment" invisible="1"/>
                 <field name="mollie_need_shipment_sync" invisible="1"/>
             </field>

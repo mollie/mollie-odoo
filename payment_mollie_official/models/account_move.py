@@ -2,13 +2,25 @@
 from odoo import models, fields, _
 from odoo.exceptions import UserError
 
-import logging
-
-_logger = logging.getLogger(__name__)
-
 
 class AccountMove(models.Model):
     _inherit = "account.move"
+
+    def _post(self, soft=True):
+        """ Vouchers might create extra payment record for reminder amount
+            when 2 diffrent journal are there 2 payment records are created
+            so we need to process second payment if present.
+        """
+        posted = super()._post(soft)
+
+        for invoice in posted.filtered(lambda move: move.is_invoice()):
+            payments = invoice.mapped('transaction_ids.mollie_reminder_payment_id')
+            move_lines = payments.line_ids.filtered(lambda line: line.account_internal_type in ('receivable', 'payable') and not line.reconciled)
+            for line in move_lines:
+                invoice.js_assign_outstanding_line(line.id)
+        return posted
+
+    # To proccess refunds from credit notes
 
     valid_for_mollie_refund = fields.Boolean(compute="_compute_valid_for_mollie_refund")
     mollie_refund_reference = fields.Char()
@@ -20,7 +32,7 @@ class AccountMove(models.Model):
             # TODO: Need to handle multiple transection
             if len(mollie_transactions) > 1:
                 raise UserError(_("Multiple mollie transactions are linked with invoice. Please refund manually from mollie portal"))
-            payment_record = mollie_transactions.acquirer_id._mollie_get_payment_data(mollie_transactions.acquirer_reference, force_payment=True)
+            payment_record = mollie_transactions.acquirer_id._api_mollie_get_payment_data(mollie_transactions.acquirer_reference, force_payment=True)
             return payment_record, mollie_transactions
         return False, mollie_transactions
 
@@ -51,30 +63,16 @@ class AccountMove(models.Model):
         self.ensure_one()
 
         # CASE 1: For the credit notes generated from invoice
-        transections = self.reversed_entry_id.transaction_ids.filtered(lambda tx: tx.state == 'done' and tx.acquirer_id.provider == 'mollie')
+        transactions = self.reversed_entry_id.transaction_ids.filtered(lambda tx: tx.state == 'done' and tx.acquirer_id.provider == 'mollie')
 
         # CASE 2: For the credit note generated due to returns of delivery
         # TODO: In this case credit note is generated from Sale order and so both invoice are not linked as reversal move.
         # this module does not have direct dependencies on the sales module. We are checking fields in move line to check sale order is linked.
-        # and we get transections info from sale order. May be, we can create glue module for this.
-        if not transections and 'sale_line_ids' in  self.invoice_line_ids._fields:
-            transections = self.invoice_line_ids.mapped('sale_line_ids.order_id.transaction_ids')
+        # and we get transactions info from sale order. May be, we can create glue module for this.
+        if not transactions and 'sale_line_ids' in self.invoice_line_ids._fields:
+            transactions = self.invoice_line_ids.mapped('sale_line_ids.order_id.transaction_ids')
 
-        return transections
-
-    def _post(self, soft=True):
-        """ Vouchers might create extra payment record for reminder amount
-            when 2 diffrent journal are there 2 payment records are created
-            so we need to process second payment if present.
-        """
-        posted = super()._post(soft)
-
-        for invoice in posted.filtered(lambda move: move.is_invoice()):
-            payments = invoice.mapped('transaction_ids.mollie_reminder_payment_id')
-            move_lines = payments.line_ids.filtered(lambda line: line.account_internal_type in ('receivable', 'payable') and not line.reconciled)
-            for line in move_lines:
-                invoice.js_assign_outstanding_line(line.id)
-        return posted
+        return transactions
 
     def action_register_refund_payment(self):
         context = {

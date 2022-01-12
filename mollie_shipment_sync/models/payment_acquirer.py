@@ -14,9 +14,4 @@ class PaymentAcquirerMollie(models.Model):
     # -----------------------------------------------
 
     def _api_mollie_sync_shipment(self, order_reference, shipment_data):
-        order = self._api_mollie_get_order(order_reference)
-        try:
-            shipment = order.create_shipment(shipment_data)
-        except UnprocessableEntityError as e:
-            return {'error': str(e)}
-        return shipment
+        return self._mollie_make_request(f'/orders/{order_reference}/shipments', data=shipment_data, method="POST")

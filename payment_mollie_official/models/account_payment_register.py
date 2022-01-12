@@ -27,8 +27,8 @@ class AccountPaymentRegister(models.TransientModel):
             if self.amount > self.max_mollie_amount:
                 raise UserError(_("Maximum amount you can refund is %s. Please change the refund amount." % self.max_mollie_amount))
 
-            payment_record = self.mollie_transecion_id.acquirer_id._mollie_get_payment_data(self.mollie_transecion_id.acquirer_reference, force_payment=True)
-            refund = self.mollie_transecion_id.acquirer_id._api_mollie_refund(self.amount, self.currency_id, payment_record)
+            payment_data = self.mollie_transecion_id.acquirer_id._api_mollie_get_payment_data(self.mollie_transecion_id.acquirer_reference, force_payment=True)
+            refund = self.mollie_transecion_id.acquirer_id._api_mollie_refund(self.amount, self.currency_id.name, payment_data.get('id'))
 
             if refund['status'] in ['pending', 'refunded'] and payments.get('res_id'):
                 description = refund['id']

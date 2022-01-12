@@ -368,7 +368,7 @@ class AccountJournal(models.Model):
     def _parse_payment_metadata(self, payment, tx_type):
 
         json_info = {}
-        mollie_acquirer = self.env.ref('payment_mollie_official.payment_acquirer_mollie', raise_if_not_found=False)
+        mollie_acquirer = self.env.ref('payment.payment_acquirer_mollie', raise_if_not_found=False)
         statement_line_data = {}
 
         if payment.get('metadata'):

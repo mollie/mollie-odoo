@@ -7,12 +7,12 @@ class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
     mollie_payment = fields.Boolean(compute='_compute_mollie_payment')
-    mollie_need_shipment_sync = fields.Boolean(compute='_compute_mollie_need_shipment_sync', store=True)
+    mollie_need_shipment_sync = fields.Boolean(compute='_compute_mollie_need_shipment_sync', store=True, default=False)
 
     def mollie_sync_shipment_data(self):
         transaction = self._mollie_get_valid_transaction()
         if transaction:
-            data = transaction.acquirer_id._mollie_get_payment_data(transaction.acquirer_reference)
+            data = transaction.acquirer_id._api_mollie_get_payment_data(transaction.acquirer_reference)
             shipment_lines = []
             if data and data.get('lines'):
                 for mollie_line in data.get('lines'):
@@ -50,7 +50,7 @@ class SaleOrder(models.Model):
         return self.transaction_ids.filtered(lambda t: t.acquirer_id.provider == 'mollie' and t.state in ['authorized', 'done'] and t.acquirer_reference.startswith("ord_"))
 
     def _cron_mollie_sync_shipment(self):
-        mollie_acquirer = self.env.ref('payment_mollie_official.payment_acquirer_mollie')
+        mollie_acquirer = self.env.ref('payment.payment_acquirer_mollie')
         if mollie_acquirer.mollie_auto_sync_shipment:
             orders = self.search([('mollie_need_shipment_sync', '=', True)])
             for order in orders:

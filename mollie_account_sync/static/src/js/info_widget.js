@@ -1,6 +1,7 @@
 odoo.define('drgl.payment_info.widget', function(require) {
     "use strict";
 
+
     var AbstractField = require('web.AbstractField');
     var fieldRegistry = require('web.field_registry');
     var Dialog = require('web.Dialog');

@@ -2,7 +2,7 @@
 
 {
     'name': 'Mollie Shipment Sync',
-    'version': '14.0.0.0',
+    'version': '15.0.0.1',
     'description': '',
     'summary': 'Sync shipment details to mollie payments',
     'author': 'Mollie',
@@ -19,7 +19,7 @@
         'data/cron.xml'
     ],
 
-    'images': [
-        'static/description/cover.png',
-    ],
+    # 'images': [
+    #     'static/description/cover.png',
+    # ],
 }

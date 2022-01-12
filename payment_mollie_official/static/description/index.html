@@ -1,5 +1,10 @@
 
 <div class="row py-3">
+    <div class="col-md-12">
+        <div class="alert alert-info" role="alert">
+            <p class="mb-0"> <i class="fa fa-info-circle" > </i> Odoo v15 has inbuilt support for the Mollie payments. This is extended module which adds several new features on top of default module.</p>
+        </div>
+    </div>
     <div class="col-md-6 py-3">
         <img style="align-self: flex-start;"
             src="img/icon-rect.png">
@@ -130,6 +135,34 @@
     <div class="col-md-6 py-3">
         <div class="card shadow">
             <div class="card-body text-center">
+                <i class="fa fa-credit-card-alt mb-2" style="
+                    color: white;
+                    background-color: #0076fe;
+                    padding: 13px 10px;
+                    border-radius: 25px;
+                    font-size: 20px;
+                    "></i>
+                <h5> Save card options for faster checkout. </h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 py-3">
+        <div class="card shadow">
+            <div class="card-body text-center">
+                <i class="fa fa-cutlery mb-2" style="
+                        color: white;
+                        background-color: #0076fe;
+                        padding: 12px;
+                        border-radius: 25px;
+                        font-size: 22px;
+                    "></i>
+                <h5> Eco-, gift and meal vouchers support. </h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 py-3">
+        <div class="card shadow">
+            <div class="card-body text-center">
                 <i class="fa fa-reply-all mb-2" style="
                         color: white;
                         background-color: #0076fe;
@@ -167,18 +200,10 @@
         style="background-color: #0077ff;color: #fff;padding: 5px 17px;font-size: 14px;"> Step 1 </span><span
         style="display: inline-block;font-size: 19px;"> Download the module and place the module in apps folder. </span>
 </h3>
-<h3>
-    <span class="badge badge-pill mr-2"
-        style="background-color: #0077ff;color: #fff;padding: 5px 17px;font-size: 14px;"> Step 2 </span><span
-        style="display: inline-block;font-size: 19px;"> Install python dependencies (it is listed in requirements.txt file in module). </span>
-</h3>
-<span style="background-color: #424242;color: white;padding: 8px 28px;display: inline-block;margin-left: 85px;border-radius: 6px;margin-bottom: 16px;">
-    pip3 install -r requirements.txt
-</span>
 
 <h3>
     <span class="badge badge-pill mr-2"
-        style="background-color: #0077ff;color: #fff;padding: 5px 17px;font-size: 14px;"> Step 3 </span><span
+        style="background-color: #0077ff;color: #fff;padding: 5px 17px;font-size: 14px;"> Step 2 </span><span
         style="display: inline-block;font-size: 19px;"> 
         Install this module in your Odoo instance.
         </span>
@@ -186,7 +211,7 @@
 
 <h3>
     <span class="badge badge-pill mr-2"
-        style="background-color: #0077ff;color: #fff;padding: 5px 17px;font-size: 14px;"> Step 4 </span><span
+        style="background-color: #0077ff;color: #fff;padding: 5px 17px;font-size: 14px;"> Step 3 </span><span
         style="display: inline-block;font-size: 19px;"> Open 
             <span style="color:#0077ff;"> Website > Configuration > Payment Acquirers </span>
             and open acquirers
@@ -195,7 +220,7 @@
 
 <h3>
     <span class="badge badge-pill mr-2"
-        style="background-color: #0077ff;color: #fff;padding: 5px 17px;font-size: 14px;"> Step 5 </span><span
+        style="background-color: #0077ff;color: #fff;padding: 5px 17px;font-size: 14px;"> Step 4 </span><span
         style="display: inline-block;font-size: 19px;"> Fill the API keys and credentials. (You will find these keys from your Mollie dashboard.)
     </span>
 </h3>
@@ -204,7 +229,7 @@
 
 <h3>
     <span class="badge badge-pill mr-2"
-        style="background-color: #0077ff;color: #fff;padding: 5px 17px;font-size: 14px;"> Step 6 </span><span
+        style="background-color: #0077ff;color: #fff;padding: 5px 17px;font-size: 14px;"> Step 5 </span><span
         style="display: inline-block;font-size: 19px;"> Click on <span style="color:#0077ff;">Mollie Payment Methods</span> tab and click on <span style="color:#0077ff;">sync payment method</span> button.
     </span>
 </h3>
@@ -226,86 +251,15 @@
 
 <div class="card mx-auto w-md-75">
     <div class="card-header bg-200">
-        <h4 class="m-0">v14.0.0.7</h4>
+        <h4 class="m-0">v15.0.0.1</h4>
     </div>
     <div class="card-body">
-        <div> <b class="text-danger"> FIX </b> Fixed issue of Order API when using it with fees. </div>
-    </div>
-</div>
-
-<div class="card mx-auto w-md-75">
-    <div class="card-header bg-200">
-        <h4 class="m-0">v14.0.0.6</h4>
-    </div>
-    <div class="card-body">
-        <div> <b class="text-success"> NEW </b> Added feature to extra fees(surcharge). </div>
-        <div> <b class="text-success"> NEW </b> Added support of Apple Pay for supported devices. </div>
-        <div> <b class="text-success"> NEW </b> Make mollie payments method translatable also sync translation from mollie. </div>
-        <div> <b class="text-success"> NEW </b> Filter non supported payment methods during check out (based on amount, currency and billing country). </div>
-        <div> <b class="text-warning"> UPDATE </b> Select first payment method by default when mollie method is first. </div>
-        <div> <b class="text-danger"> FIX </b> Fixed SEPA payment module view conflict. </div>
-        <div> <b class="text-danger"> FIX </b> Minor bug fixes. </div>
-    </div>
-</div>
-
-<div class="card mx-auto w-md-75">
-    <div class="card-header bg-200">
-        <h4 class="m-0">v14.0.0.5</h4>
-    </div>
-    <div class="card-body">
-        <div> <b class="text-success"> NEW </b> Option to hide the payment methods based on country. </div>
-        <div> <b class="text-warning"> UPDATE </b> Send extra metadata for shipment API. </div>
-        <div> <b class="text-danger"> FIX </b> Increase the timeout request (due to python SDK change). </div>
-        <div> <b class="text-danger"> FIX </b> Minor bug fixes. </div>
-    </div>
-</div>
-
-<div class="card mx-auto w-md-75">
-    <div class="card-header bg-200">
-        <h4 class="m-0">v14.0.0.4</h4>
-    </div>
-    <div class="card-body">
-        <div> <b class="text-warning"> UPDATE </b> Set default amount in the refund dialog. </div>
-        <div> <b class="text-warning"> UPDATE </b> Show only payment api type methods for payment links. </div>
-        <div> <b class="text-danger"> FIX </b> Minor bug fixes. </div>
-    </div>
-</div>
-<div class="card mx-auto w-md-75">
-    <div class="card-header bg-200">
-        <h4 class="m-0">v14.0.0.3</h4>
-    </div>
-    <div class="card-body">
-        <div> <b class="text-success"> NEW </b> Added vouchers support. </div>
-        <div> <b class="text-success"> NEW </b> Configure vouchers categories at products and product categories. </div>
-        <div> <b class="text-success"> NEW </b> Manage mollie refunds via credit notes. </div>
-        <div> <b class="text-success"> NEW </b> Restrict user from over refund. </div>
-        <div> <b class="text-warning"> UPDATE </b> Better management of API fallbacks. </div>
-        <div> <b class="text-danger"> FIX </b> Deactivate inghomepay option. </div>
-        <div> <b class="text-danger"> FIX </b> Hide the credit card option if profile is not configured. </div>
-        <div> <b class="text-danger"> FIX </b> Fixed wrong currency field for invoice. </div>
-    </div>
-</div>
-<div class="card mx-auto w-md-75">
-    <div class="card-header bg-200">
-        <h4 class="m-0">v14.0.0.2</h4>
-    </div>
-    <div class="card-body">
-        <div> <b class="text-success"> NEW </b> Added option to manually post process transactions. </div>
-        <div> <b class="text-success"> NEW </b> Webhook will now post process the transactions too. </div>
-        <div> <b class="text-danger"> FIX </b> Handle multiple webhook calls for delayed responses. </div>
-    </div>
-</div>
-<div class="card mx-auto w-md-75">
-    <div class="card-header bg-200">
-        <h4 class="m-0">v14.0.0.1</h4>
-    </div>
-    <div class="card-body">
-        <div> <b class="text-success"> NEW </b> Migrated module from v13 to v14.  </div>
+        <div> <b class="text-success"> NEW </b> New extended module for v15.  </div>
     </div>
 </div>
 
 <div class="row mt-5 border text-center">
-    <div class="col-md-4 py-3" style="background-color: #0077ff;color: white;">
+    <div class="col-md-4 py-3" style="background: #0077ff;color: white;">
         <h4 style="color: white;" class="mb-0"> Developed by <b>Applix</b></h4>
         <div style="font-family: 'Montserrat';font-weight: 500;">
             https://www.mollie.com/integrations/odoo
