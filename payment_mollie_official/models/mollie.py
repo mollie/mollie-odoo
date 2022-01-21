@@ -129,7 +129,7 @@ class TxMollie(models.Model):
 
         _logger.info('Validated transfer payment for tx %s: set as pending' % (reference))
         mollie_api_key = acquirer._get_mollie_api_keys(acquirer.environment)['mollie_api_key']
-        url = "%s/payments" % (acquirer._get_mollie_urls(acquirer.environment)['mollie_form_url'])
+        url = "%spayments" % (acquirer._get_mollie_urls(acquirer.environment)['mollie_form_url'])
 
         payload = {
             "id": transactionId
