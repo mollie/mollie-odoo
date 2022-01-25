@@ -21,6 +21,7 @@ class PaymentTransaction(models.Model):
     mollie_payment_method = fields.Char()
     mollie_payment_issuer = fields.Char()
     mollie_reminder_payment_id = fields.Many2one('account.payment', string='Reminder Payment', readonly=True)
+    mollie_save_card = fields.Boolean()
 
     def mollie_create(self, vals):
         create_vals = {}
@@ -33,6 +34,9 @@ class PaymentTransaction(models.Model):
 
         if request and request.params.get('mollie_issuer'):
             create_vals['mollie_payment_issuer'] = request.params.get('mollie_issuer')
+
+        if request and request.params.get('mollie_save_card'):
+            create_vals['mollie_save_card'] = request.params.get('mollie_save_card')
 
         if vals.get('fees') and isinstance(vals['fees'], dict):
             payment_method = create_vals.get('mollie_payment_method')
@@ -167,3 +171,18 @@ class PaymentTransaction(models.Model):
             self.form_feedback(data, "mollie")
         if self.state == 'done' and not self.is_processed:
             self._post_process_after_done()
+
+    def _get_transaction_customer_id(self):
+        """ This method return mollie customer id if needed in transection
+            It will create new customer id if needed.
+        """
+        mollie_customer_id = False
+        if self.mollie_save_card and not self.env.user.has_group('base.group_public'):  # for extra security
+            user_sudo = self.env.user.sudo()
+            mollie_customer_id = user_sudo.mollie_customer_id
+            if not mollie_customer_id:
+                customer_id_data = self.acquirer_id._api_mollie_create_customer_id()
+                if customer_id_data and customer_id_data.get('id'):
+                    user_sudo.mollie_customer_id = customer_id_data.get('id')
+                    mollie_customer_id = user_sudo.mollie_customer_id
+        return mollie_customer_id
