@@ -64,7 +64,7 @@
             </ul>
         </div>
         <t t-if="payment_method.method_id_code == 'creditcard'">
-            <div id="o_payment_form_acq_creditcard" t-attf-class="d-none card-footer">
+            <div id="o_payment_form_acq_creditcard" t-attf-class="d-none card-footer" t-if="payment_method._mollie_show_creditcard_option()">
                 <t t-call="payment_mollie_official.mollie_creditcard_component"/>
             </div>
         </t>
@@ -77,8 +77,20 @@
 </template>
 
 <template id="mollie_creditcard_component">
+    <t t-set="has_mollie_customer_id" t-value="request.env.user.sudo().mollie_customer_id"/>
+    <t t-set="mollie_components_enabled" t-value="acq.sudo().mollie_use_components"/>
     <div>
-        <div id="o_mollie_component" t-att-data-profile_id="acq.sudo().mollie_profile_id" t-att-data-mode="acq.sudo().state">
+        <div t-if="mollie_components_enabled and has_mollie_customer_id" class="ml-2">
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="mollieCardType" id="mollieSavedCard" value="saved_card" checked="checked"/>
+                <label class="form-check-label mt-0" for="mollieSavedCard">Use Saved Card </label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="mollieCardType" id="mollieInlineCard" value="component"/>
+                <label class="form-check-label mt-0" for="mollieInlineCard">Fill Card Details</label>
+            </div>
+        </div>
+        <div id="o_mollie_component" t-att-class="has_mollie_customer_id and 'd-none' or ''" t-if="mollie_components_enabled" t-att-data-profile_id="acq.sudo().mollie_profile_id" t-att-data-mode="acq.sudo().state">
             <div class="form-row o_mollie_form mb-1">
                 <div class="col-md-12">
                     <label class="label text-muted mb-1" for="mollie-card-holder">Card Holder</label>
@@ -101,6 +113,12 @@
                     <div id="mollie-verification-code-error" class="text-danger small"></div>
                 </div>
             </div>
+        </div>
+        <div id="o_mollie_save_card" t-att-class="has_mollie_customer_id and 'd-none' or ''" t-if="acq.sudo().mollie_show_save_card" groups="!base.group_public">
+            <label>
+                <input name="o_mollie_save_card" type="checkbox"/>
+                    Save my card details
+            </label>
         </div>
     </div>
 </template>

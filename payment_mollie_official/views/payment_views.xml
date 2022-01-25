@@ -10,15 +10,15 @@
                 <group attrs="{'invisible': [('provider', '!=', 'mollie')]}">
                     <field name="mollie_api_key_test" attrs="{'required':[ ('provider', '=', 'mollie'), ('state', '=', 'test')]}" password="True"/>
                     <field name="mollie_api_key_prod" attrs="{'required':[ ('provider', '=', 'mollie'), ('state', '=', 'enabled')]}" password="True"/>
-                    <field name="mollie_profile_id" attrs="{'required':[ ('provider', '=', 'mollie'), ('state', '=', 'enabled')]}" password="True"/>
-                    <field name="mollie_voucher_enabled" invisible="1"/>
-                    <label string=" " for="mollie_profile_id"> </label>
-                    <small class="text-muted oe_edit_only"> Credit card option will not be displayed without profile ID.
+                    <field name="mollie_use_components" />
+                    <field name="mollie_profile_id" password="True" attrs="{'invisible': [('mollie_use_components', '=', False)], 'required':  [('mollie_use_components', '=', True)]}"/>
+                    <label string=" " for="mollie_profile_id" attrs="{'invisible': [('mollie_use_components', '=', False)]}"> </label>
+                    <small class="text-muted" attrs="{'invisible': [('mollie_use_components', '=', False)]}"> Credit card option will not be displayed without profile ID.
                         <br/>
                         <b><a href="https://www.mollie.com/dashboard/developers/api-keys" target="_new"> Get your API keys <i class="fa fa-arrow-right"> </i> </a></b>
-                        <br/>
-                        <br/>
                     </small>
+                    <field name="mollie_show_save_card" />
+                    <field name="mollie_voucher_enabled" invisible="1"/>
                 </group>
             </xpath>
             <page name="acquirer_credentials" position="after">

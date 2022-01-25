@@ -7,5 +7,6 @@ from . import mollie_issuers
 from . import res_partner
 from . import account_move
 from . import product
+from . import res_user
 from . import voucher_lines
 from . import account_payment

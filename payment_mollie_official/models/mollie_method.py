@@ -39,3 +39,14 @@ class MolliePaymentMethod(models.Model):
     fees_int_var = fields.Float('Variable international fees (in percents)')
 
     mollie_voucher_ids = fields.One2many('mollie.voucher.line', 'method_id', string='Mollie Voucher Config')
+
+    def _mollie_show_creditcard_option(self):
+        if self.method_id_code != 'creditcard':
+            return False
+        acquirer_sudo = self.sudo().parent_id
+        self.env.user._mollie_validate_customer_id(acquirer_sudo)
+        if acquirer_sudo.mollie_profile_id and acquirer_sudo.sudo().mollie_use_components:
+            return True
+        if acquirer_sudo.sudo().mollie_show_save_card and not self.env.user.has_group('base.group_public'):
+            return True
+        return False
