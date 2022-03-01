@@ -19,6 +19,7 @@ class MolliePaymentMethod(models.Model):
     country_ids = fields.Many2many('res.country', string='Country Availability')
     mollie_voucher_ids = fields.One2many('mollie.voucher.line', 'method_id', string='Mollie Voucher Config')
     company_id = fields.Many2one(related="acquirer_id.company_id")
+    enable_qr_payment = fields.Boolean(string="Enable QR payment")
 
     # Hidden fields that are used for filtering methods
     supports_order_api = fields.Boolean(string="Supports Order API")

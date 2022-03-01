@@ -332,7 +332,7 @@ class PaymentAcquirerMollie(models.Model):
                     result[method['id']] = method
         return result or {}
 
-    def _api_mollie_create_payment_record(self, api_type, payment_data, silent_errors=False):
+    def _api_mollie_create_payment_record(self, api_type, payment_data, params=None, silent_errors=False):
         """ Create the payment records on the mollie. It calls payment or order
         API based on 'api_type' param.
         :param str api_type: api is selected based on this parameter
@@ -341,7 +341,7 @@ class PaymentAcquirerMollie(models.Model):
         :rtype: dict
         """
         endpoint = '/orders' if api_type == 'order' else '/payments'
-        return self._mollie_make_request(endpoint, data=payment_data, method="POST", silent_errors=silent_errors)
+        return self._mollie_make_request(endpoint, data=payment_data, params=params, method="POST", silent_errors=silent_errors)
 
     def _api_mollie_get_payment_data(self, transaction_reference, force_payment=False):
         """ Fetch the payment records based `transaction_reference`. It is used

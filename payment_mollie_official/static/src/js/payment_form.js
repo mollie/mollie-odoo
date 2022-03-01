@@ -5,6 +5,7 @@ odoo.define('mollie.payment.form', function (require) {
     const ajax = require('web.ajax');
     const checkoutForm = require('payment.checkout_form');
     const core = require('web.core');
+    const qrDialog = require('mollie.qr.dialog');
 
     const _t = core._t;
 
@@ -170,6 +171,40 @@ odoo.define('mollie.payment.form', function (require) {
                             return _super();
                         }
                     });
+            } else {
+                return this._super(...arguments);
+            }
+        },
+
+        /**
+         * Redirect the customer by submitting the redirect form included in the processing values.
+         *
+         * We have overridden this method to show qr code popup.
+         *
+         * @override
+         * @param {string} provider - The provider of the acquirer
+         * @param {number} acquirerId - The id of the acquirer handling the transaction
+         * @param {object} processingValues - The processing values of the transaction
+         * @return {undefined}
+         */
+        _processRedirectPayment: function(provider, acquirerId, processingValues) {
+            const $redirectForm = $(processingValues.redirect_form_html).attr(
+                'id', 'o_payment_redirect_form'
+            );
+            var qrImgSrc = $redirectForm.data('qrsrc');
+            if (qrImgSrc) {
+                var dialog = new qrDialog(this, {
+                    qrImgSrc: qrImgSrc,
+                    submitRedirectForm: this._super.bind(this, ...arguments),
+                    size: 'small',
+                    title: _t('Scan QR'),
+                    renderFooter: false
+                });
+                dialog.opened().then(() => {
+                    $.unblockUI();
+                    this._enableButton();
+                });
+                dialog.open();
             } else {
                 return this._super(...arguments);
             }

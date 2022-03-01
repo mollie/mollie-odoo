@@ -136,7 +136,7 @@
 
 <template id="redirect_form"  inherit_id="payment_mollie.redirect_form">
     <xpath expr="//form" position="replace">
-        <form  t-att-action="api_url" method="get">
+        <form  t-att-action="api_url" method="get" t-att-data-qrsrc="qr_src">
             <input t-if="ref" name="ref" type="hidden" t-att-value="ref"/>
             <t t-foreach="extra_params" t-as="param">
                 <input t-att-name="param" type="hidden" t-att-value="param_value"/>

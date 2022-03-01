@@ -114,7 +114,8 @@ class PaymentTransaction(models.Model):
         # and there is no need to checkout on mollie
         if payment_data.get("_links", {}).get("checkout"):
             mollie_checkout_url = payment_data["_links"]["checkout"]["href"]
-            return {'api_url': mollie_checkout_url, 'extra_params': urls.url_parse(mollie_checkout_url).decode_query()}
+            qr_src = payment_data.get('details', {}).get('qrCode', {}).get('src')
+            return {'api_url': mollie_checkout_url, 'extra_params': urls.url_parse(mollie_checkout_url).decode_query(), 'qr_src': qr_src}
         else:
             return {
                 'api_url': payment_data.get('redirectUrl'),
@@ -247,8 +248,8 @@ class PaymentTransaction(models.Model):
 
         result = None
 
-        # Order API (use if sale orders are present)
-        if 'sale_order_ids' in self._fields and self.sale_order_ids and method_record.supports_order_api:
+        # Order API (use if sale orders are present). Also qr code is only supported by Payment API
+        if (not method_record.enable_qr_payment) and 'sale_order_ids' in self._fields and self.sale_order_ids and method_record.supports_order_api:
             # Order API
             result = self._mollie_create_payment_record('order', silent_errors=True)
 
@@ -266,8 +267,8 @@ class PaymentTransaction(models.Model):
         :return: data of created record received from mollie api
         :rtype: dict
         """
-        payment_data = self._mollie_prepare_payment_payload(api_type)
-        result = self.acquirer_id._api_mollie_create_payment_record(api_type, payment_data, silent_errors=silent_errors)
+        payment_data, params = self._mollie_prepare_payment_payload(api_type)
+        result = self.acquirer_id._api_mollie_create_payment_record(api_type, payment_data, params=params, silent_errors=silent_errors)
 
         # We are setting acquirer reference as we are receiving it before 3DS payment
         # So we can verify the validity of the transecion
@@ -286,7 +287,7 @@ class PaymentTransaction(models.Model):
         """
         base_url = self.acquirer_id.get_base_url()
         redirect_url = urls.url_join(base_url, MollieController._return_url)
-
+        params = {}
         payment_data = {
             'method': self.mollie_payment_method,
             'amount': {
@@ -347,8 +348,11 @@ class PaymentTransaction(models.Model):
                 payment_data['payment']['webhookUrl'] = payment_data['webhookUrl']    # To get refund webhook
         else:
             payment_data.update(method_specific_parameters)
+            method_record = self.acquirer_id.mollie_methods_ids.filtered(lambda m: m.method_code == self.mollie_payment_method)
+            if method_record.enable_qr_payment:
+                params['include'] = 'details.qrCode'
 
-        return payment_data
+        return payment_data, params
 
     def _mollie_get_order_lines(self, order):
         """ This method prepares order line data for order api

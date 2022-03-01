@@ -2,7 +2,7 @@
 
 {
     'name': 'Mollie Payments Extended',
-    'version': '15.0.0.1',
+    'version': '15.0.0.2',
     'category': 'eCommerce',
     'license': 'LGPL-3',
     'author': 'Mollie',
@@ -31,6 +31,7 @@
     'assets': {
         'web.assets_frontend': [
             'payment_mollie_official/static/src/js/payment_form.js',
+            'payment_mollie_official/static/src/js/qr_dialog.js',
             'payment_mollie_official/static/src/scss/payment_form.scss',
         ]
     },

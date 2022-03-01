@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+
+    <t t-name="mollie.qr.dialog">
+        <div class="text-center">
+            <h5> Open the app and scan QR </h5>
+            <img class="img img-fluid mb-2" t-att-src="widget.qrImgSrc"/>
+            <h5 class="mb-2"> OR </h5>
+            <button class="btn btn-primary btn-block dr_continue_checkout"> Continue without QR Code </button>
+        </div>
+    </t>
+
+</templates>
