@@ -7,6 +7,7 @@ var core = require('web.core');
 var Dialog = require('web.Dialog');
 var publicWidget = require('web.public.widget');
 var ajax = require('web.ajax');
+const qrDialog = require('mollie.qr.dialog');
 
 var _t = core._t;
 
@@ -216,7 +217,22 @@ publicWidget.registry.PaymentForm.include({
                         self.enableButton(button);
                         return new Promise(function () { });
                     }
-
+                    var qrInput = $(newForm).find("input[name='qr_src']"); // qr image src
+                    if (qrInput.length) {
+                        var dialog = new qrDialog(self, {
+                            qrImgSrc: qrInput.val(),
+                            submitRedirectForm: function () {newForm.submit()},
+                            size: 'small',
+                            title: _t('Scan QR'),
+                            renderFooter: false
+                        });
+                        var dialogDef = dialog.opened().then(() => {
+                            // $.unblockUI();
+                            self.enableButton(button);
+                        });
+                        dialog.open();
+                        return dialogDef;
+                    }
                     if (action_url) {
                         newForm.submit(); // and finally submit the form
                         return new Promise(function () { });

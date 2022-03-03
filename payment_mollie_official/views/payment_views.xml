@@ -55,6 +55,7 @@
                                             <field name="active" invisible="1"/>
                                             <field name="active_on_shop" widget="boolean_toggle"/>
                                             <field name="journal_id"/>
+                                            <field name="enable_qr_payment" widget="boolean_toggle" attrs="{'invisible': [('method_id_code', 'not in', ['bancontact'])]}"/>
                                         </group>
                                         <group>
                                             <field name="payment_icon_ids" widget="many2many_tags"/>
