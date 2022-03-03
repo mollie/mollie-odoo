@@ -37,6 +37,7 @@ class MolliePaymentMethod(models.Model):
     fees_dom_var = fields.Float('Variable domestic fees (in percents)')
     fees_int_fixed = fields.Float('Fixed international fees')
     fees_int_var = fields.Float('Variable international fees (in percents)')
+    enable_qr_payment = fields.Boolean(string="Enable QR payment")
 
     mollie_voucher_ids = fields.One2many('mollie.voucher.line', 'method_id', string='Mollie Voucher Config')
 

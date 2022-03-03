@@ -6,11 +6,13 @@
     <input type="hidden" name="checkout_url" t-att-value="checkout_url"/>
     <input type="hidden" name="error_msg" t-att-value="error_msg"/>
     <input type="hidden" name="status" t-att-data-value="status"/>
+    <input t-if="qr_src" type="hidden" name="qr_src" t-att-value="qr_src"/>
 </template>
 
 <template id="assets_frontend" inherit_id="web.assets_frontend">
     <xpath expr="script[last()]" position="after">
         <script type="text/javascript" src="/payment_mollie_official/static/src/js/payment_form.js"></script>
+        <script type="text/javascript" src="/payment_mollie_official/static/src/js/qr_dialog.js"></script>
         <link rel="stylesheet" type="text/scss" href="/payment_mollie_official/static/src/scss/payment_form.scss"/>
     </xpath>
 </template>
