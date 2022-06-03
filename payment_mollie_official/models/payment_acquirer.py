@@ -27,7 +27,7 @@ class PaymentAcquirerMollie(models.Model):
     mollie_voucher_ids = fields.One2many('mollie.voucher.line', 'acquirer_id', string='Mollie Voucher Config')
     mollie_voucher_enabled = fields.Boolean(compute="_compute_mollie_voucher_enabled")
 
-    mollie_use_components = fields.Boolean(string='Mollie Components')
+    mollie_use_components = fields.Boolean(string='Mollie Components', default=True)
     mollie_show_save_card = fields.Boolean(string='Single-Click payments')
 
     def _get_feature_support(self):
@@ -657,7 +657,7 @@ class PaymentAcquirerMollie(models.Model):
             'es_ES', 'ca_ES', 'pt_PT', 'it_IT',
             'nb_NO', 'sv_SE', 'fi_FI', 'da_DK',
             'is_IS', 'hu_HU', 'pl_PL', 'lv_LV',
-            'lt_LT']
+            'lt_LT', 'en_GB']
 
     def _mollie_redirect_url(self, tx_id):
         base_url = self.get_base_url()
