@@ -23,7 +23,7 @@ class PaymentAcquirerMollie(models.Model):
     mollie_profile_id = fields.Char("Mollie Profile ID", groups="base.group_user")
     mollie_methods_ids = fields.One2many('mollie.payment.method', 'acquirer_id', string='Mollie Payment Methods')
 
-    mollie_use_components = fields.Boolean(string='Mollie Components')
+    mollie_use_components = fields.Boolean(string='Mollie Components', default=True)
     mollie_show_save_card = fields.Boolean(string='Single-Click payments')
 
     # --------------
@@ -421,7 +421,7 @@ class PaymentAcquirerMollie(models.Model):
             'es_ES', 'ca_ES', 'pt_PT', 'it_IT',
             'nb_NO', 'sv_SE', 'fi_FI', 'da_DK',
             'is_IS', 'hu_HU', 'pl_PL', 'lv_LV',
-            'lt_LT']
+            'lt_LT', 'en_GB']
 
     def _mollie_fetch_image_by_url(self, image_url):
         image_base64 = False
