@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from odoo import _, api, fields, models
-from mollie.api.error import UnprocessableEntityError
 
 
 class PaymentAcquirerMollie(models.Model):
