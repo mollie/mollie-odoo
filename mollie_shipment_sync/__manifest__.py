@@ -2,7 +2,7 @@
 
 {
     'name': 'Mollie Shipment Sync',
-    'version': '15.0.0.1',
+    'version': '15.0.0.2',
     'description': '',
     'summary': 'Sync shipment details to mollie payments',
     'author': 'Mollie',
