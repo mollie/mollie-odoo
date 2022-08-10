@@ -2,7 +2,7 @@
 
 {
     'name': 'Mollie Payments',
-    'version': '14.0.0.10',
+    'version': '14.0.0.11',
     'category': 'eCommerce',
     'license': 'LGPL-3',
     'author': 'Mollie',
@@ -36,4 +36,6 @@
     'images': [
         'static/description/cover.png',
     ],
+    'post_init_hook': 'create_missing_journal_for_acquirers',
+    'uninstall_hook': 'uninstall_hook',
 }
