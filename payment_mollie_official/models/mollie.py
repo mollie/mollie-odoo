@@ -119,6 +119,10 @@ class TxMollie(models.Model):
 
     @api.multi
     def _mollie_form_validate(self, data):
+        """
+        Check transaction status on Mollie's API and
+        set to done in Odoo if paid.
+        """
         reference = data.get('reference')
 
         acquirer = self.acquirer_id
@@ -129,39 +133,41 @@ class TxMollie(models.Model):
 
         _logger.info('Validated transfer payment for tx %s: set as pending' % (reference))
         mollie_api_key = acquirer._get_mollie_api_keys(acquirer.environment)['mollie_api_key']
-        url = "%s/payments" % (acquirer._get_mollie_urls(acquirer.environment)['mollie_form_url'])
+        url_base = acquirer._get_mollie_urls(acquirer.environment)['mollie_form_url']
 
-        payload = {
-            "id": transactionId
-        }
+        url_base = url_base.rstrip("/")
+        url = "{base}/payments/{transaction_id}".format(
+            base=url_base, transaction_id=transactionId
+        )
+
         if acquirer.environment == 'test':
-            payload["testmode"] = True
+            payload = {"testmode": True}
+        else:
+            payload = {}
 
         headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + mollie_api_key}
 
+        _logger.info("GET ", url)
         mollie_response = requests.get(
-            url, data=json.dumps(payload), headers=headers).json()
+            url, params=payload, headers=headers).json()
+
+        response_id = mollie_response.get("id")
+        if response_id != transactionId:
+            _logger.error('Mollie: response transaction id does not match.')
+            return True
 
         if self.state == 'done':
             _logger.info('Mollie: trying to validate an already validated tx (ref %s)', reference)
             return True
 
-        data_list = mollie_response["data"]
-        data = {}
-        status = 'undefined'
-        for x in data_list:
-            if isinstance(x, dict) and x.get('id', False) and x['id'] == \
-                    transactionId:
-                data = x
-                break
-
-        if "status" in data:
-            status = data["status"]
+        status = mollie_response.get("status", "undefined")
 
         if status == "paid":
+            paid_datetime = mollie_response["paidDatetime"].replace(".0Z", "")
+            date_validate = fields.datetime.strptime(paid_datetime, "%Y-%m-%dT%H:%M:%S")
             vals = {
                 'state': 'done',
-                'date_validate':  fields.datetime.strptime(data["paidDatetime"].replace(".0Z", ""), "%Y-%m-%dT%H:%M:%S"),
+                'date_validate':  date_validate,
                 'acquirer_reference': transactionId,
             }
 
