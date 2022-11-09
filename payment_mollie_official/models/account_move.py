@@ -43,27 +43,11 @@ class AccountMove(models.Model):
                 has_mollie_tx = True
             move.valid_for_mollie_refund = has_mollie_tx
 
-    def mollie_process_refund(self):
-        self.ensure_one()
-        payment_record, mollie_transactions = self._get_mollie_payment_data_for_refund()
-        if payment_record:
-            # Create payment record and post the payment
-            AccountPaymentRegister = self.env['account.payment.register'].with_context(active_ids=self.ids, active_model='account.move')
-            payment_obj = AccountPaymentRegister.create({
-                'journal_id': mollie_transactions.payment_id.journal_id.id,
-                'payment_method_id': mollie_transactions.payment_id.payment_method_id.id
-            })
-            payment_obj.action_create_payments()
-            # Create refund in mollie via API
-            refund = mollie_transactions.acquirer_id._api_mollie_refund(self.amount_total, self.currency_id, payment_record)
-            if refund['status'] == 'refunded':
-                self.mollie_refund_reference = refund['id']
-
     def _find_valid_mollie_transactions(self):
         self.ensure_one()
 
         # CASE 1: For the credit notes generated from invoice
-        transactions = self.reversed_entry_id.transaction_ids.filtered(lambda tx: tx.state == 'done' and tx.acquirer_id.provider == 'mollie')
+        transactions = self.reversed_entry_id.transaction_ids.sudo().filtered(lambda tx: tx.state == 'done' and tx.acquirer_id.provider == 'mollie')
 
         # CASE 2: For the credit note generated due to returns of delivery
         # TODO: In this case credit note is generated from Sale order and so both invoice are not linked as reversal move.
@@ -80,7 +64,7 @@ class AccountMove(models.Model):
             'active_ids': self.ids,
         }
 
-        payment_record, mollie_transactions = self._get_mollie_payment_data_for_refund()
+        payment_record, mollie_transactions = self.sudo()._get_mollie_payment_data_for_refund()
 
         # We will not get `amountRemaining` key if payment is not paid (only authorized)
         if payment_record and payment_record.get('amountRemaining'):
