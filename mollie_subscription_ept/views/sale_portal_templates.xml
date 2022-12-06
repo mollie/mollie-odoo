@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="portal_my_home_menu_sale_ext" name="Portal layout : sales menu entries extended"
+              inherit_id="portal.portal_breadcrumbs" priority="20">
+        <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+            <li t-if="page_name == 'subscriptions'"
+                t-attf-class="breadcrumb-item #{'active ' if not subscriptions else ''}">
+                <a t-if="subscription" t-attf-href="/my/subscriptions?{{ keep_query() }}">Subscriptions</a>
+                <t t-else="">Subscriptions</t>
+            </li>
+        </xpath>
+    </template>
+
+    <template id="portal_my_home_subscription" name="Portal My Home : Subscription entries"
+              inherit_id="portal.portal_my_home" priority="20">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+            <t t-if="subscription_count" t-call="portal.portal_docs_entry">
+                <t t-set="title">Subscriptions</t>
+                <t t-set="url" t-value="'/my/subscriptions'"/>
+                <t t-set="count" t-value="subscription_count"/>
+            </t>
+        </xpath>
+    </template>
+
+    <template id="portal_my_subscriptions" name="My Subscriptions">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">Subscriptions</t>
+            </t>
+            <t t-if="not subscriptions">
+                <p>There are currently no subscriptions for your account.</p>
+            </t>
+            <t t-if="subscriptions" t-call="portal.portal_table">
+                <thead>
+                    <tr class="active">
+                        <th>
+                            <span class='d-none d-md-inline'>Subscription</span>
+                            <span class='d-block d-md-none'>Ref.</span>
+                        </th>
+                        <th class="text-left">Start Date</th>
+                        <th class="text-left">Next Payment Date</th>
+                        <th class="text-right">Amount</th>
+                        <th class="text-center">Status</th>
+                    </tr>
+                </thead>
+                <t t-foreach="subscriptions" t-as="order">
+                    <t t-foreach="order.mollie_subscription_id.sorted(key=lambda r: r.name, reverse=True)"
+                       t-as="subscription">
+                        <tr>
+                            <td>
+                                <a t-att-href="'/my/subscriptions/%s' % subscription.id">
+                                    <t t-esc="subscription.name"/>
+                                </a>
+                            </td>
+                            <td class="text-left">
+                                <span t-field="subscription.startDate" t-options="{'widget': 'date'}"/>
+                            </td>
+                            <td class="text-left">
+                                <span t-field="subscription.nextPaymentDate" t-options="{'widget': 'date'}"/>
+                            </td>
+                            <td class="text-right">
+                                <span t-field="subscription.amount"
+                                      t-options='{"widget": "monetary", "display_currency": order.pricelist_id.currency_id}'/>
+                            </td>
+                            <td class="text-center">
+                                <span t-if="subscription.status == 'active'" class="badge badge-pill badge-success">
+                                    Active
+                                </span>
+                                <span t-elif="subscription.status == 'completed'"
+                                      class="badge badge-pill badge-success">
+                                    Completed
+                                </span>
+                                <span t-elif="subscription.status == 'canceled'" class="badge badge-pill badge-danger">
+                                    Cancelled
+                                </span>
+                                <span t-else="" class="badge badge-pill" t-field="subscription.status"/>
+                            </td>
+                        </tr>
+                    </t>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <template id="portal_breadcrumbs_ext" name="Portal Breadcrumbs">
+        <ol class="o_portal_submenu breadcrumb mb-0 py-2 flex-grow-1">
+            <li class="breadcrumb-item">
+                <a href="/my/home" aria-label="Home" title="Home">
+                    <i class="fa fa-home"/>
+                </a>
+            </li>
+            <li t-if="subscription_obj" t-attf-class="breadcrumb-item #{'active ' if subscription_obj else ''}">
+                <a t-attf-href="/my/subscriptions?{{ keep_query() }}">Subscriptions</a>
+            </li>
+            <li t-if="subscription_obj" class="breadcrumb-item active">
+                <t t-esc="subscription_obj.name"/>
+            </li>
+        </ol>
+    </template>
+
+    <template id="portal_layout_ext" name="Portal Layout Ext">
+        <t t-call="portal.frontend_layout">
+            <t t-set="is_portal" t-value="True"/>
+            <div class="o_portal container mt-3">
+                <div class="row align-items-center bg-white no-gutters border rounded">
+                    <div class="col">
+                        <t t-call="mollie_subscription_ept.portal_breadcrumbs_ext"/>
+                    </div>
+                </div>
+            </div>
+            <div id="wrap" class='o_portal_wrap'>
+                <div class="container mb64">
+                    <t t-raw="0"/>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="portal_sidebar_ext" name="Sidebar Ext">
+        <t t-call="mollie_subscription_ept.portal_layout_ext">
+            <body data-spy="scroll" data-target=".navspy" data-offset="50">
+                <div class="container o_portal_sidebar"/>
+                <div class="oe_structure mb32" id="oe_structure_portal_sidebar_1"/>
+            </body>
+        </t>
+    </template>
+
+    <template id="portal_my_subscriptions_template" name="Subscription Portal Template"
+              inherit_id="mollie_subscription_ept.portal_sidebar_ext" primary="True">
+        <xpath expr="//div[hasclass('o_portal_sidebar')]" position="inside">
+            <div class="row mt16 o_portal_sale_sidebar">
+                <div id="quote_content" class="col-12 col-lg justify-content-end">
+                    <div t-attf-class="card">
+                        <div t-call="mollie_subscription_ept.subscriptions_portal_content"/>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+    </template>
+
+    <template id="subscriptions_portal_content" name="Subscriptions Portal Content">
+        <!-- Intro -->
+        <div id="introduction" t-attf-class="pb-2 pt-3 card-header bg-white">
+            <div class="row">
+                <div class="mb-3 col-6">
+                    <h2 class="my-0">
+                        <em t-esc="subscription_obj.name"/>
+                    </h2>
+                </div>
+                <div class="mb-3 col-6">
+                    <span t-if="subscription_obj.status == 'active'" class="badge badge-pill badge-success float-right">
+                        Active
+                    </span>
+                    <span t-elif="subscription_obj.status == 'completed'"
+                          class="badge badge-pill badge-success float-right">
+                        Completed
+                    </span>
+                    <span t-elif="subscription_obj.status == 'canceled'"
+                          class="badge badge-pill badge-danger float-right">
+                        Cancelled
+                    </span>
+                    <span t-else="" class="badge badge-pill float-right" t-field="subscription_obj.status"/>
+                </div>
+            </div>
+        </div>
+        <div t-attf-class="card-body">
+            <t t-if="subscription_obj.status == 'active'">
+                <div class="btn-group float-right">
+                    <button class="btn btn-danger" id="cancel_subscription_btn" title="CANCEL">CANCEL</button>
+                </div>
+            </t>
+            <!-- Informations -->
+            <div id="informations">
+                <div class="row" id="so_date">
+                    <div class="mb-3 col-6">
+                        <strong>Description :</strong>
+                        <span t-field="subscription_obj.description"/>
+                        <br/>
+                        <strong>Sale Order :</strong>
+                        <a t-att-href="sale_order.get_portal_url()">
+                            <span t-field="subscription_obj.sale_order_id"/>
+                        </a>
+                        <br/>
+                        <strong>Subscription Item :</strong>
+                        <span t-field="subscription_obj.product_id.name"/>
+                        <br/>
+                        <strong>Amount :</strong>
+                        <span data-id="total_subscription_amount" t-field="subscription_obj.amount"
+                              t-options='{"widget": "monetary", "display_currency": sale_order.pricelist_id.currency_id}'/>
+                    </div>
+                    <div class="mb-3 col-6">
+                        <strong>Start Date :</strong>
+                        <span t-field="subscription_obj.startDate" t-options="{&quot;widget&quot;: &quot;date&quot;}"/>
+                        <br/>
+                        <t t-if="subscription_obj.nextPaymentDate">
+                            <strong>Next Payment Date :</strong>
+                            <span t-field="subscription_obj.nextPaymentDate"
+                                  t-options="{&quot;widget&quot;: &quot;date&quot;}"/>
+                            <br/>
+                        </t>
+                        <t t-if="subscription_obj.canceled_date">
+                            <strong>Cancelled Date :</strong>
+                            <span t-field="subscription_obj.canceled_date"
+                                  t-options="{&quot;widget&quot;: &quot;date&quot;}"/>
+                            <br/>
+                        </t>
+                        <strong>Interval :</strong>
+                        <span t-field="subscription_obj.interval"/>
+                        <br/>
+                        <strong>Total Rebilling Cycle :</strong>
+                        <span t-field="subscription_obj.times"/>
+                        <br/>
+                        <strong>Remaining Rebilling Cycle :</strong>
+                        <span t-field="subscription_obj.timesRemaining"/>
+                    </div>
+                </div>
+            </div>
+
+            <section id="details" style="page-break-inside: auto;" class="mt32">
+                <h3 id="details">Payment Details</h3>
+                <table class="table table-sm" id="sales_order_table">
+                    <thead class="bg-100">
+                        <tr>
+                            <th class="text-left">Payment #</th>
+                            <th class="text-left">Description</th>
+                            <th class="text-left">Date</th>
+                            <th class="text-left">Status</th>
+                            <th class="text-right">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody class="sale_tbody">
+                        <t t-foreach="subscription_obj.mollie_payment_ids.sorted(key=lambda r: r.paid_date, reverse=True)"
+                           t-as="payment">
+                            <t t-if='payment'>
+                                <tr class="bg-200 font-italic o_line_note">
+                                    <td id="product_name">
+                                        <span t-field="payment.name"/>
+                                    </td>
+                                    <td id="product_name">
+                                        <span t-field="payment.description"/>
+                                    </td>
+                                    <td id="product_name">
+                                        <span t-field="payment.paid_date"/>
+                                    </td>
+                                    <td id="product_name">
+                                        <span t-if="payment.status == 'paid'" class="badge badge-pill badge-success">
+                                            PAID
+                                        </span>
+                                        <span t-elif="payment.status == 'failed'" class="badge badge-pill badge-danger">
+                                            FAILED
+                                        </span>
+                                        <span t-elif="payment.status == 'expired'"
+                                              class="badge badge-pill badge-danger">
+                                            EXPIRED
+                                        </span>
+                                        <span t-elif="payment.status == 'open'" class="badge badge-pill badge-warning">
+                                            OPEN
+                                        </span>
+                                        <span t-else="" class="badge badge-pill" t-field="payment.status"/>
+                                    </td>
+                                    <td id="product_name" class="text-right">
+                                        <span data-id="total_amount" t-field="payment.amount"
+                                              t-options='{"widget": "monetary", "display_currency": sale_order.pricelist_id.currency_id}'/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </t>
+                    </tbody>
+                </table>
+            </section>
+        </div>
+        <div role="dialog" class="modal fade" id="cancel_subscription_modal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <header class="modal-header">
+                        <h4 class="modal-title">Cancel Subscription</h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&amp;times;</button>
+                    </header>
+                    <main class="modal-body">
+                        <p>Are you sure...! You want to cancel subsciption
+                            <strong class="text-danger" t-field="subscription_obj.name"/>
+                            <input type="hidden" name="subscriptions_id" id="subscriptions_id"
+                                   t-att-value="subscription_obj.subscriptions_id"/>
+                        </p>
+                    </main>
+                    <footer class="modal-footer">
+                        <button type="button" class="btn btn-danger" id="cancel_subscription">Cancel</button>
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                    </footer>
+                </div>
+            </div>
+        </div>
+    </template>
+</odoo>

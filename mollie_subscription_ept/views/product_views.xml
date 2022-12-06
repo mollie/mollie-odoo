@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<record id="product_template_subscription_view_form" model="ir.ui.view">
+    <field name="name">product.template.subscription.view.form</field>
+    <field name="model">product.template</field>
+    <field name="inherit_id" ref="product.product_template_only_form_view"/>
+    <field name="arch" type="xml">
+        <field name="company_id" position="after">
+            <field name="is_mollie_subscription"/>
+            <field name="subscription_interval" attrs="{'invisible' : [('is_mollie_subscription', '=' ,False)]}"/>
+            <field name="subscription_interval_type" attrs="{'invisible' : [('is_mollie_subscription', '=' ,False)]}"/>
+            <field name="interval_time" attrs="{'invisible' : [('is_mollie_subscription', '=' ,False)]}"/>
+        </field>
+        <!-- <field name="mollie_voucher_category" position="replace" />
+ -->    </field>
+</record>
+
+</odoo>

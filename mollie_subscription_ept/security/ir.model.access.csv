@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_mollie_subscription,access_mollie_subscription,model_mollie_subscription,base.group_user,1,1,1,1
+access_mollie_payment,access_mollie_payment,model_mollie_payment,base.group_user,1,1,1,1
