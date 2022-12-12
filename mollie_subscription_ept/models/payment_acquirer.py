@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import logging
 
 from mollie.api.client import Client as MollieClient
@@ -23,8 +22,7 @@ class PaymentAcquirerMollie(models.Model):
         """
         Show only credit card payment method when checkout subscriptions type products
         """
-        methods = super(PaymentAcquirerMollie, self)._mollie_get_supported_methods(order, invoice, amount, currency,
-                                                                                   partner_id)
+        methods = super(PaymentAcquirerMollie, self)._mollie_get_supported_methods(order, invoice, amount, currency, partner_id)
         subscription_product = order.order_line.product_id.filtered(lambda product: product.is_mollie_subscription)
         if subscription_product:
             methods = methods.filtered(lambda m: m.method_code in ['creditcard', 'ideal'])
@@ -40,6 +38,5 @@ class PaymentAcquirerMollie(models.Model):
             mollie_client.set_api_key(self.mollie_api_key_test)
 
         mollie_client.set_user_agent_component('Odoo', service.common.exp_version()['server_version'])
-        mollie_client.set_user_agent_component('MollieOdoo',
-                                               self.env.ref('base.module_payment_mollie').installed_version)
+        mollie_client.set_user_agent_component('MollieOdoo', self.env.ref('base.module_payment_mollie').installed_version)
         return mollie_client

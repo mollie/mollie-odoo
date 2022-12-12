@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 {
     'name': 'Mollie Subscription',
     'version': '1.0',

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from odoo import models, fields
 
 
@@ -9,12 +8,18 @@ class SaleOrder(models.Model):
 
     def _check_subs_in_cart(self):
         result = self.order_line.product_id.filtered(lambda product: product.is_mollie_subscription)
-        return True if result else False
+        res = False
+        if result:
+            res = True
+        return res
 
     def _public_user(self):
         public_partner_id = self.env.ref("base.public_user") and self.env.ref("base.public_user").partner_id or False
         current_partner_id = self.partner_id or False
-        return True if public_partner_id.id == current_partner_id.id else False
+        if public_partner_id.id == current_partner_id.id:
+            return True
+        else:
+            return False
 
     def add_to_wishlist(self, line_obj):
         self.env['product.wishlist'].create({'partner_id': self.partner_id.id or False,

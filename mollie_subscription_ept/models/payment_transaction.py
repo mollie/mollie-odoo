@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import logging
 
 from odoo import _, models
@@ -73,25 +72,23 @@ class PaymentTransaction(models.Model):
 
         result = None
 
-        subscription_product = self.sale_order_ids.order_line.product_id.filtered(lambda prd:
-                                                                                  prd.is_mollie_subscription)
+        subscription_product = self.sale_order_ids.order_line.product_id.filtered(lambda prd: prd.is_mollie_subscription)
         if subscription_product and method_record.supports_payment_api and method_record.supports_order_api:
             result = self.with_context(first_mollie_payment=True)._mollie_create_payment_record('payment')
             if result:
                 self.env['mollie.payment'].sudo()._create_payment(result)
         else:
             # Order API (use if sale orders are present). Also qr code is only supported by Payment API
-            if (not method_record.enable_qr_payment) and 'sale_order_ids' in self._fields and self.sale_order_ids \
-                    and method_record.supports_order_api:
+            if (not method_record.enable_qr_payment) and 'sale_order_ids' in self._fields and self.sale_order_ids and method_record.supports_order_api:
                 # Order API
                 result = self._mollie_create_payment_record('order', silent_errors=True)
 
             # Payment API
-            if (result is None or result.get(
-                    'status') == 422) and method_record.supports_payment_api:  # Here 422 status used for fallback Read more at https://docs.mollie.com/overview/handling-errors
+            if (result is None or result.get('status') == 422) and method_record.supports_payment_api:  # Here 422 status used for fallback Read more at https://docs.mollie.com/overview/handling-errors
                 if result:
-                    _logger.warning(
-                        f"Can not use order api due to 'Error[422]: {result.get('title')} - {result.get('detail')}' \n- Fallback on Mollie payment API ")
+                    _logger.warning("Can not use order api due to 'Error[422]: %s - %s' "
+                                    "\n- Fallback on Mollie payment API " % (result.get('title'),
+                                                                             result.get('detail')))
                 result = self._mollie_create_payment_record('payment')
         return result
 
@@ -103,8 +100,7 @@ class PaymentTransaction(models.Model):
         payment_data, params = super(PaymentTransaction, self)._mollie_prepare_payment_payload(api_type)
 
         if self._context.get("first_mollie_payment"):
-            payment_data.update({'description': f'First payment for {self.sale_order_ids.name}',
-                                 'sequenceType': 'first'})
+            payment_data.update({'description': f'First payment for {self.sale_order_ids.name}', 'sequenceType': 'first'})
 
         mollie_customer_id = self._get_transaction_customer_id()
         if api_type == 'order':

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import logging
 
 from datetime import timedelta, date, datetime
@@ -16,17 +15,14 @@ class MollieSubscription(models.Model):
     _description = 'Mollie Subscription'
     _inherit = ['mail.thread']
 
-    name = fields.Char(string="Subscription", readonly=True, required=True, copy=False, default='New',
-                       tracking=1)
+    name = fields.Char(string="Subscription", readonly=True, required=True, copy=False, default='New', tracking=1)
     subscriptions_id = fields.Char('Subscription ID', help="Mollie Subscription ID")
     customerId = fields.Char('Customer ID', help="Customer ID")
     partner_id = fields.Many2one('res.partner', 'Partner')
     status = fields.Char('Status', tracking=1)
     amount = fields.Float('Amount')
     times = fields.Integer('Rebilling Cycle', help="Total number of charges for the subscription to complete")
-    timesRemaining = fields.Integer('Remaining Rebilling Cycle',
-                                    help="Remaining number of charges for the subscription to complete",
-                                    tracking=1)
+    timesRemaining = fields.Integer('Remaining Rebilling Cycle', help="Remaining number of charges for the subscription to complete", tracking=1)
     interval = fields.Char('Interval', help="A time between charges")
     description = fields.Text('Description')
     startDate = fields.Date('Start Date', tracking=1)
@@ -67,9 +63,9 @@ class MollieSubscription(models.Model):
                 interval = '{} {}'.format(product.subscription_interval, product.subscription_interval_type)
                 description = '{} / {}'.format(sale_order_obj.name, product.name)
                 webhook_url = ''
-                webhookUrl = urls.url_join(mollie.get_base_url(), MollieController._notify_url)
-                if "://localhost" not in webhookUrl and "://192.168." not in webhookUrl:
-                    webhook_url = webhookUrl
+                webhook_urls = urls.url_join(mollie.get_base_url(), MollieController._notify_url)
+                if "://localhost" not in webhook_urls and "://192.168." not in webhook_urls:
+                    webhook_url = webhook_urls
                 mollie_customer_id = transaction_obj._get_transaction_customer_id()
                 subscription_obj = mollie_client.customer_subscriptions.with_parent_id(mollie_customer_id)
                 subscription = subscription_obj.create(data={'amount': amount or '',
@@ -94,8 +90,7 @@ class MollieSubscription(models.Model):
                             'sale_order_id': sale_order_obj.id}
                     subs_obj = self.sudo().create(vals)
                     # sale_order_obj.mollie_subscription_id = subs_obj.id
-                    mollie_payment = self.env['mollie.payment'].sudo().search([
-                        ('payment_id', '=', transaction_obj.acquirer_reference)])
+                    mollie_payment = self.env['mollie.payment'].sudo().search([('payment_id', '=', transaction_obj.acquirer_reference)])
                     if mollie_payment:
                         mollie_payment.subscription_id = subscription['id']
                         mollie_payment.mollie_subscription_id = subs_obj.id
@@ -115,8 +110,8 @@ class MollieSubscription(models.Model):
                                'times': subscription.get('times', False),
                                'timesRemaining': subscription.get('timesRemaining', False),
                                'nextPaymentDate': subscription.get('nextPaymentDate', False)})
-            msg = f"<b>This subscription has been updated by {self.env.user.name} on " \
-                  f"{datetime.today().strftime('%Y-%m-%d %H:%M')}"
+            msg = "<b>This subscription has been updated by %s on %s" % (self.env.user.name,
+                                                                         datetime.today().strftime('%Y-%m-%d %H:%M'))
             for obj in self:
                 obj.sudo().message_post(body=msg)
 
@@ -156,8 +151,8 @@ class MollieSubscription(models.Model):
                 subscription_obj.sudo().write({'status': subscription.get('status', False),
                                                'canceled_date': canceled_date,
                                                'nextPaymentDate': False})
-                msg = f"<b>This subscription has been cancelled by {self.env.user.name} on " \
-                      f"{datetime.today().strftime('%Y-%m-%d %H:%M')}"
+                msg = "<b>This subscription has been cancelled by %s on %s" % (self.env.user.name,
+                                                                               datetime.today().strftime('%Y-%m-%d %H:%M'))
                 subscription_obj.sudo().message_post(body=msg)
 
     def auto_update_subscription(self):
@@ -172,6 +167,6 @@ class MollieSubscription(models.Model):
                                        'times': subscription.get('times', False),
                                        'timesRemaining': subscription.get('timesRemaining', False),
                                        'nextPaymentDate': subscription.get('nextPaymentDate', False)})
-                msg = f"<b>This subscription has been updated by {self.env.user.name} on " \
-                      f"{datetime.today().strftime('%Y-%m-%d %H:%M')}"
+                msg = "<b>This subscription has been updated by %s on %s" % (self.env.user.name,
+                                                                             datetime.today().strftime('%Y-%m-%d %H:%M'))
                 subs_obj.sudo().message_post(body=msg)

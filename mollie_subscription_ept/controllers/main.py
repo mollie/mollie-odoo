@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 import logging
-import werkzeug
 from odoo import fields, http
-from odoo.http import request, Response
+from odoo.http import request
 from odoo.tools.json import scriptsafe as json_scriptsafe
 
 _logger = logging.getLogger(__name__)
@@ -69,9 +67,7 @@ class WebsiteSale(http.Controller):
 
         pcav = kw.get('product_custom_attribute_values')
         nvav = kw.get('no_variant_attribute_values')
-        value = order._cart_update(product_id=product_id, line_id=line_id, add_qty=add_qty, set_qty=set_qty,
-                                   product_custom_attribute_values=json_scriptsafe.loads(pcav) if pcav else None,
-                                   no_variant_attribute_values=json_scriptsafe.loads(nvav) if nvav else None)
+        value = order._cart_update(product_id=product_id, line_id=line_id, add_qty=add_qty, set_qty=set_qty, product_custom_attribute_values=json_scriptsafe.loads(pcav) if pcav else None, no_variant_attribute_values=json_scriptsafe.loads(nvav) if nvav else None)
 
         self._set_session(value)
 

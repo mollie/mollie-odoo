@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import logging
 from datetime import datetime
 from odoo import fields, models, api, _
@@ -48,14 +47,12 @@ class MolliePayment(models.Model):
             paid_date = datetime.strptime(pay_obj['createdAt'][0:19], "%Y-%m-%dT%H:%M:%S")
             if pay_obj.get('paidAt', False):
                 paid_date = datetime.strptime(pay_obj['paidAt'][0:19], "%Y-%m-%dT%H:%M:%S")
-            mollie_subs_id = self.env['mollie.subscription'].search(
-                [('subscriptions_id', '=', pay_obj.get('subscriptionId', False))])
+            mollie_subs_id = self.env['mollie.subscription'].search([('subscriptions_id', '=', pay_obj.get('subscriptionId', False))])
             checkout_url = False
             if pay_obj.get('status') == 'open':
                 checkout_url = pay_obj["_links"]["checkout"]["href"]
             vals = {'payment_id': pay_obj['id'] or False,
-                    'createdAt': pay_obj['createdAt'] and datetime.strptime(
-                        pay_obj['createdAt'][0:19], "%Y-%m-%dT%H:%M:%S") or False,
+                    'createdAt': pay_obj['createdAt'] and datetime.strptime(pay_obj['createdAt'][0:19], "%Y-%m-%dT%H:%M:%S") or False,
                     'amount': pay_obj.get('amount', {}).get("value", ""),
                     'amount_currency': pay_obj.get('amount', {}).get("currency", ""),
                     'description': pay_obj['description'] or False,
@@ -75,8 +72,8 @@ class MolliePayment(models.Model):
                     'checkout_url': checkout_url,
                     "transaction_id": pay_obj['metadata'] and pay_obj.get("metadata", {}).get("transaction_id")}
             payment = self.sudo().create(vals)
-            msg = f"<b>This payment has been created by {self.env.user.name} on " \
-                  f"{datetime.today().strftime('%Y-%m-%d %H:%M')}"
+            msg = "<b>This payment has been created by %s on %s" % (self.env.user.name,
+                                                                    datetime.today().strftime('%Y-%m-%d %H:%M'))
             for obj in self:
                 obj.sudo().message_post(body=msg)
             payment.create_mollie_invoice()
@@ -112,7 +109,8 @@ class MolliePayment(models.Model):
             if pay_obj.get('subscriptionId', False):
                 vals.update({'subscription_id': pay_obj.get('subscriptionId')})
             self.sudo().write(vals)
-            msg = f"<b>This payment has been updated by {method} on {datetime.today().strftime('%Y-%m-%d %H:%M')}"
+            msg = f"<b>This payment has been updated by %s on %s" % (method,
+                                                                     datetime.today().strftime('%Y-%m-%d %H:%M'))
             for obj in self:
                 obj.sudo().message_post(body=msg)
 
