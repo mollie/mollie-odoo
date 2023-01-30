@@ -5,41 +5,41 @@
 
     <!-- This will add method based fees -->
     <xpath expr="//form/div[hasclass('card')]" position="before">
-        <t t-set="fees_by_acquirer" t-value="acquirers._compute_mollie_method_fees(fees_by_acquirer, order=order, amount=amount, currency=currency, partner_id=partner_id)"/>
+        <t t-set="fees_by_provider" t-value="providers._compute_mollie_method_fees(fees_by_provider, order=order, amount=amount, currency=currency, partner_id=partner_id)"/>
     </xpath>
 
     <xpath expr="//div[hasclass('o_payment_option_card')][1]" position="attributes">
-        <attribute name="t-if">acquirer.provider != 'mollie'</attribute>
+        <attribute name="t-if">provider.code != 'mollie'</attribute>
     </xpath>
     <xpath expr="//t/div[hasclass('o_payment_option_card')][1]" position="after">
-        <t t-if="acquirer.provider == 'mollie'">
+        <t t-if="provider.code == 'mollie'">
             <t t-call="payment_mollie_official.mollie_payment_methods_select"/>
         </t>
     </xpath>
 </template>
 
-<!-- Mollie supports multiple payment methods (acquirer)
+<!-- Mollie supports multiple payment methods (provider)
     This templates render all enabled payment options-->
 <template id="mollie_payment_methods_select">
-    <t t-set="mollie_payment_methods" t-value="acquirer._mollie_get_supported_methods(order, invoice, amount, currency, partner_id)"/>
+    <t t-set="mollie_payment_methods" t-value="provider._mollie_get_supported_methods(order, invoice, amount, currency, partner_id)"/>
     <t t-foreach="mollie_payment_methods" t-as="payment_method">
         <div name="o_payment_option_card" t-attf-class="card-body o_payment_option_card #{'d-none' if payment_method.method_code == 'applepay' else ''}">
             <label>
                 <!-- === Radio button === -->
-                <!-- Here we have added mollie as payment-option-type as it will have multiple payment option from same acquirer -->
-                <input name="o_payment_radio" type="radio" t-att-checked="acquirer.id == default_payment_option_id and payment_method_index == 0" t-att-class="'' if acquirer_count - 1 + len(mollie_payment_methods) + token_count > 1 else 'd-none'" t-att-data-payment-option-id="payment_method.id" t-att-data-provider="acquirer.provider" t-attf-data-payment-option-type="mollie_method" t-att-data-mollie-method="payment_method.method_code" t-att-data-mollie-issuers="len(payment_method.payment_issuer_ids)" t-att-data-mollie-acquirer-id="acquirer.id"/>
-                <!-- === Acquirer name === -->
+                <!-- Here we have added mollie as payment-option-type as it will have multiple payment option from same provider -->
+                <input name="o_payment_radio" type="radio" t-att-checked="provider.id == default_payment_option_id and payment_method_index == 0" t-att-class="'' if provider_count - 1 + len(mollie_payment_methods) + token_count > 1 else 'd-none'" t-att-data-payment-option-id="payment_method.id" t-att-data-provider="provider.code" t-attf-data-payment-option-type="mollie_method" t-att-data-mollie-method="payment_method.method_code" t-att-data-mollie-issuers="len(payment_method.payment_issuer_ids)" t-att-data-mollie-provider-id="provider.id"/>
+                <!-- === provider name === -->
                 <span class="payment_option_name">
                     <b t-esc="payment_method.name"/>
                 </span>
                 <!-- === "Test Mode" badge === -->
-                <span t-if="acquirer.state == 'test'" class="badge-pill badge-warning ml-1">
+                <span t-if="provider.state == 'test'" class="badge bg-warning text-dark ml-1">
                     Test Mode
                 </span>
                 <!-- === Extra fees badge === -->
-                <t t-if="fees_by_acquirer.get(payment_method)">
-                    <span class="badge-pill badge-secondary ml-1">
-                        + <t t-esc="fees_by_acquirer.get(payment_method)"
+                <t t-if="fees_by_provider.get(payment_method)">
+                    <span class="badge rounded-pill bg-secondary ml-1">
+                        + <t t-esc="fees_by_provider.get(payment_method)"
                                 t-options="{'widget': 'monetary', 'display_currency': currency}"/>
                         Fees
                     </span>
@@ -47,12 +47,12 @@
             </label>
             <!-- === Payment icon list === -->
             <t t-call="payment.icon_list">
-                <t t-set="acquirer" t-value="payment_method"/>
+                <t t-set="provider" t-value="payment_method"/>
             </t>
             <!-- === Help message === -->
-            <div t-if="acquirer.pre_msg" t-out="acquirer.pre_msg" class="text-muted ml-3"/>
+            <div t-if="provider.pre_msg" t-out="provider.pre_msg" class="text-muted ml-3"/>
         </div>
-        <!-- === Acquirer inline form === -->
+        <!-- === provider inline form === -->
         <div t-attf-id="o_payment_mollie_method_inline_form_{{payment_method.id}}" name="o_payment_inline_form" class="card-footer d-none">
             <!-- === Inline creadit card  === -->
             <div class="clearfix" t-if="payment_method._mollie_show_creditcard_option()">
@@ -67,7 +67,7 @@
 
 <template id="mollie_creditcard_component">
     <t t-set="has_mollie_customer_id" t-value="request.env.user.sudo().mollie_customer_id"/>
-    <t t-set="mollie_components_enabled" t-value="acquirer.sudo().mollie_use_components"/>
+    <t t-set="mollie_components_enabled" t-value="provider.sudo().mollie_use_components"/>
     <div>
         <div t-if="mollie_components_enabled and has_mollie_customer_id" class="ml-2">
             <div class="form-check form-check-inline">
@@ -79,8 +79,8 @@
                 <label class="form-check-label mt-0" for="mollieInlineCard">Fill Card Details</label>
             </div>
         </div>
-        <div id="o_mollie_component" t-att-class="has_mollie_customer_id and 'd-none' or ''" t-if="mollie_components_enabled" t-att-data-profile_id="acquirer.sudo().mollie_profile_id" t-att-data-mode="acquirer.sudo().state">
-            <div class="form-row o_mollie_form mb-1">
+        <div id="o_mollie_component" t-att-class="has_mollie_customer_id and 'd-none' or ''" t-if="mollie_components_enabled" t-att-data-profile_id="provider.sudo().mollie_profile_id" t-att-data-mode="provider.sudo().state">
+            <div class="row o_mollie_form mb-1">
                 <div class="col-md-12">
                     <label class="label text-muted mb-1" for="mollie-card-holder">Card Holder</label>
                     <div id="mollie-card-holder" class="mollie_input border bg-white p-2"></div>
@@ -103,7 +103,7 @@
                 </div>
             </div>
         </div>
-        <div id="o_mollie_save_card" t-att-class="has_mollie_customer_id and 'd-none' or ''" t-if="acquirer.sudo().mollie_show_save_card" groups="!base.group_public">
+        <div id="o_mollie_save_card" t-att-class="has_mollie_customer_id and 'd-none' or ''" t-if="provider.sudo().mollie_show_save_card" groups="!base.group_public">
             <label>
                 <input name="o_mollie_save_card" type="checkbox"/>
                     Save my card details

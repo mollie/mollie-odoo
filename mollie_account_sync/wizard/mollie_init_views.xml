@@ -11,8 +11,8 @@
                         <field name="journal_id" invisible="1" />
                         <field name="sync_all"/>
                     </group>
-                    <group string="Select settlement to sync" attrs="{'invisible': [('settlement_lines', '=', [])]}">
-                        <field name="settlement_lines" nolabel="1">
+                    <group string="Select settlement to sync" class="oe_inline" attrs="{'invisible': [('settlement_lines', '=', [])]}">
+                        <field colspan="2" name="settlement_lines" nolabel="1">
                             <tree create="0">
                                 <field name="name"/>
                                 <field name="settlement_date"/>

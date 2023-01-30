@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Journal Form View Inherit -->
-    <record id="view_bank_statement_form_int" model="ir.ui.view">
-        <field name="name">account.bank.statement.form</field>
-        <field name="model">account.bank.statement</field>
-        <field name="inherit_id" ref="account.view_bank_statement_form"/>
+    <record id="view_bank_statement_line_kanban_bank_rec_widget_inherit_mollie_account_sync" model="ir.ui.view">
+        <field name="name">account.bank.statement.line.view.kanban.inherit</field>
+        <field name="model">account.bank.statement.line</field>
+        <field name="inherit_id" ref="account_accountant.view_bank_statement_line_kanban_bank_rec_widget"/>
         <field name="arch" type="xml">
-            <field name="date" position="after">
-                <field name="journal_sync_type" invisible="1"/>
-                <field name="mollie_internal_transfer_id" redonly="1" attrs="{'invisible': [('journal_sync_type', '!=', 'mollie_sync')]}"/>
+            <field name="journal_id" position="after">
+                <field name="mollie_json_info"/>
             </field>
-            <xpath expr="//field[@name='line_ids']/tree/field[@name='amount']" position="after">
-                <field name="mollie_json_info" widget="payment_info" string=" " attrs="{'column_invisible': [('parent.journal_sync_type', '!=', 'mollie_sync')]}"/>
+            <xpath expr="//div[@id='row2_col1']" position="inside">
+                <field name="mollie_json_info" class="float-end me-2" widget="payment_info" attrs="{'invisible': [('mollie_json_info', '=', False)]}"/>
             </xpath>
         </field>
     </record>

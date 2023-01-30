@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<odoo>
-
-    <record id="payment.payment_acquirer_mollie" model="payment.acquirer">
-        <field name="support_fees_computation">True</field>
-        <field name="support_refund">partial</field>
-    </record>
-
-</odoo>

@@ -11,14 +11,14 @@ class MolliePaymentMethod(models.Model):
 
     name = fields.Char(translate=True)
     sequence = fields.Integer()
-    acquirer_id = fields.Many2one('payment.acquirer', string='Acquirer')  # This will be always mollie
+    provider_id = fields.Many2one('payment.provider', string='Provider')  # This will be always mollie
     method_code = fields.Char(string="Method code")
     payment_icon_ids = fields.Many2many('payment.icon', string='Supported Payment Icons')
     active = fields.Boolean(default=True)
     active_on_shop = fields.Boolean(string="Enabled on shop", default=True)
     country_ids = fields.Many2many('res.country', string='Country Availability')
     mollie_voucher_ids = fields.One2many('mollie.voucher.line', 'method_id', string='Mollie Voucher Config')
-    company_id = fields.Many2one(related="acquirer_id.company_id")
+    company_id = fields.Many2one(related="provider_id.company_id")
     enable_qr_payment = fields.Boolean(string="Enable QR payment")
 
     # Hidden fields that are used for filtering methods
@@ -103,7 +103,7 @@ class MolliePaymentMethod(models.Model):
         self.ensure_one()
         fees = 0.0
         if self.fees_active:
-            if country == self.acquirer_id.company_id.country_id:
+            if country == self.provider_id.company_id.country_id:
                 fixed = self.fees_dom_fixed
                 variable = self.fees_dom_var
             else:
@@ -115,11 +115,11 @@ class MolliePaymentMethod(models.Model):
     def _mollie_show_creditcard_option(self):
         if self.method_code != 'creditcard':
             return False
-        acquirer_sudo = self.sudo().acquirer_id
-        self.env.user._mollie_validate_customer_id(self.acquirer_id)
-        if acquirer_sudo.mollie_profile_id and acquirer_sudo.sudo().mollie_use_components:
+        provider_sudo = self.sudo().provider_id
+        self.env.user._mollie_validate_customer_id(self.provider_id)
+        if provider_sudo.mollie_profile_id and provider_sudo.sudo().mollie_use_components:
             return True
-        if acquirer_sudo.sudo().mollie_show_save_card and not self.env.user.has_group('base.group_public'):
+        if provider_sudo.sudo().mollie_show_save_card and not self.env.user.has_group('base.group_public'):
             return True
 
         return False
@@ -132,7 +132,7 @@ class MolliePaymentIssuers(models.Model):
 
     name = fields.Char(translate=True)
     sequence = fields.Integer()
-    acquirer_id = fields.Many2one('mollie.payment.method', string='Acquirer')
+    provider_id = fields.Many2one('mollie.payment.method', string='Provider')
     payment_icon_ids = fields.Many2many('payment.icon', string='Supported Payment Icons')
     issuers_code = fields.Char()
     active = fields.Boolean(default=True)

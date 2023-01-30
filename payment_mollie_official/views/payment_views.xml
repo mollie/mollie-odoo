@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="acquirer_form_view_mollie" model="ir.ui.view">
-        <field name="name">payment.acquirer.form.inherit</field>
-        <field name="model">payment.acquirer</field>
-        <field name="inherit_id" ref="payment_mollie.payment_acquirer_form"/>
+        <field name="name">payment.provider.form.inherit</field>
+        <field name="model">payment.provider</field>
+        <field name="inherit_id" ref="payment_mollie.payment_provider_form"/>
         <field name="priority">20</field>
         <field name="arch" type="xml">
             <field name="mollie_api_key" position="replace">
-                <field name="mollie_api_key" string="API Key" attrs="{'required': [('provider', '=', 'mollie'), ('state', '=', 'enabled')]}" password="True"/>
-                <field name="mollie_api_key_test" attrs="{'required': [('provider', '=', 'mollie'), ('state', '=', 'test')]}" password="True"/>
+                <field name="mollie_api_key" string="API Key" attrs="{'required': [('code', '=', 'mollie'), ('state', '=', 'enabled')]}" password="True"/>
+                <field name="mollie_api_key_test" attrs="{'required': [('code', '=', 'mollie'), ('state', '=', 'test')]}" password="True"/>
                 <field name="mollie_use_components" />
-                <field name="mollie_profile_id" password="True" attrs="{'invisible': [('mollie_use_components', '=', False)], 'required':  [('provider', '=', 'mollie'), ('mollie_use_components', '=', True)]}"/>
+                <field name="mollie_profile_id" password="True" attrs="{'invisible': [('mollie_use_components', '=', False)], 'required':  [('mollie_use_components', '=', True)]}"/>
                 <label string=" " for="mollie_profile_id" attrs="{'invisible': [('mollie_use_components', '=', False)]}"> </label>
                 <small class="text-muted" attrs="{'invisible': [('mollie_use_components', '=', False)]}"> Credit card option will not be displayed without profile ID.
                     <br/>
@@ -18,8 +18,8 @@
                 </small>
                 <field name="mollie_show_save_card" />
             </field>
-            <page name="acquirer_credentials" position="after">
-                <page string="Mollie Payment Methods" attrs="{'invisible': [('provider', '!=', 'mollie')]}">
+            <page name="configuration" position="after">
+                <page string="Mollie Payment Methods" attrs="{'invisible': [('code', '!=', 'mollie')]}">
                     <field name="mollie_methods_ids" >
                         <tree create="0">
                             <field name="sequence" widget="handle"/>

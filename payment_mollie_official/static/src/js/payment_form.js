@@ -6,6 +6,7 @@ odoo.define('mollie.payment.form', function (require) {
     const checkoutForm = require('payment.checkout_form');
     const core = require('web.core');
     const qrDialog = require('mollie.qr.dialog');
+    const { loadJS } = require('@web/core/assets');
 
     const _t = core._t;
 
@@ -53,13 +54,13 @@ odoo.define('mollie.payment.form', function (require) {
          *
          * @override method from payment.payment_form_mixin
          * @private
-         * @param {string} provider - The provider of the selected payment option's acquirer
+         * @param {string} code - The provider of the selected payment option's provider
          * @param {number} paymentOptionId - The id of the selected payment option
          * @param {string} flow - The online payment flow of the selected payment option
          * @return {Promise}
          */
-        _prepareInlineForm: function (provider, paymentOptionId, flow) {
-            if (provider !== 'mollie') {
+        _prepareInlineForm: function (code, paymentOptionId, flow) {
+            if (code !== 'mollie') {
                 return this._super(...arguments);
             }
             // this._setPaymentFlow('direct');
@@ -67,7 +68,7 @@ odoo.define('mollie.payment.form', function (require) {
             if (!$creditCardContainer.length || this.mollieComponentLoaded) {
                 return this._super(...arguments);
             }
-            return ajax.loadJS("https://js.mollie.com/v1/mollie.js").then(() => this._setupMollieComponent());
+            return loadJS("https://js.mollie.com/v1/mollie.js").then(() => this._setupMollieComponent());
         },
 
         /**
@@ -96,21 +97,21 @@ odoo.define('mollie.payment.form', function (require) {
          *
          * @override method from payment.payment_form_mixin
          * @private
-         * @param {string} provider - The provider of the selected payment option's acquirer
+         * @param {string} code - The provider of the selected payment option's provider
          * @param {number} paymentOptionId - The id of the selected payment option
          * @param {string} flow - The online payment flow of the selected payment option
          * @return {object} The extended transaction route params
          */
-        _prepareTransactionRouteParams: function (provider, paymentOptionId, flow) {
+        _prepareTransactionRouteParams: function (code, paymentOptionId, flow) {
             const transactionRouteParams = this._super(...arguments);
-            if (provider !== 'mollie') {
+            if (code !== 'mollie') {
                 return transactionRouteParams;
             }
             const $checkedRadios = this.$('input[name="o_payment_radio"]:checked');
             const mollie_method = $checkedRadios.data('mollie-method');
             let mollieData = {
                 mollie_method: $checkedRadios.data('mollie-method'),
-                payment_option_id: $checkedRadios.data('mollie-acquirer-id'),
+                payment_option_id: $checkedRadios.data('mollie-provider-id'),
             };
 
             const useSavedCard = $('#mollieSavedCard').prop('checked');
@@ -133,13 +134,13 @@ odoo.define('mollie.payment.form', function (require) {
          *
          * @override method from payment.payment_form_mixin
          * @private
-         * @param {string} provider - The provider of the acquirer
-         * @param {number} acquirerId - The id of the acquirer handling the transaction
+         * @param {string} code - The provider of the provider
+         * @param {number} providerId - The id of the provider handling the transaction
          * @param {object} processingValues - The processing values of the transaction
          * @return {Promise}
          */
-        _processDirectPayment: function (provider, acquirerId, processingValues) {
-            if (provider !== 'mollie') {
+        _processDirectPayment: function (code, providerId, processingValues) {
+            if (code !== 'mollie') {
                 return this._super(...arguments);
             }
             window.location = processingValues.redirect_url;
@@ -150,13 +151,13 @@ odoo.define('mollie.payment.form', function (require) {
          *
          * @override method from payment.payment_form_mixin
          * @private
-         * @param {string} provider - The provider of the payment option's acquirer
+         * @param {string} code - The provider of the payment option's provider
          * @param {number} paymentOptionId - The id of the payment option handling the transaction
          * @param {string} flow - The online payment flow of the transaction
          * @return {Promise}
          */
-        _processPayment: function (provider, paymentOptionId, flow) {
-            if (provider !== 'mollie') {
+        _processPayment: function (code, paymentOptionId, flow) {
+            if (code !== 'mollie') {
                 return this._super(...arguments);
             }
             this.cardToken = false;
@@ -182,12 +183,12 @@ odoo.define('mollie.payment.form', function (require) {
          * We have overridden this method to show qr code popup.
          *
          * @override
-         * @param {string} provider - The provider of the acquirer
-         * @param {number} acquirerId - The id of the acquirer handling the transaction
+         * @param {string} code - The provider of the provider
+         * @param {number} providerId - The id of the provider handling the transaction
          * @param {object} processingValues - The processing values of the transaction
          * @return {undefined}
          */
-        _processRedirectPayment: function(provider, acquirerId, processingValues) {
+        _processRedirectPayment: function(code, providerId, processingValues) {
             const $redirectForm = $(processingValues.redirect_form_html).attr(
                 'id', 'o_payment_redirect_form'
             );

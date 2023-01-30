@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from email import header
 import json
 import base64
 import logging
@@ -14,17 +15,28 @@ from odoo.http import request
 _logger = logging.getLogger(__name__)
 
 
-class PaymentAcquirerMollie(models.Model):
-    _inherit = 'payment.acquirer'
+class PaymentProviderMollie(models.Model):
+    _inherit = 'payment.provider'
 
     # removed required_if_provider becasue we do not want to add production key during testing
-    mollie_api_key = fields.Char(string="Mollie API Key", required_if_provider=False, help="The Test or Live API Key depending on the configuration of the acquirer", groups="base.group_system")
+    mollie_api_key = fields.Char(string="Mollie API Key", required_if_provider=False, help="The Test or Live API Key depending on the configuration of the provider", groups="base.group_system")
     mollie_api_key_test = fields.Char(string="Test API key", groups="base.group_user")
     mollie_profile_id = fields.Char("Mollie Profile ID", groups="base.group_user")
-    mollie_methods_ids = fields.One2many('mollie.payment.method', 'acquirer_id', string='Mollie Payment Methods')
+    mollie_methods_ids = fields.One2many('mollie.payment.method', 'provider_id', string='Mollie Payment Methods')
 
     mollie_use_components = fields.Boolean(string='Mollie Components', default=True)
     mollie_show_save_card = fields.Boolean(string='Single-Click payments')
+
+    # ----------------
+    # PAYMENT FEATURES
+    # ----------------
+
+    def _compute_feature_support_fields(self):
+        """ Override of `payment` to enable additional features. """
+        super()._compute_feature_support_fields()
+        self.filtered(lambda p: p.code == 'mollie').update({
+            'support_refund': 'partial',
+        })
 
     # --------------
     # ACTION METHODS
@@ -41,21 +53,21 @@ class PaymentAcquirerMollie(models.Model):
     # Fees METHODs
     # ----------------
 
-    def _compute_mollie_method_fees(self, fees_by_acquirer, invoice=None, order=None, amount=None, currency=None, partner_id=None):
-        """ This method adds fees for mollie's methods in Odoo's fees_by_acquirer.
+    def _compute_mollie_method_fees(self, fees_by_provider, invoice=None, order=None, amount=None, currency=None, partner_id=None):
+        """ This method adds fees for mollie's methods in Odoo's fees_by_provider.
 
-        :param dict fees_by_acquirer: fees and payment methods mepping
+        :param dict fees_by_provider: fees and payment methods mepping
         :param recordset order: order recordset to fetch amount currency or partner
         :param float amount: total amount to pay
         :param recordset currency: The currency of the transaction, as a `res.currency` record
         :param recordset country: The customer country, as a `res.country` record
-        :return: fees map for the mollie method and payment acquirer (here values are fees)
+        :return: fees map for the mollie method and payment provider (here values are fees)
         :rtype: dict
         """
-        mollie_acquirer = self.filtered(lambda acq: acq.provider == 'mollie')
+        mollie_provider = self.filtered(lambda acq: acq.code == 'mollie')
 
-        if not mollie_acquirer or not (order or (amount and currency and partner_id)):
-            return fees_by_acquirer
+        if not mollie_provider or not (order or (amount and currency and partner_id)):
+            return fees_by_provider
 
         country_id = False
         if order:
@@ -65,14 +77,14 @@ class PaymentAcquirerMollie(models.Model):
         elif partner_id:
             country_id = self.sudo().env['res.partner'].browse(partner_id).country_id
 
-        global_fees = mollie_acquirer._compute_fees(amount, currency, country_id)
-        for mollie_method in mollie_acquirer.mollie_methods_ids:
-            fees_by_acquirer[mollie_method] = global_fees
+        global_fees = mollie_provider._compute_fees(amount, currency, country_id)
+        for mollie_method in mollie_provider.mollie_methods_ids:
+            fees_by_provider[mollie_method] = global_fees
 
             # this way method can override global fees (it can even removes global fees)
             if mollie_method.fees_active:
-                fees_by_acquirer[mollie_method] = mollie_method._compute_fees(amount, currency, country_id)
-        return fees_by_acquirer
+                fees_by_provider[mollie_method] = mollie_method._compute_fees(amount, currency, country_id)
+        return fees_by_provider
 
     # --------------------------------------------------------
     # TO SYNC ACTIVE MOLLIE METHODS, ISSUSER AND TRANSLATIONS
@@ -98,7 +110,7 @@ class PaymentAcquirerMollie(models.Model):
             create_vals = {
                 'name': method_info['description'],
                 'method_code': method_info['id'],
-                'acquirer_id': self.id,
+                'provider_id': self.id,
                 'supports_order_api': method_info.get('support_order_api', False),
                 'supports_payment_api': method_info.get('support_payment_api', False)
             }
@@ -158,43 +170,25 @@ class PaymentAcquirerMollie(models.Model):
         Note: We only create the terms if it is not present because user might have enterd
         his own translation values,
         """
-        IrTranslation = self.env['ir.translation']
         supported_locale = self._mollie_get_supported_locale()
         supported_locale.remove('en_US')  # en_US is default
         active_langs = self.env['res.lang'].search([('code', 'in', supported_locale)])
         mollie_methods = self.mollie_methods_ids
 
         for lang in active_langs:
-            existing_trans = self.env['ir.translation'].search([('name', '=', 'mollie.payment.method,name'), ('lang', '=', lang.code)])
-            translated_method_ids = existing_trans.mapped('res_id')
-            method_to_translate = []
+            methods_data = self._api_mollie_get_active_payment_methods(extra_params={'locale': lang.code})
             for method in mollie_methods:
-                if method.id not in translated_method_ids:
-                    method_to_translate.append(method.id)
-
-            # We only create the terms if it is not present
-            if method_to_translate:
-                methods_data = self._api_mollie_get_active_payment_methods(extra_params={'locale': lang.code})
-                for method_id in method_to_translate:
-                    mollie_method = mollie_methods.filtered(lambda m: m.id == method_id)
-                    translated_value = methods_data.get(mollie_method.method_code, {}).get('description')
-                    if translated_value:
-                        IrTranslation.create({
-                            'type': 'model',
-                            'name': 'mollie.payment.method,name',
-                            'lang': lang.code,
-                            'res_id': method_id,
-                            'src': mollie_method.name,
-                            'value': translated_value,
-                            'state': 'translated',
-                        })
+                translated_value = methods_data.get(method.method_code, {}).get('description')
+                method.with_context(lang=lang.code).write({
+                    'name': translated_value
+                })
 
     # -----------------------------------
     # TO FILTER METHODS ON CHECKOUT FORMS
     # -----------------------------------
 
     def _mollie_get_supported_methods(self, order, invoice, amount, currency, partner_id):
-        """ Mollie provides multiple payment methods in single payment acquirer.
+        """ Mollie provides multiple payment methods in single payment provider.
             Support of these varies based on based amount, currency and billing country.
             So this method will filters the mollie's supported payment method based amount,
             currency and billing country.

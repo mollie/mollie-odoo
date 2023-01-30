@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from odoo import _, api, fields, models
+from mollie.api.error import UnprocessableEntityError
 
 
-class PaymentAcquirerMollie(models.Model):
-    _inherit = 'payment.acquirer'
+class PaymentproviderMollie(models.Model):
+    _inherit = 'payment.provider'
 
     mollie_auto_sync_shipment = fields.Boolean()
 

@@ -2,7 +2,7 @@
 
 {
     'name': 'Mollie Settlement Sync',
-    'version': '15.0.0.1',
+    'version': '16.0.0.0',
     'description': '',
     'summary': 'This module sync settlements from mollie',
     'author': 'Mollie',
@@ -24,11 +24,9 @@
     ],
 
     'assets': {
-        'web.assets_qweb': [
-            'mollie_account_sync/static/src/xml/*.xml'
-        ],
         'web.assets_backend': [
-            'mollie_account_sync/static/src/js/info_widget.js'
+            'mollie_account_sync/static/src/xml/*.xml',
+            'mollie_account_sync/static/src/js/info_widget.js',
         ]
     },
 }

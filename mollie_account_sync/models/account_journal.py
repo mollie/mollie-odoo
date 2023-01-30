@@ -126,6 +126,7 @@ class AccountJournal(models.Model):
                 'payment_ref': self._generate_payment_ref(payment['metadata']) or payment['description'],
                 'amount': float(payment['settlementAmount']['value']),
                 'mollie_transaction_id': payment['id'],
+                'journal_id': self.id,
             }
             statement_line.update(self._parse_payment_metadata(payment, 'Payment'))
             statement_lines.append((0, 0, statement_line))
@@ -138,6 +139,7 @@ class AccountJournal(models.Model):
                 'payment_ref': self._generate_payment_ref(refund.get('metadata')) or refund.get('description') or ('Refund for %s' % refund['id']),
                 'amount': float(refund['settlementAmount']['value']),
                 'mollie_transaction_id': refund['id'],
+                'journal_id': self.id,
             }
             if refund.get('_embedded') and refund['_embedded'].get('payment'):
                 statement_line.update(self._parse_payment_metadata(refund['_embedded']['payment'], 'Refund'))
@@ -153,6 +155,7 @@ class AccountJournal(models.Model):
                 'payment_ref': capture.get('description') or "Klarna capture for Payment Ref: %s" % capture.get('paymentId'),
                 'amount': float(capture['settlementAmount']['value']),
                 'mollie_transaction_id': capture['id'],
+                'journal_id': self.id,
             }
             if capture.get('_embedded') and capture['_embedded'].get('payment'):
                 statement_line.update(self._parse_payment_metadata(capture['_embedded']['payment'], 'Capture'))
@@ -166,6 +169,7 @@ class AccountJournal(models.Model):
                 'payment_ref': chargeback.get('description') or "Chargeback for Payment Ref: %s" % chargeback.get('paymentId'),
                 'amount': float(chargeback['settlementAmount']['value']),
                 'mollie_transaction_id': chargeback['id'],
+                'journal_id': self.id,
             }
             if chargeback.get('_embedded') and chargeback['_embedded'].get('payment'):
                 statement_line.update(self._parse_payment_metadata(chargeback['_embedded']['payment'], 'Chargeback'))
@@ -177,16 +181,15 @@ class AccountJournal(models.Model):
             'date': self._format_mollie_date(settlement_data['createdAt']),
             'payment_ref': 'MOLLIE PAYMENTS REF %s (for Internal Transfer)' % (settlement_data['reference']),
             'amount': - float(settlement_data['amount']['value']),
+            'journal_id': self.id,
         }))
-
         statement_vals = {
             'name': settlement_data['reference'],
             'date': self._format_mollie_date(settlement_data['createdAt']),
-            'journal_id': self.id,
             'line_ids': statement_lines,
             'mollie_settlement_id': settlement_data['id'],
+            'journal_id': self.id,
         }
-
         statement = BankStatement.create(statement_vals)
         statement.balance_end_real = statement.balance_end
 
@@ -356,7 +359,7 @@ class AccountJournal(models.Model):
                     lines.append({
                         'date': '%s-%s-01' % (year, month),
                         'payment_ref': line_name,
-                        # 'ref': line_name,
+                        'journal_id':self.id,
                         'amount': l_round(amount)
                     })
                     total += l_round(amount)
@@ -368,7 +371,7 @@ class AccountJournal(models.Model):
     def _parse_payment_metadata(self, payment, tx_type):
 
         json_info = {}
-        mollie_acquirer = self.env.ref('payment.payment_acquirer_mollie', raise_if_not_found=False)
+        mollie_provider = self.env.ref('payment.payment_provider_mollie', raise_if_not_found=False)
         statement_line_data = {}
 
         if payment.get('metadata'):
@@ -379,9 +382,9 @@ class AccountJournal(models.Model):
             json_info['MollieType'] = tx_type
             statement_line_data['mollie_json_info'] = json.dumps(json_info)
 
-        domain = [('acquirer_reference', '=', payment['id'])]
-        if mollie_acquirer:
-            domain += [('acquirer_id', '=', mollie_acquirer.id)]
+        domain = [('provider_reference', '=', payment['id'])]
+        if mollie_provider:
+            domain += [('provider_id', '=', mollie_provider.id)]
         transaction = self.env['payment.transaction'].search(domain, limit=1)
         if transaction and transaction.partner_id:
             statement_line_data['partner_id'] = transaction.partner_id.id

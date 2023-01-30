@@ -12,7 +12,7 @@ class SaleOrder(models.Model):
     def mollie_sync_shipment_data(self):
         transaction = self._mollie_get_valid_transaction()
         if transaction:
-            data = transaction.acquirer_id._api_mollie_get_payment_data(transaction.acquirer_reference)
+            data = transaction.provider_id._api_mollie_get_payment_data(transaction.provider_reference)
             shipment_lines = []
             if data and data.get('lines'):
                 for mollie_line in data.get('lines'):
@@ -27,7 +27,7 @@ class SaleOrder(models.Model):
                                     'quantity': int(qty_to_ship)    # mollie does not support float values
                                 })
                 if shipment_lines:
-                    transaction.acquirer_id._api_mollie_sync_shipment(transaction.acquirer_reference, {'lines': shipment_lines})
+                    transaction.provider_id._api_mollie_sync_shipment(transaction.provider_reference, {'lines': shipment_lines})
 
         # For all the cases we will un-mark the sales orders
         self.mollie_need_shipment_sync = False
@@ -47,11 +47,11 @@ class SaleOrder(models.Model):
 
     def _mollie_get_valid_transaction(self):
         self.ensure_one()
-        return self.transaction_ids.filtered(lambda t: t.acquirer_id.provider == 'mollie' and t.state in ['authorized', 'done'] and t.acquirer_reference.startswith("ord_"))
+        return self.transaction_ids.filtered(lambda t: t.provider_id.code == 'mollie' and t.state in ['authorized', 'done'] and t.provider_reference.startswith("ord_"))
 
     def _cron_mollie_sync_shipment(self):
-        mollie_acquirer = self.env.ref('payment.payment_acquirer_mollie')
-        if mollie_acquirer.mollie_auto_sync_shipment:
+        mollie_provider = self.env.ref('payment.payment_provider_mollie')
+        if mollie_provider.mollie_auto_sync_shipment:
             orders = self.search([('mollie_need_shipment_sync', '=', True)])
             for order in orders:
                 order.mollie_sync_shipment_data()

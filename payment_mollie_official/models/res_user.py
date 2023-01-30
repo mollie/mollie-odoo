@@ -9,10 +9,10 @@ class ResUsers(models.Model):
 
     mollie_customer_id = fields.Char()
 
-    def _mollie_validate_customer_id(self, acquirer):
+    def _mollie_validate_customer_id(self, provider):
         self.ensure_one()
         customer_id = self.sudo().mollie_customer_id
         if customer_id:
-            customer_data = acquirer._api_get_customer_data(customer_id, silent_errors=True)
+            customer_data = provider._api_get_customer_data(customer_id, silent_errors=True)
             if customer_data.get('status') == 410:    # customer ID deleted
                 self.mollie_customer_id = False

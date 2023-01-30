@@ -15,7 +15,7 @@ class AccountMove(models.Model):
 
         for invoice in posted.filtered(lambda move: move.is_invoice()):
             payments = invoice.mapped('transaction_ids.mollie_reminder_payment_id')
-            move_lines = payments.line_ids.filtered(lambda line: line.account_internal_type in ('receivable', 'payable') and not line.reconciled)
+            move_lines = payments.line_ids.filtered(lambda line: line.account_type in ('asset_receivable', 'liability_payable') and not line.reconciled)
             for line in move_lines:
                 invoice.js_assign_outstanding_line(line.id)
         return posted
@@ -32,7 +32,7 @@ class AccountMove(models.Model):
             # TODO: Need to handle multiple transection
             if len(mollie_transactions) > 1:
                 raise UserError(_("Multiple mollie transactions are linked with invoice. Please refund manually from mollie portal"))
-            payment_record = mollie_transactions.acquirer_id._api_mollie_get_payment_data(mollie_transactions.acquirer_reference, force_payment=True)
+            payment_record = mollie_transactions.provider_id._api_mollie_get_payment_data(mollie_transactions.provider_reference, force_payment=True)
             return payment_record, mollie_transactions
         return False, mollie_transactions
 
@@ -43,11 +43,27 @@ class AccountMove(models.Model):
                 has_mollie_tx = True
             move.valid_for_mollie_refund = has_mollie_tx
 
+    def mollie_process_refund(self):
+        self.ensure_one()
+        payment_record, mollie_transactions = self._get_mollie_payment_data_for_refund()
+        if payment_record:
+            # Create payment record and post the payment
+            AccountPaymentRegister = self.env['account.payment.register'].with_context(active_ids=self.ids, active_model='account.move')
+            payment_obj = AccountPaymentRegister.create({
+                'journal_id': mollie_transactions.payment_id.journal_id.id,
+                'payment_method_id': mollie_transactions.payment_id.payment_method_id.id
+            })
+            payment_obj.action_create_payments()
+            # Create refund in mollie via API
+            refund = mollie_transactions.provider_id._api_mollie_refund(self.amount_total, self.currency_id, payment_record)
+            if refund['status'] == 'refunded':
+                self.mollie_refund_reference = refund['id']
+
     def _find_valid_mollie_transactions(self):
         self.ensure_one()
 
         # CASE 1: For the credit notes generated from invoice
-        transactions = self.reversed_entry_id.transaction_ids.sudo().filtered(lambda tx: tx.state == 'done' and tx.acquirer_id.provider == 'mollie')
+        transactions = self.reversed_entry_id.transaction_ids.filtered(lambda tx: tx.state == 'done' and tx.provider_id.code == 'mollie')
 
         # CASE 2: For the credit note generated due to returns of delivery
         # TODO: In this case credit note is generated from Sale order and so both invoice are not linked as reversal move.
@@ -64,7 +80,7 @@ class AccountMove(models.Model):
             'active_ids': self.ids,
         }
 
-        payment_record, mollie_transactions = self.sudo()._get_mollie_payment_data_for_refund()
+        payment_record, mollie_transactions = self._get_mollie_payment_data_for_refund()
 
         # We will not get `amountRemaining` key if payment is not paid (only authorized)
         if payment_record and payment_record.get('amountRemaining'):
