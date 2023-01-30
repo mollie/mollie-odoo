@@ -45,7 +45,7 @@ var QrModel = Dialog.extend({
      * This is not optimal solution. websocket or long polling would be perfect solution.
      * But there is no proper way to manage it in odoo at the moment.
      * Odoo it self uses timeout based poll for payment.
-     * See: https://github.com/odoo/odoo/blob/15.0/addons/payment/static/src/js/post_processing.js
+     * See: https://github.com/odoo/odoo/blob/16.0/addons/payment/static/src/js/post_processing.js
     */
     _recallPolling: function () {
         setTimeout(this._poll.bind(this), 5000);
