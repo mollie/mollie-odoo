@@ -38,7 +38,10 @@ class MolliePayment(models.Model):
     def create(self, vals):
         if vals.get('name', 'New') == 'New':
             vals['name'] = self.env['ir.sequence'].next_by_code('payment.number') or 'New'
+        log_sudo = self.env['mollie.log'].sudo()
+        log_sudo.add_log("Prepare Payment in Odoo", f"vals : {vals}")
         result = super(MolliePayment, self).create(vals)
+        log_sudo.add_log("Created Payment in Odoo", f"Payment Object : {result}")
         return result
 
     def _create_payment(self, pay_obj):
@@ -48,6 +51,7 @@ class MolliePayment(models.Model):
             if pay_obj.get('paidAt', False):
                 paid_date = datetime.strptime(pay_obj['paidAt'][0:19], "%Y-%m-%dT%H:%M:%S")
             mollie_subs_id = self.env['mollie.subscription'].search([('subscriptions_id', '=', pay_obj.get('subscriptionId', False))])
+            log_sudo = self.env['mollie.log'].sudo()
             checkout_url = False
             if pay_obj.get('status') == 'open':
                 checkout_url = pay_obj["_links"]["checkout"]["href"]
@@ -71,7 +75,9 @@ class MolliePayment(models.Model):
                     'mollie_subscription_id': mollie_subs_id and mollie_subs_id.id or False,
                     'checkout_url': checkout_url,
                     "transaction_id": pay_obj['metadata'] and pay_obj.get("metadata", {}).get("transaction_id")}
+            log_sudo.add_log("Preparing Data for Create Mollie Payment in Odoo", f"vals : {vals}")
             payment = self.sudo().create(vals)
+            log_sudo.add_log("Created Mollie Payment in Odoo", f"Created Object : {payment}")
             msg = "<b>This payment has been created by %s on %s" % (self.env.user.name,
                                                                     datetime.today().strftime('%Y-%m-%d %H:%M'))
             for obj in self:
@@ -80,15 +86,19 @@ class MolliePayment(models.Model):
 
     def _get_payment_obj(self, payment_id):
         """Get payment data from odoo"""
+        log_sudo = self.env['mollie.log'].sudo()
         payment_obj = self.sudo().search([('payment_id', '=', payment_id)])
+        log_sudo.add_log("Get payment Object", f"Payment Object : {payment_obj}")
         return payment_obj if payment_obj else {}
 
     def refresh_payment(self):
         """Reload payment data using API"""
         mollie = self.env.ref("payment.payment_acquirer_mollie")
+        log_sudo = self.env['mollie.log'].sudo()
         mollie_client = mollie._api_mollie_get_client()
         pay_obj = mollie_client.payments.get(self.payment_id)
         if pay_obj:
+            log_sudo.add_log("Refresh Payment | Update Payment", f"Payment Object : {pay_obj}")
             self._update_payment(pay_obj, self.env.user.name)
 
     def _update_payment(self, pay_obj, method):
@@ -108,6 +118,8 @@ class MolliePayment(models.Model):
                     "transaction_id": pay_obj['metadata'] and pay_obj.get("metadata", {}).get("transaction_id")}
             if pay_obj.get('subscriptionId', False):
                 vals.update({'subscription_id': pay_obj.get('subscriptionId')})
+            log_sudo = self.env['mollie.log'].sudo()
+            log_sudo.add_log("Update Payment", f"Vals : {vals}")
             self.sudo().write(vals)
             msg = f"<b>This payment has been updated by %s on %s" % (method,
                                                                      datetime.today().strftime('%Y-%m-%d %H:%M'))
@@ -117,6 +129,8 @@ class MolliePayment(models.Model):
     def auto_update_payments(self):
         """Cron job for update and create a payment records from Mollie API"""
         mollie = self.env.ref("payment.payment_acquirer_mollie")
+        log_sudo = self.env['mollie.log'].sudo()
+        log_sudo.add_log("Auto Update Payments Called", "Auto Update Payments Called")
         mollie_client = mollie._api_mollie_get_client()
         subscription_objs = self.env['mollie.subscription'].search([('status', '=', 'active')])
         customer_ids = list(set(subscription_objs.mapped('customerId')))
@@ -125,6 +139,7 @@ class MolliePayment(models.Model):
             if payments and payments.get('_embedded'):
                 payment_list = payments['_embedded'].get('payments', [])
                 for payment in payment_list:
+                    log_sudo.add_log("Auto Update Payments", f"Transaction Object : {payment}")
                     is_exist = self.sudo()._get_payment_obj(payment['id'])
                     if is_exist:
                         is_exist = is_exist.filtered(lambda l: l.status == 'open')
@@ -140,6 +155,7 @@ class MolliePayment(models.Model):
         """
         invoice = False
         subscription = self.mollie_subscription_id
+        log_sudo = self.env['mollie.log'].sudo()
         if subscription:
             if self.sequence_type == "first":
                 order = subscription.sale_order_id
@@ -151,6 +167,7 @@ class MolliePayment(models.Model):
                 invoice_vals = self._prepare_invoice_vals()
                 invoice = self.env["account.move"].create(invoice_vals)
             if invoice:
+                log_sudo.add_log("Create Mollie Invoice", f"Invoice Object : {invoice} | Subscription Id : {subscription}")
                 invoice.action_post()
                 self.invoice_id = invoice
 
@@ -159,8 +176,11 @@ class MolliePayment(models.Model):
         Register payment for the related invoice.
         @author: Maulik Barad on Date 01-Dec-2022.
         """
+        log_sudo = self.env['mollie.log'].sudo()
         vals = self._prepare_payment_dict(self.invoice_id)
+        log_sudo.add_log("Account Payment", f"vals : {vals}")
         payment = self.env["account.payment"].create(vals)
+        log_sudo.add_log("Created Account Payment", f"payment object : {payment}")
         payment.action_post()
         self.reconcile_payment_ept(payment, self.invoice_id)
         return True

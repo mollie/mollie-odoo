@@ -17,6 +17,7 @@
         "views/sale_portal_templates.xml",
         "views/mollie_subscription_view.xml",
         "views/mollie_payment_views.xml",
+        "views/mollie_log_views.xml",
     ],
     "assets": {
         "web.assets_frontend": [

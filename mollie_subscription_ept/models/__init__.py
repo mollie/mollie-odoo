@@ -6,3 +6,4 @@ from . import payment_transaction
 from . import product
 from . import res_partner
 from . import sale_order
+from . import mollie_log

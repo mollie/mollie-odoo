@@ -36,9 +36,12 @@ class MollieSubscription(models.Model):
 
     @api.model
     def create(self, vals):
+        log_sudo = self.env['mollie.log'].sudo()
         if vals.get('name', 'New') == 'New':
             vals['name'] = self.env['ir.sequence'].next_by_code('subscriptions.number') or 'New'
+        log_sudo.add_log("Create Subscription on the Odoo", f"Create Vals : {vals}")
         result = super(MollieSubscription, self).create(vals)
+        log_sudo.add_log("Created Subscription on the Odoo", f"Subscription Object : {result}")
         return result
 
     def _get_start_date(self, product):
@@ -53,9 +56,12 @@ class MollieSubscription(models.Model):
         return start_date.strftime("%Y-%m-%d")
 
     def _mollie_create_subscription(self, transaction_obj):
+        log_sudo = self.env['mollie.log'].sudo()
+        log_sudo.add_log("Start Creating Subscription", "Start Creating Subscription")
         mollie = self.env.ref("payment.payment_acquirer_mollie")
         mollie_client = mollie._api_mollie_get_client()
         sale_order_obj = transaction_obj.sale_order_ids
+        payment_data = transaction_obj.acquirer_id._api_mollie_get_payment_data(transaction_obj.acquirer_reference)
         for product in sale_order_obj.order_line.product_id:
             if product.is_mollie_subscription:
                 amount = {'currency': transaction_obj.currency_id.name,
@@ -68,12 +74,16 @@ class MollieSubscription(models.Model):
                     webhook_url = webhook_urls
                 mollie_customer_id = transaction_obj._get_transaction_customer_id()
                 subscription_obj = mollie_client.customer_subscriptions.with_parent_id(mollie_customer_id)
-                subscription = subscription_obj.create(data={'amount': amount or '',
-                                                             'interval': interval or '',
-                                                             'description': description or '',
-                                                             'webhookUrl': webhook_url,
-                                                             'times': product.interval_time or 1,
-                                                             'startDate': self._get_start_date(product)})
+                data = {'amount': amount or '',
+                        'interval': interval or '',
+                        'description': description or '',
+                        'webhookUrl': webhook_url,
+                        'times': product.interval_time or 1,
+                        'startDate': self._get_start_date(product),
+                        'mandateId': payment_data and payment_data['mandateId'] or ''}
+                log_sudo.add_log("Prepare Subscription Data | Mollie", f"Data {data}")
+                subscription = subscription_obj.create(data=data)
+                log_sudo.add_log("Created Subscription | Mollie", f"Subscription : {subscription}")
                 if subscription and subscription['resource'] == 'subscription':
                     vals = {'subscriptions_id': subscription['id'] or False,
                             'customerId': subscription['customerId'] or False,
@@ -88,7 +98,9 @@ class MollieSubscription(models.Model):
                             'product_id': product.id or False,
                             'webhookUrl': subscription['webhookUrl'] or False,
                             'sale_order_id': sale_order_obj.id}
+                    log_sudo.add_log("Prepare Subscription Data | Odoo", f"Vals {vals}")
                     subs_obj = self.sudo().create(vals)
+                    log_sudo.add_log("Created Subscription | Odoo", f"Subscription Obj : {subs_obj}")
                     # sale_order_obj.mollie_subscription_id = subs_obj.id
                     mollie_payment = self.env['mollie.payment'].sudo().search([('payment_id', '=', transaction_obj.acquirer_reference)])
                     if mollie_payment:
@@ -98,13 +110,17 @@ class MollieSubscription(models.Model):
                             mollie_payment.create_mollie_invoice()
 
     def refresh_subscription(self):
+        log_sudo = self.env['mollie.log'].sudo()
+        log_sudo.add_log("Refresh Subscription", "Refresh Subscription")
         self._update_subscriptions_data()
         self._update_payments_data()
 
     def _update_subscriptions_data(self):
+        log_sudo = self.env['mollie.log'].sudo()
         mollie = self.env.ref("payment.payment_acquirer_mollie")
         mollie_client = mollie._api_mollie_get_client()
         subscription = mollie_client.customer_subscriptions.with_parent_id(self.customerId).get(self.subscriptions_id)
+        log_sudo.add_log("Update Subscriptions", f"Subscription Object : {subscription}")
         if subscription:
             self.sudo().write({'status': subscription.get('status', False),
                                'times': subscription.get('times', False),
@@ -116,6 +132,8 @@ class MollieSubscription(models.Model):
                 obj.sudo().message_post(body=msg)
 
     def _update_payments_data(self):
+        log_sudo = self.env['mollie.log'].sudo()
+        log_sudo.add_log("Call Update Payments Data", "Call Update Payments Data")
         mollie = self.env.ref("payment.payment_acquirer_mollie")
         mollie_client = mollie._api_mollie_get_client()
         payments = mollie_client.customer_payments.with_parent_id(self.customerId).list()
@@ -143,6 +161,8 @@ class MollieSubscription(models.Model):
             customer_id = subscription_obj.customerId
             mollie = self.env.ref("payment.payment_acquirer_mollie")
             mollie_client = mollie._api_mollie_get_client()
+            log_sudo = self.env['mollie.log'].sudo()
+            log_sudo.add_log("Cancel Subscription", f"Subscription Id : {subscription_id}")
             subscription = mollie_client.customer_subscriptions.with_parent_id(customer_id).delete(subscription_id)
             if subscription:
                 canceled_date = False
@@ -151,22 +171,25 @@ class MollieSubscription(models.Model):
                 subscription_obj.sudo().write({'status': subscription.get('status', False),
                                                'canceled_date': canceled_date,
                                                'nextPaymentDate': False})
+                log_sudo.add_log("Successfully Canceled Subscription", f"Subscription Obj : {subscription}")
                 msg = "<b>This subscription has been cancelled by %s on %s" % (self.env.user.name,
                                                                                datetime.today().strftime('%Y-%m-%d %H:%M'))
                 subscription_obj.sudo().message_post(body=msg)
 
     def auto_update_subscription(self):
         mollie = self.env.ref("payment.payment_acquirer_mollie")
+        log_sudo = self.env['mollie.log'].sudo()
+        log_sudo.add_log("Auto Update Subscription Called", "Auto Update Subscription Called")
         mollie_client = mollie._api_mollie_get_client()
         subscriptions = self.sudo().search([('status', '=', 'active')])
         for subs_obj in subscriptions:
-            subscription = mollie_client.customer_subscriptions.with_parent_id(subs_obj.customerId).get(
-                subs_obj.subscriptions_id)
+            subscription = mollie_client.customer_subscriptions.with_parent_id(subs_obj.customerId).get(subs_obj.subscriptions_id)
             if subscription:
                 subs_obj.sudo().write({'status': subscription.get('status', False),
                                        'times': subscription.get('times', False),
                                        'timesRemaining': subscription.get('timesRemaining', False),
                                        'nextPaymentDate': subscription.get('nextPaymentDate', False)})
+                log_sudo.add_log("Auto Update Subscription", f"Auto Update Subscription Obj : {subs_obj}")
                 msg = "<b>This subscription has been updated by %s on %s" % (self.env.user.name,
                                                                              datetime.today().strftime('%Y-%m-%d %H:%M'))
                 subs_obj.sudo().message_post(body=msg)

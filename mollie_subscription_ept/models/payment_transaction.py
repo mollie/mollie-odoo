@@ -32,17 +32,22 @@ class PaymentTransaction(models.Model):
             return super()._process_feedback_data(data)
 
         mollie_payment_obj = self.env['mollie.payment']
+        log_sudo = self.env['mollie.log'].sudo()
 
         self._process_refund_transactions_status()
 
-        if self.state == 'done':
-            return
+        # if self.state == 'done':
+        #     return
 
         acquirer_reference = self.acquirer_reference
         mollie_payment = self.acquirer_id._api_mollie_get_payment_data(acquirer_reference)
         payment_status = mollie_payment.get('status')
-        if payment_status == 'paid':
+        log_sudo.add_log("Mollie Payment", f"Mollie Payment Object : {mollie_payment}")
+        if payment_status == 'paid' or payment_status == 'pending' or payment_status == 'authorized':
+            log_sudo.add_log("Start Creating Subscription", "Start Creating Subscription")
             self.env['mollie.subscription']._mollie_create_subscription(self)
+            log_sudo.add_log("Created Subscription", "Created Subscription")
+        if payment_status == 'paid':
             self._set_done()
         elif payment_status == 'pending':
             self._set_pending()
@@ -55,6 +60,7 @@ class PaymentTransaction(models.Model):
                 if existing_payment.status != mollie_payment['status']:
                     existing_payment._update_payment(mollie_payment, 'Webhook')
             else:
+                log_sudo.add_log("Start Creating Payment", f"Payment Data : {mollie_payment}")
                 mollie_payment_obj._create_payment(mollie_payment)
             self._set_canceled("Mollie: " + _("Mollie: canceled due to status: %s", payment_status))
         else:
@@ -67,21 +73,24 @@ class PaymentTransaction(models.Model):
         @author: Maulik Barad on Date 25-Nov-2022.
         """
         self.ensure_one()
-        method_record = self.acquirer_id.mollie_methods_ids.filtered(
-            lambda m: m.method_code == self.mollie_payment_method)
+        method_record = self.acquirer_id.mollie_methods_ids.filtered(lambda m: m.method_code == self.mollie_payment_method)
 
         result = None
+        log_sudo = self.env['mollie.log'].sudo()
 
         subscription_product = self.sale_order_ids.order_line.product_id.filtered(lambda prd: prd.is_mollie_subscription)
         if subscription_product and method_record.supports_payment_api and method_record.supports_order_api:
             result = self.with_context(first_mollie_payment=True)._mollie_create_payment_record('payment')
             if result:
+                log_sudo.add_log("Start Creating Payment", f"Payment Data : {result}")
                 self.env['mollie.payment'].sudo()._create_payment(result)
         else:
             # Order API (use if sale orders are present). Also qr code is only supported by Payment API
             if (not method_record.enable_qr_payment) and 'sale_order_ids' in self._fields and self.sale_order_ids and method_record.supports_order_api:
                 # Order API
+                log_sudo.add_log("Start Creating Payment", "Start Creating Payment")
                 result = self._mollie_create_payment_record('order', silent_errors=True)
+                log_sudo.add_log("Created Payment Object", f"Payment Object : {result}")
 
             # Payment API
             if (result is None or result.get('status') == 422) and method_record.supports_payment_api:  # Here 422 status used for fallback Read more at https://docs.mollie.com/overview/handling-errors
@@ -89,7 +98,9 @@ class PaymentTransaction(models.Model):
                     _logger.warning("Can not use order api due to 'Error[422]: %s - %s' "
                                     "\n- Fallback on Mollie payment API " % (result.get('title'),
                                                                              result.get('detail')))
+                log_sudo.add_log("Start Creating Payment", "Start Creating Payment")
                 result = self._mollie_create_payment_record('payment')
+                log_sudo.add_log("Created Payment Object", f"Payment Object : {result}")
         return result
 
     def _mollie_prepare_payment_payload(self, api_type):

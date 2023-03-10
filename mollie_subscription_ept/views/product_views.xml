@@ -8,8 +8,8 @@
     <field name="arch" type="xml">
         <field name="company_id" position="after">
             <field name="is_mollie_subscription"/>
-            <field name="subscription_interval" attrs="{'invisible' : [('is_mollie_subscription', '=' ,False)]}"/>
-            <field name="subscription_interval_type" attrs="{'invisible' : [('is_mollie_subscription', '=' ,False)]}"/>
+            <field name="subscription_interval" string="Frequency" attrs="{'invisible' : [('is_mollie_subscription', '=' ,False)]}"/>
+            <field name="subscription_interval_type" string="Subscription Period" attrs="{'invisible' : [('is_mollie_subscription', '=' ,False)]}"/>
             <field name="interval_time" attrs="{'invisible' : [('is_mollie_subscription', '=' ,False)]}"/>
         </field>
         <!-- <field name="mollie_voucher_category" position="replace" />
