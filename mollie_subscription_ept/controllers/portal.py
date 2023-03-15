@@ -44,9 +44,8 @@ class CustomerPortalExt(CustomerPortal):
                              page=page,
                              step=self._items_per_page)
         # content according to pager and archive selected
-        orders = sale_order.search(domain, order=sort_order, limit=self._items_per_page, offset=pager['offset'])
         values.update({'date': date_begin,
-                       'subscriptions': orders.sudo(),
+                       'subscriptions': sale_order.sudo().search(domain, order=sort_order, limit=self._items_per_page, offset=pager['offset']),
                        'page_name': 'subscriptions',
                        'pager': pager,
                        'default_url': '/my/subscriptions',

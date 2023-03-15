@@ -12,7 +12,7 @@ class SaleOrder(models.Model):
     def _public_user(self):
         public_partner_id = self.env.ref("base.public_user") and self.env.ref("base.public_user").partner_id or False
         current_partner_id = self.partner_id or False
-        return True if public_partner_id.id == current_partner_id.id else False
+        return True if public_partner_id == current_partner_id else False
 
     def add_to_wishlist(self, line_obj):
         self.env['product.wishlist'].create({'partner_id': self.partner_id.id or False,
