@@ -36,20 +36,17 @@ class PaymentTransaction(models.Model):
 
         self._process_refund_transactions_status()
 
-        # if self.state == 'done':
-        #     return
-
         acquirer_reference = self.acquirer_reference
         mollie_payment = self.acquirer_id._api_mollie_get_payment_data(acquirer_reference)
         payment_status = mollie_payment.get('status')
         log_sudo.add_log("Mollie Payment", f"Mollie Payment Object : {mollie_payment}")
-        if payment_status == 'paid' or payment_status == 'pending' or payment_status == 'authorized':
+        if payment_status in ['paid', 'done', 'pending', 'authorized']:
             log_sudo.add_log("Start Creating Subscription", "Start Creating Subscription")
             self.env['mollie.subscription']._mollie_create_subscription(self)
             log_sudo.add_log("Created Subscription", "Created Subscription")
-        if payment_status == 'paid':
+        if payment_status in ['paid', 'done']:
             self._set_done()
-        elif payment_status == 'pending':
+        elif payment_status in ['pending', 'open']:
             self._set_pending()
         elif payment_status == 'authorized':
             self._set_authorized()

@@ -8,14 +8,11 @@ class CustomerPortalExt(CustomerPortal):
 
     def _prepare_portal_layout_values(self):
         values = super(CustomerPortalExt, self)._prepare_portal_layout_values()
-
         partner = request.env.user.partner_id
-        sale_order = request.env['sale.order']
-        subscription_count = sale_order.search_count([('message_partner_ids', 'child_of', [partner.commercial_partner_id.id]),
-                                                      ('mollie_subscription_id', '!=', False),
-                                                      ('state', 'in', ['sale', 'done'])])
+        subscription_count = request.env['sale.order'].search_count([('message_partner_ids', 'child_of', [partner.commercial_partner_id.id]),
+                                                                     ('mollie_subscription_id', '!=', False),
+                                                                     ('state', 'in', ['sale', 'done'])])
         values.update({'subscription_count': subscription_count})
-
         return values
 
     @http.route(['/my/subscriptions', '/my/subscriptions/page/<int:page>'], type='http', auth="user", website=True)
@@ -23,8 +20,9 @@ class CustomerPortalExt(CustomerPortal):
         values = self._prepare_portal_layout_values()
         partner = request.env.user.partner_id
         sale_order = request.env['sale.order']
-
-        domain = [('message_partner_ids', 'child_of', [partner.commercial_partner_id.id]), ('mollie_subscription_id', '!=', None), ('state', 'in', ['sale', 'done'])]
+        domain = [('message_partner_ids', 'child_of', [partner.commercial_partner_id.id]),
+                  ('mollie_subscription_id', '!=', None),
+                  ('state', 'in', ['sale', 'done'])]
 
         searchbar_sortings = {'date': {'label': _('Order Date'), 'order': 'date_order desc'},
                               'name': {'label': _('Reference'), 'order': 'name'},
@@ -47,7 +45,6 @@ class CustomerPortalExt(CustomerPortal):
                              step=self._items_per_page)
         # content according to pager and archive selected
         orders = sale_order.search(domain, order=sort_order, limit=self._items_per_page, offset=pager['offset'])
-
         values.update({'date': date_begin,
                        'subscriptions': orders.sudo(),
                        'page_name': 'subscriptions',
@@ -64,13 +61,11 @@ class CustomerPortalExt(CustomerPortal):
         except (AccessError, MissingError):
             return request.redirect('/my')
 
-        if subscription_obj:
-            values = {'sale_order': subscription_obj.sale_order_id,
-                      'subscription_obj': subscription_obj,
-                      'bootstrap_formatting': True,
-                      'partner_id': subscription_obj.partner_id.id}
+        values = {'sale_order': subscription_obj.sale_order_id,
+                  'subscription_obj': subscription_obj,
+                  'partner_id': subscription_obj.partner_id.id}
 
-            if subscription_obj.sale_order_id.company_id:
-                values['res_company'] = subscription_obj.sale_order_id.company_id
+        if subscription_obj.sale_order_id.company_id:
+            values['res_company'] = subscription_obj.sale_order_id.company_id
 
-            return request.render('mollie_subscription_ept.portal_my_subscriptions_template', values)
+        return request.render('mollie_subscription_ept.portal_my_subscriptions_template', values)

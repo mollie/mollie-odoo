@@ -5,6 +5,7 @@ from datetime import datetime
 class MollieLog(models.Model):
     _name = 'mollie.log'
     _rec_name = "log_name"
+    _description = "Mollie Subscription Logging"
 
     log_name = fields.Char("Name")
     log_description = fields.Text("Description")

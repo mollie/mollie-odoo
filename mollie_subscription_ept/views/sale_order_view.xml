@@ -10,12 +10,12 @@
                       attrs="{'invisible': [('mollie_subscription_id', '=', False)]}">
                     <group>
                         <field
-                            name="mollie_subscription_id"
-                            widget="one2many_list"
-                            colspan="4"
-                            nolabel="1"
-                            mode="kanban"
-                            options="{'no_create_edit': True}"
+                                name="mollie_subscription_id"
+                                widget="one2many_list"
+                                colspan="4"
+                                nolabel="1"
+                                mode="kanban"
+                                options="{'no_create_edit': True}"
                         />
                     </group>
                 </page>

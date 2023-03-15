@@ -2,17 +2,16 @@ import logging
 from odoo import fields, http
 from odoo.http import request
 from odoo.tools.json import scriptsafe as json_scriptsafe
+from odoo.addons.website_sale.controllers.main import WebsiteSale
 
 _logger = logging.getLogger(__name__)
 
 
-class WebsiteSale(http.Controller):
+class WebsiteSale(WebsiteSale):
 
     @http.route(['/clear_warn'], type='json', auth="public", website=True)
     def clear_warning(self, **post):
-        hide_warn = post.get('hide_warn')
-        if hide_warn:
-            request.session['show_wishlist_warn'] = request.session['show_in_cart_warn'] = False
+        request.session['show_wishlist_warn'] = request.session['show_in_cart_warn'] = not (post.get('hide_warn'))
         return True
 
     def _set_session(self, so_obj):
@@ -35,12 +34,11 @@ class WebsiteSale(http.Controller):
         if kw.get('no_variant_attribute_values'):
             no_variant_attribute_values = json_scriptsafe.loads(kw.get('no_variant_attribute_values'))
 
-        values = sale_order._cart_update(
-            product_id=int(product_id),
-            add_qty=add_qty,
-            set_qty=set_qty,
-            product_custom_attribute_values=product_custom_attribute_values,
-            no_variant_attribute_values=no_variant_attribute_values)
+        values = sale_order._cart_update(product_id=int(product_id),
+                                         add_qty=add_qty,
+                                         set_qty=set_qty,
+                                         product_custom_attribute_values=product_custom_attribute_values,
+                                         no_variant_attribute_values=no_variant_attribute_values)
 
         self._set_session(values)
 
@@ -57,37 +55,25 @@ class WebsiteSale(http.Controller):
             - When adding a product from the wishlist.
             - When adding a product to cart on the same page (without redirection).
         """
-        order = request.website.sale_get_order(force_create=1)
-        if order.state != 'draft':
-            request.website.sale_reset()
-            if kw.get('force_create'):
-                order = request.website.sale_get_order(force_create=1)
-            else:
-                return {}
+        values = super(WebsiteSale, self).cart_update_json(product_id=product_id,
+                                                           line_id=line_id,
+                                                           add_qty=add_qty,
+                                                           set_qty=set_qty,
+                                                           display=display, **kw)
 
-        pcav = kw.get('product_custom_attribute_values')
-        nvav = kw.get('no_variant_attribute_values')
-        value = order._cart_update(product_id=product_id, line_id=line_id, add_qty=add_qty, set_qty=set_qty, product_custom_attribute_values=json_scriptsafe.loads(pcav) if pcav else None, no_variant_attribute_values=json_scriptsafe.loads(nvav) if nvav else None)
+        self._set_session(values)
 
-        self._set_session(value)
+        return values
 
-        if not order.cart_quantity:
-            request.website.sale_reset()
-            return value
+class MolliePayment(WebsiteSale):
 
-        order = request.website.sale_get_order()
-        value['cart_quantity'] = order.cart_quantity
-
-        if not display:
-            return value
-
-        value['website_sale.cart_lines'] = request.env['ir.ui.view']._render_template("website_sale.cart_lines", {
-            'website_sale_order': order,
-            'date': fields.Date.today(),
-            'suggested_products': order._cart_accessories()
-        })
-        value['website_sale.short_cart_summary'] = request.env['ir.ui.view']._render_template(
-            "website_sale.short_cart_summary", {
-                'website_sale_order': order,
-            })
-        return value
+    def _get_shop_payment_values(self, order, **kwargs):
+        """
+        show only mollie's credit card payment method when checkout subscription type product
+        """
+        values = super(MolliePayment, self)._get_shop_payment_values(order, **kwargs)
+        if order:
+            check_is_subscription = order._check_subs_in_cart()
+            if check_is_subscription:
+                values['acquirers'] = values['acquirers'].filtered(lambda x: x.provider == 'mollie')
+        return values

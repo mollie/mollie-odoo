@@ -50,13 +50,15 @@ class MolliePayment(models.Model):
             paid_date = datetime.strptime(pay_obj['createdAt'][0:19], "%Y-%m-%dT%H:%M:%S")
             if pay_obj.get('paidAt', False):
                 paid_date = datetime.strptime(pay_obj['paidAt'][0:19], "%Y-%m-%dT%H:%M:%S")
-            mollie_subs_id = self.env['mollie.subscription'].search([('subscriptions_id', '=', pay_obj.get('subscriptionId', False))])
+            mollie_subs_id = self.env['mollie.subscription'].search(
+                [('subscriptions_id', '=', pay_obj.get('subscriptionId', False))])
             log_sudo = self.env['mollie.log'].sudo()
             checkout_url = False
             if pay_obj.get('status') == 'open':
                 checkout_url = pay_obj["_links"]["checkout"]["href"]
             vals = {'payment_id': pay_obj['id'] or False,
-                    'createdAt': pay_obj['createdAt'] and datetime.strptime(pay_obj['createdAt'][0:19], "%Y-%m-%dT%H:%M:%S") or False,
+                    'createdAt': pay_obj['createdAt'] and datetime.strptime(pay_obj['createdAt'][0:19],
+                                                                            "%Y-%m-%dT%H:%M:%S") or False,
                     'amount': pay_obj.get('amount', {}).get("value", ""),
                     'amount_currency': pay_obj.get('amount', {}).get("currency", ""),
                     'description': pay_obj['description'] or False,
@@ -139,12 +141,13 @@ class MolliePayment(models.Model):
             if payments and payments.get('_embedded'):
                 payment_list = payments['_embedded'].get('payments', [])
                 for payment in payment_list:
-                    log_sudo.add_log("Auto Update Payments", f"Transaction Object : {payment}")
-                    is_exist = self.sudo()._get_payment_obj(payment['id'])
-                    if is_exist:
-                        is_exist = is_exist.filtered(lambda l: l.status == 'open')
-                        if is_exist.status != payment['status']:
-                            is_exist.sudo()._update_payment(payment, self.env.user.name)
+                    payment_objs = self.sudo()._get_payment_obj(payment['id'])
+                    if payment_objs:
+                        payment_obj = payment_objs.filtered(lambda l: l.status not in ['paid', 'expired',
+                                                                                       'canceled', 'failed'])
+                        if payment_obj and payment_obj.status != payment['status']:
+                            log_sudo.add_log("Auto Update Payments", f"Transaction Object : {payment}")
+                            payment_obj.sudo()._update_payment(payment, self.env.user.name)
                     else:
                         self.sudo()._create_payment(payment)
 
@@ -167,7 +170,8 @@ class MolliePayment(models.Model):
                 invoice_vals = self._prepare_invoice_vals()
                 invoice = self.env["account.move"].create(invoice_vals)
             if invoice:
-                log_sudo.add_log("Create Mollie Invoice", f"Invoice Object : {invoice} | Subscription Id : {subscription}")
+                log_sudo.add_log("Create Mollie Invoice",
+                                 f"Invoice Object : {invoice} | Subscription Id : {subscription}")
                 invoice.action_post()
                 self.invoice_id = invoice
 

@@ -21,8 +21,10 @@
                     <h1>
                         <field name="log_name" readonly="1"/>
                     </h1>
-                    Date : <field name="processed_date" readonly="1"/>
-                    | By : <field name="user" readonly="1"/>
+                    Date :
+                    <field name="processed_date" readonly="1"/>
+                    | By :
+                    <field name="user" readonly="1"/>
                     <field name="log_description" colspan="4" nolabel="1" readonly="1" widget="html"/>
                 </sheet>
             </form>

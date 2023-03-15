@@ -7,19 +7,12 @@ class SaleOrder(models.Model):
     mollie_subscription_id = fields.One2many("mollie.subscription", "sale_order_id", "Subscription")
 
     def _check_subs_in_cart(self):
-        result = self.order_line.product_id.filtered(lambda product: product.is_mollie_subscription)
-        res = False
-        if result:
-            res = True
-        return res
+        return self.order_line.product_id.filtered(lambda product: product.is_mollie_subscription)
 
     def _public_user(self):
         public_partner_id = self.env.ref("base.public_user") and self.env.ref("base.public_user").partner_id or False
         current_partner_id = self.partner_id or False
-        if public_partner_id.id == current_partner_id.id:
-            return True
-        else:
-            return False
+        return True if public_partner_id.id == current_partner_id.id else False
 
     def add_to_wishlist(self, line_obj):
         self.env['product.wishlist'].create({'partner_id': self.partner_id.id or False,

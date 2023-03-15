@@ -1,7 +1,5 @@
 import logging
-
 from mollie.api.client import Client as MollieClient
-
 from odoo import models, service
 
 _logger = logging.getLogger(__name__)
