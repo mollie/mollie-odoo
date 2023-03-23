@@ -62,52 +62,51 @@ class MollieSubscription(models.Model):
         mollie_client = mollie._api_mollie_get_client()
         sale_order_obj = transaction_obj.sale_order_ids
         payment_data = transaction_obj.acquirer_id._api_mollie_get_payment_data(transaction_obj.acquirer_reference)
-        for product in sale_order_obj.order_line.product_id:
-            if product.is_mollie_subscription:
-                amount = {'currency': transaction_obj.currency_id.name,
-                          'value': "%.2f" % (transaction_obj.amount + transaction_obj.fees)}
-                interval = '{} {}'.format(product.subscription_interval, product.subscription_interval_type)
-                description = '{} / {}'.format(sale_order_obj.name, product.name)
-                webhook_url = ''
-                webhook_urls = urls.url_join(mollie.get_base_url(), MollieController._notify_url)
-                if "://localhost" not in webhook_urls and "://192.168." not in webhook_urls:
-                    webhook_url = webhook_urls
-                mollie_customer_id = transaction_obj._get_transaction_customer_id()
-                subscription_obj = mollie_client.customer_subscriptions.with_parent_id(mollie_customer_id)
-                data = {'amount': amount or '',
-                        'interval': interval or '',
-                        'description': description or '',
-                        'webhookUrl': webhook_url,
+        for product in sale_order_obj.order_line.product_id.filtered(lambda l:l.is_mollie_subscription):
+            amount = {'currency': transaction_obj.currency_id.name,
+                      'value': "%.2f" % (transaction_obj.amount + transaction_obj.fees)}
+            interval = '{} {}'.format(product.subscription_interval, product.subscription_interval_type)
+            description = '{} / {}'.format(sale_order_obj.name, product.name)
+            webhook_url = ''
+            webhook_urls = urls.url_join(mollie.get_base_url(), MollieController._notify_url)
+            if "://localhost" not in webhook_urls and "://192.168." not in webhook_urls:
+                webhook_url = webhook_urls
+            mollie_customer_id = transaction_obj._get_transaction_customer_id()
+            subscription_obj = mollie_client.customer_subscriptions.with_parent_id(mollie_customer_id)
+            data = {'amount': amount or '',
+                    'interval': interval or '',
+                    'description': description or '',
+                    'webhookUrl': webhook_url,
+                    'times': product.interval_time or 1,
+                    'startDate': self._get_start_date(product),
+                    'mandateId': payment_data and payment_data['mandateId'] or ''}
+            log_sudo.add_log("Prepare Subscription Data | Mollie", f"Data {data}")
+            subscription = subscription_obj.create(data=data)
+            log_sudo.add_log("Created Subscription | Mollie", f"Subscription : {subscription}")
+            if subscription and subscription['resource'] == 'subscription':
+                vals = {'subscriptions_id': subscription['id'] or False,
+                        'customerId': subscription['customerId'] or False,
+                        'partner_id': sale_order_obj[0].partner_id.id,
+                        'status': subscription['status'] or False,
+                        'amount': subscription['amount'] and subscription['amount']['value'] or False,
+                        'interval': subscription['interval'] or False,
+                        'description': subscription['description'] or False,
+                        'startDate': subscription['startDate'] or False,
                         'times': product.interval_time or 1,
-                        'startDate': self._get_start_date(product),
-                        'mandateId': payment_data and payment_data['mandateId'] or ''}
-                log_sudo.add_log("Prepare Subscription Data | Mollie", f"Data {data}")
-                subscription = subscription_obj.create(data=data)
-                log_sudo.add_log("Created Subscription | Mollie", f"Subscription : {subscription}")
-                if subscription and subscription['resource'] == 'subscription':
-                    vals = {'subscriptions_id': subscription['id'] or False,
-                            'customerId': subscription['customerId'] or False,
-                            'partner_id': sale_order_obj[0].partner_id.id,
-                            'status': subscription['status'] or False,
-                            'amount': subscription['amount'] and subscription['amount']['value'] or False,
-                            'interval': subscription['interval'] or False,
-                            'description': subscription['description'] or False,
-                            'startDate': subscription['startDate'] or False,
-                            'times': product.interval_time or 1,
-                            'nextPaymentDate': subscription['nextPaymentDate'] or False,
-                            'product_id': product.id or False,
-                            'webhookUrl': subscription['webhookUrl'] or False,
-                            'sale_order_id': sale_order_obj.id}
-                    log_sudo.add_log("Prepare Subscription Data | Odoo", f"Vals {vals}")
-                    subs_obj = self.sudo().create(vals)
-                    log_sudo.add_log("Created Subscription | Odoo", f"Subscription Obj : {subs_obj}")
-                    # sale_order_obj.mollie_subscription_id = subs_obj.id
-                    mollie_payment = self.env['mollie.payment'].sudo().search([('payment_id', '=', transaction_obj.acquirer_reference)])
-                    if mollie_payment:
-                        mollie_payment.subscription_id = subscription['id']
-                        mollie_payment.mollie_subscription_id = subs_obj.id
-                        if not mollie_payment.invoice_id:
-                            mollie_payment.create_mollie_invoice()
+                        'nextPaymentDate': subscription['nextPaymentDate'] or False,
+                        'product_id': product.id or False,
+                        'webhookUrl': subscription['webhookUrl'] or False,
+                        'sale_order_id': sale_order_obj.id}
+                log_sudo.add_log("Prepare Subscription Data | Odoo", f"Vals {vals}")
+                subs_obj = self.sudo().create(vals)
+                log_sudo.add_log("Created Subscription | Odoo", f"Subscription Obj : {subs_obj}")
+                # sale_order_obj.mollie_subscription_id = subs_obj.id
+                mollie_payment = self.env['mollie.payment'].sudo().search([('payment_id', '=', transaction_obj.acquirer_reference)])
+                if mollie_payment:
+                    mollie_payment.subscription_id = subscription['id']
+                    mollie_payment.mollie_subscription_id = subs_obj.id
+                    if not mollie_payment.invoice_id:
+                        mollie_payment.create_mollie_invoice()
 
     def refresh_subscription(self):
         log_sudo = self.env['mollie.log'].sudo()

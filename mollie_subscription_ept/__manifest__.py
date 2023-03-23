@@ -18,6 +18,7 @@
         "views/mollie_subscription_view.xml",
         "views/mollie_payment_views.xml",
         "views/mollie_log_views.xml",
+        "views/payment_mollie_templates.xml"
     ],
     "assets": {
         "web.assets_frontend": [
@@ -25,5 +26,7 @@
             "mollie_subscription_ept/static/src/js/cancel_subscription.js",
         ],
     },
-    "python_dependencies": ["mollie-api-python"],
+    'external_dependencies': {
+        'python': ['mollie-api-python']
+    },
 }

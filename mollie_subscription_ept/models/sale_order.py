@@ -34,8 +34,9 @@ class SaleOrder(models.Model):
             # If any non-subscription products available in the cart, move those products to the wishlist
             if product_obj.is_mollie_subscription:
                 order_line = self.order_line.filtered(lambda x: not x.product_id.is_mollie_subscription)
+                is_public_user = self._public_user()
                 for line in order_line:
-                    if not line.product_id._is_in_wishlist() and not self._public_user():
+                    if not line.product_id._is_in_wishlist() and not is_public_user:
                         self.add_to_wishlist(line)
                         values.update({'show_wishlist_warning': True})
                     line.unlink()

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="payment_extended" inherit_id="website_sale.payment">
+        <xpath expr="//div[@t-if='acquirers or tokens']" position="replace">
+            <div t-if="acquirers or tokens" id="payment_method" class="mt-3">
+                <t t-foreach="acquirers" t-as="acquirer">
+                    <t t-if="acquirer.provider == 'mollie'">
+                        <t t-set="payment_methods" t-value="acquirers.filtered(lambda x: x._mollie_get_supported_methods(order, invoice, amount, currency, partner_id))"/>
+                        <t t-if="payment_methods">
+                            <h3 class="mb24">Pay with</h3>
+                            <t t-call="payment.checkout">
+                                <t t-set="footer_template_id" t-value="'website_sale.payment_footer'"/>
+                                <t t-set="submit_button_label">Pay Now</t>
+                            </t>
+                        </t>
+                        <t t-else="">
+                            No payment methods setup. Contact us
+                        </t>
+                    </t>
+                </t>
+            </div>
+        </xpath>
+    </template>
+</odoo>
