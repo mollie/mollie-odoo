@@ -106,7 +106,7 @@ class PaymentTransaction(models.Model):
         payment_data, params = super(PaymentTransaction, self)._mollie_prepare_payment_payload(api_type)
 
         if self._context.get("first_mollie_payment"):
-            payment_data.update({'description': f'First payment for {self.sale_order_ids.name}', 'sequenceType': 'first'})
+            payment_data.update({'description': f'First payment for {self.sale_order_ids.name} / {self.sale_order_ids.order_line.product_id.name}', 'sequenceType': 'first'})
 
         mollie_customer_id = self._get_transaction_customer_id()
         if api_type == 'order':

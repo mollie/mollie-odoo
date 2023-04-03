@@ -137,7 +137,8 @@ class MolliePayment(models.Model):
         subscription_objs = self.env['mollie.subscription'].search([('status', '=', 'active')])
         customer_ids = list(set(subscription_objs.mapped('customerId')))
         for customer_id in customer_ids:
-            payments = mollie_client.customer_payments.with_parent_id(customer_id).list()
+            customer = mollie_client.customers.get(customer_id)
+            payments = customer.payments.list()
             if payments and payments.get('_embedded'):
                 payment_list = payments['_embedded'].get('payments', [])
                 for payment in payment_list:

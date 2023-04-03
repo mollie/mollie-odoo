@@ -72,7 +72,7 @@ class MollieSubscription(models.Model):
             if "://localhost" not in webhook_urls and "://192.168." not in webhook_urls:
                 webhook_url = webhook_urls
             mollie_customer_id = transaction_obj._get_transaction_customer_id()
-            subscription_obj = mollie_client.customer_subscriptions.with_parent_id(mollie_customer_id)
+            customer = mollie_client.customers.get(mollie_customer_id)
             data = {'amount': amount or '',
                     'interval': interval or '',
                     'description': description or '',
@@ -81,7 +81,7 @@ class MollieSubscription(models.Model):
                     'startDate': self._get_start_date(product),
                     'mandateId': payment_data and payment_data['mandateId'] or ''}
             log_sudo.add_log("Prepare Subscription Data | Mollie", f"Data {data}")
-            subscription = subscription_obj.create(data=data)
+            subscription = customer.subscriptions.create(data)
             log_sudo.add_log("Created Subscription | Mollie", f"Subscription : {subscription}")
             if subscription and subscription['resource'] == 'subscription':
                 vals = {'subscriptions_id': subscription['id'] or False,
@@ -118,7 +118,8 @@ class MollieSubscription(models.Model):
         log_sudo = self.env['mollie.log'].sudo()
         mollie = self.env.ref("payment.payment_acquirer_mollie")
         mollie_client = mollie._api_mollie_get_client()
-        subscription = mollie_client.customer_subscriptions.with_parent_id(self.customerId).get(self.subscriptions_id)
+        customer = mollie_client.customers.get(self.customerId)
+        subscription = customer.subscriptions.get(self.subscriptions_id)
         log_sudo.add_log("Update Subscriptions", f"Subscription Object : {subscription}")
         if subscription:
             self.sudo().write({'status': subscription.get('status', False),
@@ -135,7 +136,7 @@ class MollieSubscription(models.Model):
         log_sudo.add_log("Call Update Payments Data", "Call Update Payments Data")
         mollie = self.env.ref("payment.payment_acquirer_mollie")
         mollie_client = mollie._api_mollie_get_client()
-        payments = mollie_client.customer_payments.with_parent_id(self.customerId).list()
+        payments = mollie_client.payments.list()
         if payments and payments.get('_embedded'):
             payment_list = payments['_embedded'].get('payments', [])
             mollie_payment_obj = self.env['mollie.payment']
@@ -143,7 +144,7 @@ class MollieSubscription(models.Model):
                 is_exist = mollie_payment_obj.sudo()._get_payment_obj(payment['id'])
                 if is_exist:
                     is_exist = is_exist.filtered(lambda l: l.status == 'open')
-                    if is_exist.status != payment['status']:
+                    if is_exist and is_exist.status != payment['status']:
                         is_exist.sudo()._update_payment(payment, self.env.user.name)
                 else:
                     mollie_payment_obj.sudo()._create_payment(payment)
@@ -162,7 +163,8 @@ class MollieSubscription(models.Model):
             mollie_client = mollie._api_mollie_get_client()
             log_sudo = self.env['mollie.log'].sudo()
             log_sudo.add_log("Cancel Subscription", f"Subscription Id : {subscription_id}")
-            subscription = mollie_client.customer_subscriptions.with_parent_id(customer_id).delete(subscription_id)
+            customer = mollie_client.customers.get(customer_id)
+            subscription = customer.subscriptions.delete(subscription_id)
             if subscription:
                 canceled_date = False
                 if 'canceledAt' in subscription.keys():
@@ -182,7 +184,8 @@ class MollieSubscription(models.Model):
         mollie_client = mollie._api_mollie_get_client()
         subscriptions = self.sudo().search([('status', '=', 'active')])
         for subs_obj in subscriptions:
-            subscription = mollie_client.customer_subscriptions.with_parent_id(subs_obj.customerId).get(subs_obj.subscriptions_id)
+            customer = mollie_client.customers.get(subs_obj.customerId)
+            subscription = customer.subscriptions.get(subs_obj.subscriptions_id)
             if subscription:
                 subs_obj.sudo().write({'status': subscription.get('status', False),
                                        'times': subscription.get('times', False),
