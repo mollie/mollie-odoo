@@ -6,7 +6,8 @@
             <div t-if="acquirers or tokens" id="payment_method" class="mt-3">
                 <t t-foreach="acquirers" t-as="acquirer">
                     <t t-if="acquirer.provider == 'mollie'">
-                        <t t-set="payment_methods" t-value="acquirers.filtered(lambda x: x._mollie_get_supported_methods(order, invoice, amount, currency, partner_id))"/>
+                        <t t-set="payment_methods"
+                           t-value="acquirers.filtered(lambda x: x._mollie_get_supported_methods(order, invoice, amount, currency, partner_id))"/>
                         <t t-if="payment_methods">
                             <h3 class="mb24">Pay with</h3>
                             <t t-call="payment.checkout">
@@ -21,5 +22,23 @@
                 </t>
             </div>
         </xpath>
+    </template>
+
+    <template id="mollie_payment_checkout"
+              inherit_id="payment_mollie_official.mollie_payment_checkout">
+
+        <xpath expr="//form/div[hasclass('card')]" position="before">
+            <t t-if="not order">
+                <t t-set="order" t-value="request.env['sale.order'].browse(sale_order_id)"/>
+            </t>
+            <t t-set="subscription_product"
+               t-value="order.order_line.product_id.filtered(lambda product: product.is_mollie_subscription)"/>
+        </xpath>
+
+        <xpath expr="//div[hasclass('o_payment_option_card')][1]" position="attributes">
+            <attribute name="t-if">not subscription_product and acquirer.provider != 'mollie'</attribute>
+        </xpath>
+
+        <xpath expr="//t[@t-if]" position="replace"/>
     </template>
 </odoo>
