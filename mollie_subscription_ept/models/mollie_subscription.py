@@ -82,6 +82,7 @@ class MollieSubscription(models.Model):
                     'mandateId': payment_data and payment_data['mandateId'] or ''}
             log_sudo.add_log("Prepare Subscription Data | Mollie", f"Data {data}")
             subscription = customer.subscriptions.create(data)
+
             log_sudo.add_log("Created Subscription | Mollie", f"Subscription : {subscription}")
             if subscription and subscription['resource'] == 'subscription':
                 vals = {'subscriptions_id': subscription['id'] or False,
@@ -136,7 +137,9 @@ class MollieSubscription(models.Model):
         log_sudo.add_log("Call Update Payments Data", "Call Update Payments Data")
         mollie = self.env.ref("payment.payment_acquirer_mollie")
         mollie_client = mollie._api_mollie_get_client()
-        payments = mollie_client.payments.list()
+        customer = mollie_client.customers.get(self.customerId)
+        subscription = customer.subscriptions.get(self.subscriptions_id)
+        payments = subscription.payments.list()
         if payments and payments.get('_embedded'):
             payment_list = payments['_embedded'].get('payments', [])
             mollie_payment_obj = self.env['mollie.payment']

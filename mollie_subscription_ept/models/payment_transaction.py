@@ -40,8 +40,9 @@ class PaymentTransaction(models.Model):
         log_sudo.add_log("Mollie Payment", f"Mollie Payment Object : {mollie_payment}")
         if payment_status in ['paid', 'done', 'pending', 'authorized']:
             log_sudo.add_log("Start Creating Subscription", "Start Creating Subscription")
-            self.env['mollie.subscription']._mollie_create_subscription(self)
-            log_sudo.add_log("Created Subscription", "Created Subscription")
+            if not self.sale_order_ids.mollie_subscription_id:
+                self.env['mollie.subscription']._mollie_create_subscription(self)
+                log_sudo.add_log("Created Subscription", "Created Subscription")
         if payment_status in ['paid', 'done']:
             self._set_done()
         elif payment_status in ['pending', 'open']:
