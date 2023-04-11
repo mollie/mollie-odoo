@@ -29,10 +29,10 @@
 
         <xpath expr="//form/div[hasclass('card')]" position="before">
             <t t-if="not order">
-                <t t-set="order" t-value="request.env['sale.order'].browse(sale_order_id)"/>
+                <t t-set="order" t-value="request.env['sale.order'].sudo().browse(sale_order_id)"/>
             </t>
             <t t-set="subscription_product"
-               t-value="order.order_line.product_id.filtered(lambda product: product.is_mollie_subscription)"/>
+               t-value="order.sudo().order_line.product_id.filtered(lambda product: product.is_mollie_subscription)"/>
         </xpath>
 
         <xpath expr="//div[hasclass('o_payment_option_card')][1]" position="attributes">
