@@ -76,7 +76,7 @@ class MollieSubscription(models.Model):
             data = {'amount': amount or '',
                     'interval': interval or '',
                     'description': description or '',
-                    # 'webhookUrl': webhook_url,
+                    'webhookUrl': webhook_url,
                     'times': product.interval_time or 1,
                     'startDate': self._get_start_date(product),
                     'mandateId': payment_data and payment_data['mandateId'] or ''}
@@ -96,7 +96,7 @@ class MollieSubscription(models.Model):
                         'times': product.interval_time or 1,
                         'nextPaymentDate': subscription['nextPaymentDate'] or False,
                         'product_id': product.id or False,
-                        'webhookUrl': webhook_url,
+                        'webhookUrl': subscription['webhookUrl'] or False,
                         'sale_order_id': sale_order_obj.id}
                 log_sudo.add_log("Prepare Subscription Data | Odoo", f"Vals {vals}")
                 subs_obj = self.sudo().create(vals)
@@ -120,8 +120,7 @@ class MollieSubscription(models.Model):
         mollie = self.env.ref("payment.payment_acquirer_mollie")
         mollie_client = mollie._api_mollie_get_client()
         customer = mollie_client.customers.get(self.customerId)
-        # subscription = customer.subscriptions.get(self.subscriptions_id)
-        subscription = customer.subscriptions.update(self.subscriptions_id, {"webhookUrl": self.webhookUrl},)
+        subscription = customer.subscriptions.get(self.subscriptions_id)
         log_sudo.add_log("Update Subscriptions", f"Subscription Object : {subscription}")
         if subscription:
             self.sudo().write({'status': subscription.get('status', False),
@@ -189,8 +188,7 @@ class MollieSubscription(models.Model):
         subscriptions = self.sudo().search([('status', '=', 'active')])
         for subs_obj in subscriptions:
             customer = mollie_client.customers.get(subs_obj.customerId)
-            # subscription = customer.subscriptions.get(subs_obj.subscriptions_id)
-            subscription = customer.subscriptions.update(subs_obj.subscriptions_id, {"webhookUrl": subs_obj.webhookUrl},)
+            subscription = customer.subscriptions.get(subs_obj.subscriptions_id)
             if subscription:
                 subs_obj.sudo().write({'status': subscription.get('status', False),
                                        'times': subscription.get('times', False),

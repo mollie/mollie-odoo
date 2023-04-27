@@ -37,6 +37,10 @@ class PaymentTransaction(models.Model):
         acquirer_reference = self.acquirer_reference
         mollie_payment = self.acquirer_id._api_mollie_get_payment_data(acquirer_reference)
         payment_status = mollie_payment.get('status')
+        if (payment_status in ['paid', 'done'] and self.state == 'done') or (
+                payment_status in ['pending', 'open'] and self.state == 'pending') or (
+                payment_status == 'authorized' and self.state == 'authorized'):
+            return
         log_sudo.add_log("Mollie Payment", f"Mollie Payment Object : {mollie_payment}")
         if payment_status in ['paid', 'done', 'pending', 'authorized']:
             log_sudo.add_log("Start Creating Subscription", "Start Creating Subscription")
