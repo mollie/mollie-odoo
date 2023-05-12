@@ -12,7 +12,7 @@ class MolliePosTerminal(models.Model):
     _name = 'mollie.pos.terminal.payments'
     _description = 'Mollie Pos Terminal'
 
-    name = fields.Char("Transection ID")
+    name = fields.Char("Transaction ID")
     mollie_uid = fields.Char("Mollie UID")
     terminal_id = fields.Many2one('mollie.pos.terminal')
     mollie_latest_response = fields.Json('Response', default={})
@@ -36,10 +36,10 @@ class MolliePosTerminal(models.Model):
             })
 
     @api.model
-    def get_mollie_payment_status(self, transection_id=None, mollie_uid=None):
+    def get_mollie_payment_status(self, transaction_id=None, mollie_uid=None):
         domain = []
-        if transection_id:
-            domain.append(('name', '=', transection_id))
+        if transaction_id:
+            domain.append(('name', '=', transaction_id))
         elif mollie_uid:
             domain.append(('mollie_uid', '=', mollie_uid))
         else:
@@ -50,10 +50,10 @@ class MolliePosTerminal(models.Model):
         return {}
 
     @api.model
-    def mollie_cancel_payment_request(self, transection_id=None, mollie_uid=None):
+    def mollie_cancel_payment_request(self, transaction_id=None, mollie_uid=None):
         domain = []
-        if transection_id:
-            domain.append(('name', '=', transection_id))
+        if transaction_id:
+            domain.append(('name', '=', transaction_id))
         elif mollie_uid:
             domain.append(('mollie_uid', '=', mollie_uid))
         else:
