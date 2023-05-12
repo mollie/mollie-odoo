@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="sync_mollie_terminal_view_form" model="ir.ui.view">
+        <field name="name">sync_mollie_terminal_view_form</field>
+        <field name="model">sync.mollie.terminal</field>
+        <field name="arch" type="xml">
+            <form>
+                <div class="text-center" attrs="{'invisible': [('mollie_terminal_api_key', '!=', False)]}">
+                    <i class="fa fa-exclamation-triangle d-inline-block text-danger rounded-circle" style="background: #ffe3e3;padding: 15px;font-size: 20px;" aria-hidden="true"></i>
+                    <h3>Api key is not set.</h3>
+                    <p>Please set api key from pos configuration.</p>
+                </div>
+                <div attrs="{'invisible': [('mollie_terminal_api_key', '=', False)]}">
+                    This operation will sync terminal infromation from mollie.
+                </div>
+                <field name="mollie_terminal_api_key" invisible="1"></field>
+                <footer>
+                    <button string="Sync Now" class="btn btn-primary" type="object" name="sync_now" attrs="{'invisible': [('mollie_terminal_api_key', '=', False)]}"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

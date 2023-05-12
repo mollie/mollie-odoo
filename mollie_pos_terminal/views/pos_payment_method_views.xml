@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="pos_payment_method_view_form_inherit_mollie_pos_terminal" model="ir.ui.view">
+        <field name="name">pos.payment.method.view.form.inherit</field>
+        <field name="model">pos.payment.method</field>
+        <field name="inherit_id" ref="point_of_sale.pos_payment_method_view_form"/>
+        <field name="arch" type="xml">
+            <field name="use_payment_terminal" position="after">
+                <field name="mollie_pos_terminal_id" attrs="{'invisible': [('use_payment_terminal', '!=', 'mollie')]}" options="{'no_create': True}"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>
