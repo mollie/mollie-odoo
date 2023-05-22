@@ -165,8 +165,8 @@ class MolliePayment(models.Model):
                 order = subscription.sale_order_id
                 if order.state == "draft":
                     order.action_confirm()
-                if not order.invoice_ids:
-                    invoice = order._create_invoices()
+                # if not order.invoice_ids:
+                #     invoice = order._create_invoices()
             else:
                 invoice_vals = self._prepare_invoice_vals()
                 invoice = self.env["account.move"].create(invoice_vals)

@@ -120,3 +120,14 @@ class PaymentTransaction(models.Model):
             payment_data["customerId"] = mollie_customer_id
 
         return payment_data, params
+
+    def _reconcile_after_done(self):
+        """
+        Inherited method for linking the invoice with Mollie payment record.
+        @author: Maulik Barad on Date 22-May-2023.
+        """
+        super(PaymentTransaction, self)._reconcile_after_done()
+        if self and self.env['ir.config_parameter'].sudo().get_param('sale.automatic_invoice'):
+            mollie_payment = self.env["mollie.payment"].search([("transaction_id", "=", self.id)])
+            if not mollie_payment.invoice_id and self.invoice_ids:
+                mollie_payment.invoice_id = self.invoice_ids[0]
