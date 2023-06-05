@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<templates>
+    <t t-name="mollie_terminal_sync.buttons">
+        <button type="button" class="btn btn-secondary o_button_sync_terminal">
+            Sync Terminal
+        </button>
+    </t>
+
+    <t t-extend="ListView.buttons" t-name="SyncMollieTerminalView.buttons">
+        <t t-jquery="button.o_list_button_add" t-operation="after">
+            <t t-call="mollie_terminal_sync.buttons"/>
+        </t>
+    </t>
+
+</templates>
