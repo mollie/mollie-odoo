@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="assets" inherit_id="point_of_sale.assets">
+        <xpath expr="." position="inside">
+            <script type="text/javascript" src="/mollie_pos_terminal/static/src/js/models.js"></script>
+            <script type="text/javascript" src="/mollie_pos_terminal/static/src/js/payment_mollie.js"></script>
+            <script type="text/javascript" src="/mollie_pos_terminal/static/src/js/PaymentScreen.js"></script>
+        </xpath>
+    </template>
+    <template id="assets_backend" inherit_id="web.assets_backend">
+        <xpath expr="." position="inside">
+            <script type="text/javascript" src="/mollie_pos_terminal/static/src/views/sync_terminal_views.js"></script>
+        </xpath>
+    </template>
+</odoo>
