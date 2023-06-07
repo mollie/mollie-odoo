@@ -30,7 +30,7 @@ class MolliePosTerminal(models.Model):
             self.create({
                 'name': response.get('id'),
                 'mollie_uid': data.get('mollie_uid'),
-                'terminal_id': self.id,
+                'terminal_id': data.get('terminal_id'),
                 'mollie_latest_response': response,
                 'status': response.get('status')
             })
