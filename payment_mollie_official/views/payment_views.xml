@@ -10,7 +10,7 @@
                 <field name="mollie_api_key" string="API Key" attrs="{'required': [('code', '=', 'mollie'), ('state', '=', 'enabled')]}" password="True"/>
                 <field name="mollie_api_key_test" attrs="{'required': [('code', '=', 'mollie'), ('state', '=', 'test')]}" password="True"/>
                 <field name="mollie_use_components" />
-                <field name="mollie_profile_id" password="True" attrs="{'invisible': [('mollie_use_components', '=', False)], 'required':  [('mollie_use_components', '=', True)]}"/>
+                <field name="mollie_profile_id" password="True" attrs="{'invisible': [('mollie_use_components', '=', False)], 'required': [('code', '=', 'mollie'), ('mollie_use_components', '=', True)]}"/>
                 <label string=" " for="mollie_profile_id" attrs="{'invisible': [('mollie_use_components', '=', False)]}"> </label>
                 <small class="text-muted" attrs="{'invisible': [('mollie_use_components', '=', False)]}"> Credit card option will not be displayed without profile ID.
                     <br/>
