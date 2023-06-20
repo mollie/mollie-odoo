@@ -47,7 +47,7 @@ class AccountJournal(models.Model):
                 'reference': "TEST 123123",
                 'createdAt': "2020-02-29T04:30:00+00:00"
             }
-            self._create_bank_statements(payment_data, refund_data, settlement)
+            self._mollie_create_bank_statements(payment_data, refund_data, settlement)
 
         if self.mollie_test:
             return
@@ -104,9 +104,9 @@ class AccountJournal(models.Model):
             refund_data = self._api_get_settlement_refunds(settlement['id'])
             capture_data = self._api_get_settlement_captures(settlement['id'])
             chargeback_data = self._api_get_settlement_chargebacks(settlement['id'])
-            self._create_bank_statements(payment_data, refund_data, capture_data, chargeback_data, settlement)
+            self._mollie_create_bank_statements(payment_data, refund_data, capture_data, chargeback_data, settlement)
 
-    def _create_bank_statements(self, payment_data, refund_data, capture_data, chargeback_data, settlement_data, return_lines=False):
+    def _mollie_create_bank_statements(self, payment_data, refund_data, capture_data, chargeback_data, settlement_data, return_lines=False):
         """ Create new bank statement based on settlement, settlement payments and settlement refunds.
 
             This method also try to guess the partner for statement.
