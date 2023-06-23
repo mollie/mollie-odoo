@@ -22,8 +22,8 @@
                     <button type="button" class="close" id="clear_warn_in_cart_btn" data-dismiss="alert"
                             aria-label="Close">&amp;times;
                     </button>
-                    <strong>Warning!</strong>
-                    You can't buy subscription &amp; non-subscription product together.
+                    <strong>Important notice!</strong>
+                    It is not possible to make a purchase that includes both a subscription and a regular product simultaneously.Please purchase these separately.
                 </div>
             </t>
         </xpath>

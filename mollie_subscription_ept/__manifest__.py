@@ -24,6 +24,7 @@
         "web.assets_frontend": [
             "mollie_subscription_ept/static/src/js/cart.js",
             "mollie_subscription_ept/static/src/js/cancel_subscription.js",
+            "mollie_subscription_ept/static/src/js/website_sale_utils.js",
         ],
     },
     'external_dependencies': {

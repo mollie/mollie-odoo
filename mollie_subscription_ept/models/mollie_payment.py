@@ -165,7 +165,7 @@ class MolliePayment(models.Model):
                 order = subscription.sale_order_id
                 if order.state == "draft":
                     order.action_confirm()
-                if not self.env['ir.config_parameter'].sudo().get_param('sale.automatic_invoice', False):
+                if not self.env['ir.config_parameter'].sudo().get_param('sale.automatic_invoice',False):
                     if not order.invoice_ids:
                         invoice = order._create_invoices()
             else:
