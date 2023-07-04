@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="mollie_subscription_tree_view" model="ir.ui.view">
+        <field name="name">mollie.subscription.tree.view</field>
+        <field name="model">mollie.subscription</field>
+        <field name="arch" type="xml">
+            <tree string="Subscriptions" default_order='create_date desc'>
+                <field name="name"/>
+                <field name="customerId"/>
+                <field name="partner_id"/>
+                <field name="product_id"/>
+                <field name="description"/>
+                <field name="amount"/>
+                <field name="startDate"/>
+                <field name="nextPaymentDate"/>
+                <field name="status"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="mollie_subscription_form_view" model="ir.ui.view">
+        <field name="name">mollie.subscription.form.view</field>
+        <field name="model">mollie.subscription</field>
+        <field name="arch" type="xml">
+            <form string="Subscriptions">
+                <header>
+                    <button name="refresh_subscription" string="Refresh" class="oe_highlight" type="object"
+                            attrs="{'invisible': [['status','=','canceled']]}"/>
+                    <button name="cancel_subscription" string="Cancel Subscription" class="oe_highlight btn-danger"
+                            type="object" attrs="{'invisible': [['status','=','canceled']]}"/>
+                </header>
+                <sheet>
+                    <group>
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                        <br/>
+                        <h3>
+                            <field name="status" invisible="1"/>
+                            <span class="badge badge-pill badge-success"
+                                  attrs="{'invisible': [('status','!=','active')]}">
+                                <span class="d-none d-md-inline">Active</span>
+                            </span>
+                            <span class="badge badge-pill badge-success"
+                                  attrs="{'invisible': [('status','!=','completed')]}">
+                                <span class="d-none d-md-inline">Completed</span>
+                            </span>
+                            <span class="badge badge-pill badge-danger"
+                                  attrs="{'invisible': [('status','!=','canceled')]}">
+                                <span class="d-none d-md-inline">Cancelled</span>
+                            </span>
+                        </h3>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="description"/>
+                            <field name="sale_order_id"/>
+                            <field name="product_id"/>
+                            <field name="amount"/>
+                        </group>
+                        <group>
+                            <field name="subscriptions_id"/>
+                            <field name="customerId"/>
+                            <field name="partner_id"/>
+                            <field name="webhookUrl"/>
+                        </group>
+                        <group>
+                            <field name="startDate"/>
+                            <field name="nextPaymentDate" attrs="{'invisible': [['status','!=','active']]}"/>
+                            <field name="canceled_date" attrs="{'invisible': [['status','!=','canceled']]}"/>
+                            <field name="times"/>
+                            <field name="timesRemaining"/>
+                            <field name="interval"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Payments">
+                            <field name="mollie_payment_ids">
+                                <tree default_order='createdAt asc'>
+                                    <field name="payment_id"/>
+                                    <field name="description"/>
+                                    <field name="amount"/>
+                                    <field name="status"/>
+                                    <field name="createdAt"/>
+                                    <field name="invoice_id" readonly="1"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="mollie_subscription_kanban_view" model="ir.ui.view">
+        <field name="model">mollie.subscription</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile">
+                <field name="id"/>
+                <field name="subscriptions_id"/>
+                <field name="status"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="oe_kanban_global_click">
+                            <div class="row mb4">
+                                <div class="col-6 o_kanban_record_headings">
+                                    <strong>
+                                        <span>
+                                            <field name="name"/>
+                                        </span>
+                                    </strong>
+                                </div>
+                                <div class="col-6 text-right">
+                                    <span class="float-right">
+                                        <field name="status" widget="label_selection"
+                                               options="{'classes': {'canceled': 'danger', 'active': 'success'}}"/>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id='mollie_subscription_search_view' model='ir.ui.view'>
+        <field name="name">mollie.subscription.search.view</field>
+        <field name="model">mollie.subscription</field>
+        <field name="arch" type="xml">
+            <search string="Subscription">
+                <field name="subscriptions_id"/>
+                <field name="customerId"/>
+                <field name="partner_id"/>
+                <field name="description"/>
+                <field name="startDate"/>
+                <field name="startDate"/>
+                <group expand="1" string="Group By">
+                    <filter name="groupby_status" context="{'group_by': 'status'}" string="Status"/>
+                    <separator/>
+                    <filter name="groupby_partner_id" context="{'group_by': 'partner_id'}" string="Partner"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id='mollie_subscription_action' model='ir.actions.act_window'>
+        <field name="name">Mollie Subscriptions</field>
+        <field name="res_model">mollie.subscription</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name='view_id' ref='mollie_subscription_tree_view'/>
+        <field name="search_view_id" ref="mollie_subscription_search_view"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Mollie Subscription</p>
+        </field>
+    </record>
+
+    <menuitem id="mollie_menu"
+              name="Mollie"
+              parent="sale.sale_menu_root"
+              groups="sales_team.group_sale_manager"/>
+
+    <menuitem id="mollie_subscription_menu"
+              name="Subscription"
+              parent="mollie_menu"
+              action="mollie_subscription_action"
+              groups="sales_team.group_sale_manager"/>
+</odoo>

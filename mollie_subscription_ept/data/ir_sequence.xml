@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="subscriptions_sequence" model="ir.sequence">
+            <field name="name">Subscriptions Number</field>
+            <field name="code">subscriptions.number</field>
+            <field name="active">TRUE</field>
+            <field name="prefix">SUB/%(range_year)s/</field>
+            <field name="padding">5</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+            <field eval="False" name="company_id"/>
+            <field eval="True" name="use_date_range"/>
+        </record>
+
+        <record id="payment_sequence" model="ir.sequence">
+            <field name="name">Payment Number</field>
+            <field name="code">payment.number</field>
+            <field name="active">TRUE</field>
+            <field name="prefix">PAY/%(range_year)s/</field>
+            <field name="padding">5</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+            <field eval="False" name="company_id"/>
+            <field eval="True" name="use_date_range"/>
+        </record>
+    </data>
+</odoo>

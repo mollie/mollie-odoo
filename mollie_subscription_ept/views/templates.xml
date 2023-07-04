@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Add warning on website cart page -->
+    <template id="mollie_together_warning" inherit_id="website_sale.cart_lines">
+        <xpath expr="//table[@id='cart_products']" position="before">
+            <t t-if="request.session.show_wishlist_warn">
+                <div class="alert alert-warning alert-dismissable">
+                    <button type="button" class="close" id="clear_warn_wishlist_btn" data-dismiss="alert"
+                            aria-label="Close">&amp;times;
+                    </button>
+                    Your previous cart items is moved to your wishlist!
+                </div>
+            </t>
+        </xpath>
+    </template>
+
+    <template id="mollie_wishlist_warning" inherit_id="website_sale.cart_lines">
+        <xpath expr="//table[@id='cart_products']" position="before">
+            <t t-if="request.session.show_in_cart_warn">
+                <div class="alert alert-warning alert-dismissable">
+                    <button type="button" class="close" id="clear_warn_in_cart_btn" data-dismiss="alert"
+                            aria-label="Close">&amp;times;
+                    </button>
+                    <strong>Important notice!</strong>
+                    It is not possible to make a purchase that includes both a subscription and a regular product simultaneously.Please purchase these separately.
+                </div>
+            </t>
+        </xpath>
+    </template>
+
+</odoo>

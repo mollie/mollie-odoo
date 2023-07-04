@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="mollie_payment_tree_view" model="ir.ui.view">
+        <field name="name">mollie.payment.tree.view</field>
+        <field name="model">mollie.payment</field>
+        <field name="arch" type="xml">
+            <tree string="Payments" default_order='createdAt desc'>
+                <field name="name"/>
+                <field name="mollie_subscription_id"/>
+                <field name="description"/>
+                <field name="amount"/>
+                <field name="method"/>
+                <field name="status"/>
+                <field name="customerId"/>
+                <field name="payment_id"/>
+                <field name="invoice_id" readonly="1"/>
+                <field name="paid_date"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="mollie_payment_form_view" model="ir.ui.view">
+        <field name="name">mollie.payment.form.view</field>
+        <field name="model">mollie.payment</field>
+        <field name="arch" type="xml">
+            <form string="Payments">
+                <header>
+                    <button
+                            name="refresh_payment"
+                            string="Refresh"
+                            type="object"/>
+                </header>
+                <sheet>
+                    <group>
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                        <br/>
+                        <h2>
+                            <span class="badge badge-pill badge-success"
+                                  attrs="{'invisible': [('status','!=','paid')]}">
+                                <span class="d-none d-md-inline">Paid</span>
+                            </span>
+                            <span class="badge badge-pill badge-danger"
+                                  attrs="{'invisible': [('status','!=','failed')]}">
+                                <span class="d-none d-md-inline">Failed</span>
+                            </span>
+                            <span class="badge badge-pill badge-primary"
+                                  attrs="{'invisible': [('status','!=','open')]}">
+                                <span class="d-none d-md-inline">Open</span>
+                            </span>
+                            <span class="badge badge-pill badge-warning"
+                                  attrs="{'invisible': [('status','!=','expired')]}">
+                                <span class="d-none d-md-inline">Expired</span>
+                            </span>
+                            <span class="badge badge-pill badge-warning"
+                                  attrs="{'invisible': [('status','!=','canceled')]}">
+                                <span class="d-none d-md-inline">Canceled</span>
+                            </span>
+                        </h2>
+                    </group>
+                    <group>
+                        <h4>
+                            <span>Amount :</span>
+                            <field class="oe_inline" name="amount"/>
+                            <field class="oe_inline" name="amount_currency"/>
+                            <br/>
+                            <span>Settlement Amount :</span>
+                            <field class="oe_inline" name="settlement_amount"/>
+                            <field class="oe_inline" name="settlement_currency"/>
+                        </h4>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="description"/>
+                            <field name="method"/>
+                            <field name="status" invisible="1"/>
+                            <field name="createdAt"/>
+                            <field name="paid_date"/>
+                            <field name="sequence_type"/>
+                        </group>
+                        <group>
+                            <field name="payment_id"/>
+                            <field name="profileId"/>
+                            <field name="customerId"/>
+                            <field name="mandateId"/>
+                            <field name="subscription_id"/>
+                            <field name="mollie_subscription_id"/>
+                            <field name="invoice_id" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Payment Details">
+                            <field name="details"/>
+                            <field name="metadata"/>
+                            <b>
+                                <field name="checkout_url"
+                                       attrs="{'invisible': [('status','in',['paid','failed','expired'])]}"/>
+                            </b>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id='mollie_payment_search_view' model='ir.ui.view'>
+        <field name="name">mollie.payment.search.view</field>
+        <field name="model">mollie.payment</field>
+        <field name="arch" type="xml">
+            <search string="Payment">
+                <field name="subscription_id"/>
+                <field name="customerId"/>
+                <field name="payment_id"/>
+                <group expand="1" string="Group By">
+                    <filter name="groupby_payment_status" context="{'group_by': 'status'}" string="Status"/>
+                    <separator/>
+                    <filter name="groupby_subscription_id" context="{'group_by': 'mollie_subscription_id'}"
+                            string="Subscription"/>
+                    <filter name="groupby_customer_id" context="{'group_by': 'customerId'}" string="Customer"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id='mollie_payment_action' model='ir.actions.act_window'>
+        <field name="name">Mollie Payments</field>
+        <field name="res_model">mollie.payment</field>
+        <field name="view_mode">tree,form</field>
+        <field name='view_id' ref='mollie_payment_tree_view'/>
+        <field name="search_view_id" ref="mollie_payment_search_view"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Mollie Payments</p>
+        </field>
+    </record>
+
+    <menuitem id="mollie_payment_menu" name="Payments" parent="mollie_menu" action="mollie_payment_action"
+              groups="sales_team.group_sale_manager"/>
+</odoo>

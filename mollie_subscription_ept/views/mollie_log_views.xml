@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="mollie_log_tree_view" model="ir.ui.view">
+        <field name="name">mollie.log.tree.view</field>
+        <field name="model">mollie.log</field>
+        <field name="arch" type="xml">
+            <tree string="Mollie Logs" default_order='processed_date desc'>
+                <field name="log_name"/>
+                <field name="user"/>
+                <field name="processed_date"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="mollie_log_form_view" model="ir.ui.view">
+        <field name="name">mollie.log.form.view</field>
+        <field name="model">mollie.log</field>
+        <field name="arch" type="xml">
+            <form string="Mollie Logs">
+                <sheet>
+                    <h1>
+                        <field name="log_name" readonly="1"/>
+                    </h1>
+                    Date :
+                    <field name="processed_date" readonly="1"/>
+                    | By :
+                    <field name="user" readonly="1"/>
+                    <field name="log_description" colspan="4" nolabel="1" readonly="1" widget="html"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id='mollie_log_search_view' model='ir.ui.view'>
+        <field name="name">mollie.log.search.view</field>
+        <field name="model">mollie.log</field>
+        <field name="arch" type="xml">
+            <search string="Mollie Logs">
+                <field name="log_name"/>
+                <field name="processed_date"/>
+                <field name="user"/>
+                <group expand="1" string="Group By">
+                    <filter name="log_name" context="{'group_by': 'log_name'}" string="Name"/>
+                    <filter name="processed_date" context="{'group_by': 'processed_date'}" string="Date"/>
+                    <filter name="user" context="{'group_by': 'user'}" string="User"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id='mollie_log_action' model='ir.actions.act_window'>
+        <field name="name">Mollie Logs</field>
+        <field name="res_model">mollie.log</field>
+        <field name="view_mode">tree,form</field>
+        <field name='view_id' ref='mollie_log_tree_view'/>
+        <field name="search_view_id" ref="mollie_log_search_view"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Mollie Logs</p>
+        </field>
+    </record>
+
+    <menuitem id="mollie_log_menu"
+              name="Mollie Logs"
+              parent="mollie_menu"
+              action="mollie_log_action"
+              groups="sales_team.group_sale_manager"/>
+</odoo>

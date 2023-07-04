@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="res_partner_form_subscriptions" model="ir.ui.view">
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='internal_notes']" position="after">
+                <page name="subscriptions" string="Subscriptions" attrs="{'invisible': [('mollie_subscription_ids', '=', False)]}">
+                    <field name="mollie_subscription_ids" widget="one2many">
+                        <tree string="subscriptions" create="0" delete="0">
+                            <field name="name"/>
+                            <field name="description"/>
+                            <field name="amount"/>
+                            <field name="startDate"/>
+                            <field name="nextPaymentDate"/>
+                            <field name="status"/>
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+            <xpath expr="//field[@name='vat']" position="after">
+                <field name="mollie_customer_id" attrs="{'invisible': [('mollie_customer_id', '=', False)]}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+
