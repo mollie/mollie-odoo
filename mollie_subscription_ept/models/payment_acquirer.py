@@ -8,13 +8,14 @@ _logger = logging.getLogger(__name__)
 class PaymentAcquirerMollie(models.Model):
     _inherit = 'payment.acquirer'
 
-    def _api_mollie_create_customer_id(self, partner_obj):
-        if partner_obj:
-            customer_data = {'name': partner_obj.name, 'metadata': {'odoo_partner_id': partner_obj.id}}
-            if partner_obj.email:
-                customer_data['email'] = partner_obj.email
+    def _api_mollie_create_customer_id(self):
+        if self._context.get('partner', False):
+            partner = self.env['res.partner'].browse(self._context.get('partner'))
+            customer_data = {'name': partner.name, 'metadata': {'odoo_partner_id': partner.id}}
+            if partner.email:
+                customer_data['email'] = partner.email
             return self._mollie_make_request('/customers', data=customer_data, method="POST")
-        return False
+        return super(PaymentAcquirerMollie, self)._api_mollie_create_customer_id()
 
     def _mollie_get_supported_methods(self, order, invoice, amount, currency, partner_id):
         """
@@ -31,7 +32,7 @@ class PaymentAcquirerMollie(models.Model):
         # TODO: [PGA] Add partical validation for keys e.g. production key should start from live_
 
         if self.state == 'enabled':
-            mollie_client.set_api_key(self.mollie_api_key_prod)
+            mollie_client.set_api_key(self.mollie_api_key)
         elif self.state == 'test':
             mollie_client.set_api_key(self.mollie_api_key_test)
 
