@@ -30,7 +30,7 @@
             </xpath>
 
             <div name="bank_statement_create_button" position='attributes'>
-                <attribute name="t-if"> dashboard.bank_statements_source != 'online_sync' and dashboard.bank_statements_source != 'mollie_sync' </attribute>
+                <attribute name="t-if">!['mollie_sync', 'mollie_balance_sync'].includes(dashboard.bank_statements_source) </attribute>
             </div>
         </field>
     </record>

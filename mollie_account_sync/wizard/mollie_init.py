@@ -7,6 +7,7 @@ from odoo import _, api, fields, models
 _logger = logging.getLogger(__name__)
 
 LIMIT = 40
+MAX_LIMIT = 250
 
 
 class MollieInit(models.TransientModel):
@@ -18,30 +19,46 @@ class MollieInit(models.TransientModel):
         result = []
         if journal_id:
             journal = self.env['account.journal'].browse(journal_id)
-            settlements_data = journal._api_get_settlements(limit=LIMIT)
-            if settlements_data['count'] == 0:
-                return []
-            last_bnk_stmt = self.env['account.bank.statement'].search([('journal_id', '=', journal_id)], limit=1)
-            for settlement in settlements_data['_embedded']['settlements']:
-                settlement_date = journal._format_mollie_date(settlement['createdAt'])
-                settlement_date_obj = fields.Date.to_date(settlement_date)
-                if (not last_bnk_stmt or settlement_date_obj > last_bnk_stmt.date) and settlement['status'] == 'paidout':
-                    result.append((0, 0, {
-                        'name': settlement['reference'],
-                        'settlement_date': settlement_date,
-                        'settlement_id': settlement['id'],
-                        'settlement_amount': settlement['amount']['value'],
-                    }))
+            result = self._get_settlement_lines(journal)
         return result
 
     settlement_lines = fields.One2many('wiz.mollie.init.line', 'wiz_id', default=_default_settlement_lines)
     journal_id = fields.Many2one('account.journal')
     sync_all = fields.Boolean()
+    show_previous_statements = fields.Boolean('Show Previous Statements')
 
     @api.onchange('sync_all')
     def on_change_sync_all(self):
         for line in self.settlement_lines:
             line.do_sync = self.sync_all
+
+    @api.onchange('show_previous_statements')
+    def on_change_show_previous_statements(self):
+        limit = MAX_LIMIT if self.show_previous_statements else LIMIT
+        self.settlement_lines = self._get_settlement_lines(self.journal_id, limit)
+
+    def _get_settlement_lines(self, journal, limit=LIMIT):
+        settlement_lines = []
+        settlements_data = journal._api_get_settlements(limit=limit)
+        if settlements_data['count'] == 0:
+            return []
+        if self.show_previous_statements:
+            last_bnk_stmt = False
+        else:
+            last_bnk_stmt = self.env['account.bank.statement'].search([('journal_id', '=', journal.id)], limit=1)
+        for settlement in settlements_data['_embedded']['settlements']:
+            settlement_date = journal._format_mollie_date(settlement['createdAt'])
+            settlement_date_obj = fields.Date.to_date(settlement_date)
+            if (not last_bnk_stmt or settlement_date_obj > last_bnk_stmt.date) and settlement['status'] == 'paidout':
+                settlement_lines.append({
+                    'name': settlement['reference'],
+                    'settlement_date': settlement_date,
+                    'settlement_id': settlement['id'],
+                    'settlement_amount': settlement['amount']['value'],
+                })
+        if settlement_lines:
+            return self.env['wiz.mollie.init.line'].create(settlement_lines)
+        return settlement_lines
 
     def sync_settlement(self):
         self.ensure_one()

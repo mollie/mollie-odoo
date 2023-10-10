@@ -119,7 +119,7 @@ class AccountJournal(models.Model):
         statement_lines = []
 
         for payment in payment_data:
-            if not payment.get('settlementAmount'):
+            if not payment.get('settlementAmount') or payment.get('status') == 'failed':
                 continue
             statement_line = {
                 'date': self._format_mollie_date(payment['createdAt']),
@@ -132,7 +132,7 @@ class AccountJournal(models.Model):
             statement_lines.append((0, 0, statement_line))
 
         for refund in refund_data:
-            if not refund.get('settlementAmount'):
+            if not refund.get('settlementAmount') or refund.get('status') == 'failed':
                 continue
             statement_line = {
                 'date': self._format_mollie_date(refund['createdAt']),
@@ -148,7 +148,7 @@ class AccountJournal(models.Model):
             statement_lines.append((0, 0, fee_line))
 
         for capture in capture_data:
-            if not capture.get('settlementAmount'):
+            if not capture.get('settlementAmount') or capture.get('status') == 'failed':
                 continue
             statement_line = {
                 'date': self._format_mollie_date(capture['createdAt']),
@@ -162,7 +162,7 @@ class AccountJournal(models.Model):
             statement_lines.append((0, 0, statement_line))
 
         for chargeback in chargeback_data:
-            if not chargeback.get('settlementAmount'):
+            if not chargeback.get('settlementAmount') or chargeback.get('status') == 'failed':
                 continue
             statement_line = {
                 'date': self._format_mollie_date(chargeback['createdAt']),
@@ -286,16 +286,6 @@ class AccountJournal(models.Model):
             next_chargebacks = self._api_call_chargebacks_recursive(chargeback_data["_links"]['next']['href'])
             chargebacks.extend(next_chargebacks)
         return chargebacks
-
-    def _api_call_get_order_meta(self, order_id):
-        api_endpoint = "https://api.mollie.com/v2/orders/%s" % order_id
-        order = self._mollie_api_call(api_endpoint)
-        data = {}
-        if order.get('metadata'):
-            data.update(order['metadata'])
-        if order.get('billingAddress'):
-            data.update(order['billingAddress'])
-        return data
 
     # =====================
     # GENERIC TOOLS METHODS
