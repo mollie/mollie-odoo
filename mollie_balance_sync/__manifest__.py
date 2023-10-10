@@ -25,4 +25,7 @@
             'mollie_balance_sync/static/src/js/info_widget.js',
         ]
     },
+    'images': [
+        'static/description/cover.png',
+    ],
 }
