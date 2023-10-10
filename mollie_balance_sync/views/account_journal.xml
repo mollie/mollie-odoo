@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Journal Form View Inherit -->
+    <record id="account_journal_view_form_inherit_mollie_balance_sync" model="ir.ui.view">
+        <field name="name">account.journal.view.form.inherit.mollie_balance_sync</field>
+        <field name="model">account.journal</field>
+        <field name="inherit_id" ref="account.view_account_journal_form"/>
+        <field name="arch" type="xml">
+            <div name="button_box" position="inside">
+                <button class="oe_stat_button" type="action"
+                        name="%(action_mollie_transaction_queue)d" icon="fa-list-alt"
+                        context="{'search_default_journal_id':active_id}"
+                        attrs="{'invisible': [('bank_statements_source', '!=', 'mollie_balance_sync')]}">
+                    <div class="o_stat_info">
+                        <span class="o_stat_value">
+                            <field name="mollie_queue_statement_count"/>
+                        </span>
+                        <span class="o_stat_text">
+                            Mollie Queue
+                        </span>
+                    </div>
+                </button>
+            </div>
+            <xpath expr="//page[@name='bank_account']/group" position="inside">
+                <group string="Mollie Balance Configuration " attrs="{'invisible': [('bank_statements_source', '!=', 'mollie_balance_sync')]}">
+                    <field name="mollie_api_key" password="True" />
+                    <field name="mollie_initialize" invisible="1" />
+                    <label for="mollie_balance_account_id" />
+                    <div>
+                        <field name="mollie_balance_account_id" domain="[('journal_id','=',id)]" options="{'no_create_edit': True, 'no_quick_create': True, 'no_open': True}" attrs="{'invisible': [('bank_statements_source', '!=', 'mollie_balance_sync')], 'readonly': [('mollie_initialize', '!=', False)]}" />
+                        <button type="object" attrs="{'invisible': ['|', ('mollie_api_key', '=', False), ('mollie_initialize', '=', True)]}" name="action_sync_mollie_balance_account" class="btn-link ps-0"><i class="fa fa-refresh"/> Sync Balance Accounts</button>
+                    </div>
+                    <div class="alert alert-warning" colspan="2" attrs="{'invisible': ['|', ('mollie_initialize', '=', True), ('mollie_balance_account_id', '=', False)], 'required': [('mollie_balance_account_id', '!=', False), ('mollie_initialize', '=', False)]}">
+                        <p class="fw-bolder mb-0"> Initial Sync Needed </p>
+                        <p> Select the date from where you want to load balance lines </p>
+                        <div class="oe_inline" style="display: inline;">
+                            <label for="mollie_sync_from" class="text-dark fw-bolder" />
+                            <field name="mollie_sync_from" class="oe_inline bg-white"  />
+                            <button type="object" name="action_mollie_balance_initial_sync" attrs="{'invisible': [('mollie_sync_from', '=', False)]}" class="btn-warning btn btn-sm"><i class="fa fa-refresh"/> SYNC NOW</button>
+                        </div>
+                    </div>
+                    <field name="mollie_last_sync" readonly="1" attrs="{'invisible': [('mollie_last_sync', '=', False)]}"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Journal Kanban View Inherit -->
+    <record id="account_journal_dashboard_inherit_mollie_balance_sync" model="ir.ui.view">
+        <field name="name">account.journal.dashboard.inherit.mollie_balance_sync</field>
+        <field name="model">account.journal</field>
+        <field name="inherit_id" ref="account.account_journal_dashboard_kanban_view"/>
+        <field name="arch" type="xml">
+            <xpath expr='//div[@name="bank_journal_cta"]' position='inside'>
+                <field name="bank_statements_source" invisible="1"/>
+                <t t-if="record.bank_statements_source.raw_value == 'mollie_balance_sync'">
+                    <a type="action" name="%(action_mollie_transaction_queue)d" context="{'search_default_journal_id':active_id, 'search_default_partial': 1, 'search_default_not_created': 1}">
+                        <field name="mollie_queue_statement_count"/>
+                        Records in queue
+                    </a>
+                </t>
+            </xpath>
+
+            <div name="bank_statement_create_button" position='attributes'>
+                <attribute name="t-if">!['mollie_sync', 'mollie_balance_sync'].includes(dashboard.bank_statements_source) </attribute>
+            </div>
+        </field>
+    </record>
+
+</odoo>

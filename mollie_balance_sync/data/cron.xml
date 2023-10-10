@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="mollie_sync_balance_statements_in_queue_cron" model="ir.cron">
+        <field name="name">Mollie Balance: generate queue lines</field>
+        <field name="model_id" ref="model_account_journal"/>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="numbercall">-1</field>
+        <field name="state">code</field>
+        <field name="code">model._cron_sync_mollie_balance_statement()</field>
+    </record>
+
+    <record id="mollie_generate_balance_statements_cron" model="ir.cron">
+        <field name="name">Mollie Balance: generate bank statements</field>
+        <field name="model_id" ref="model_mollie_transaction_queue"/>
+        <field name="interval_number">15</field>
+        <field name="interval_type">minutes</field>
+        <field name="numbercall">-1</field>
+        <field name="state">code</field>
+        <field name="code">model._cron_generate_mollie_statements_from_queue()</field>
+    </record>
+
+</odoo>

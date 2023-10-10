@@ -1,0 +1,60 @@
+<?xml version="1.0" ?>
+<templates id="balance_payment_template" xml:space="preserve">
+    <t t-name="drg_balance_payment_info" owl="1">
+        <Dialog title="env._t('Information')" footer="false">
+            <table class="table table-bordered">
+                <tbody>
+                    <t t-call="drg_balance_payment_info_line">
+                        <t t-set="data" t-value="tableVal"/>
+                    </t>
+                </tbody>
+            </table>
+        </Dialog>
+    </t>
+
+    <t t-name="drg_balance_payment_info_line" owl="1">
+        <t t-foreach="data" t-as="d" t-key="d_index">
+            <t t-if="typeof data[d] === 'object' &amp;&amp; data[d] !== null">
+                <t t-call="drg_balance_payment_info">
+                    <t t-set="data" t-value="data[d]"/>
+                </t>
+            </t>
+            <t t-else="">
+                <tr>
+                    <td>
+                        <strong>
+                            <t t-esc="this.formatCamelCase(d)"/>
+                        </strong>
+                    </td>
+                    <td>
+                        <t t-esc="data[d]"/>
+                    </td>
+                </tr>
+            </t>
+        </t>
+    </t>
+
+    <t t-name="mollieBalanceSync.mollieBalanceJsonDataComponent" owl="1">
+        <t t-if="data.MollieType == 'payment'">
+            <button t-on-click="() => this._openDialog()" type="button" style="background-color: #d4e9de;" class="btn btn-sm py-0 text-success" title="Info">
+                <i class="fa fa-info-circle"></i> <t t-out="data.MollieType"/>
+            </button>
+        </t>
+        <t t-elif="data.MollieType == 'refund'">
+            <button t-on-click="() => this._openDialog()" type="button" style="background-color: #eedada;" class="btn btn-sm py-0 text-danger" title="Info">
+                <i class="fa fa-info-circle"></i> <t t-out="data.MollieType"/>
+            </button>
+        </t>
+        <t t-elif="data.MollieType == 'capture'">
+            <button t-on-click="() => this._openDialog()" type="button" style="color: #2196F3 !important; background-color: #d7e9fd;" class="btn btn-sm py-0 text-info" title="Info">
+                <i class="fa fa-info-circle"></i> <t t-out="data.MollieType"/>
+            </button>
+        </t>
+        <t t-elif="data.MollieType == 'chargeback'">
+            <button t-on-click="() => this._openDialog()" type="button" style="background-color: #eedada;" class="btn btn-sm py-0 text-danger" title="Info">
+                <i class="fa fa-info-circle"></i> <t t-out="data.MollieType"/>
+            </button>
+        </t>
+    </t>
+
+</templates>

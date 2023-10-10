@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="mollie_transaction_queue_view_tree" model="ir.ui.view">
+        <field name="name">mollie.transaction.queue.view.tree</field>
+        <field name="model">mollie.transaction.queue</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="transaction_date" />
+                <field name="payment_ref" />
+                <field name="amount" decoration-danger="amount &lt; 0" decoration-success="amount &gt; 0"/>
+                <field name="transaction_id" />
+                <field name="journal_id" />
+                <field name="transaction_json" optional="hide"/>
+                <field name="balance_transaction_id" optional="hide"/>
+                <field name="state" widget="badge" decoration-info="state=='created'" decoration-success="state=='reconciled'" decoration-muted="state=='not_created'" />
+                <field name="reason_of_exception" optional="hide"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="mollie_transaction_queue_view_search" model="ir.ui.view">
+        <field name="name">mollie.transaction.queue.view.search</field>
+        <field name="model">mollie.transaction.queue</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="journal_id" />
+                <field name="transaction_id" />
+                <field name="payment_ref" />
+                <field name="balance_transaction_id" />
+                <filter name="not_created" string="Not Created" domain="[('state', '=', 'not_created')]"/>
+                <filter name="created" string="Created" domain="[('state', '=', 'created')]"/>
+                <filter name="reconciled" string="Reconciled" domain="[('state', '=', 'reconciled')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="state" name="State" domain="" context="{'group_by':'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record  id="action_mollie_transaction_queue" model="ir.actions.act_window">
+        <field name="name">Mollie Transaction Queue</field>
+        <field name="res_model">mollie.transaction.queue</field>
+        <field name="view_mode">tree</field>
+    </record>
+
+    <menuitem id="menu_mollie_transaction_queue" action="action_mollie_transaction_queue" name="Mollie Transaction Queue" parent="account.account_banks_menu" />
+
+
+</odoo>
