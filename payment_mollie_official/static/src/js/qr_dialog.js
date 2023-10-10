@@ -10,7 +10,6 @@ var qweb = core.qweb;
 
 var QrModel = Dialog.extend({
     template: 'mollie.qr.dialog',
-    xmlDependencies: (Dialog.prototype.xmlDependencies || []).concat(['/payment_mollie_official/static/src/xml/dialog.xml']),
     events: {
         "click .dr_continue_checkout": '_onClickContinue',
     },

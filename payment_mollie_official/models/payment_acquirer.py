@@ -36,6 +36,8 @@ class PaymentProviderMollie(models.Model):
         super()._compute_feature_support_fields()
         self.filtered(lambda p: p.code == 'mollie').update({
             'support_refund': 'partial',
+            'support_fees': True,
+            'support_manual_capture': True
         })
 
     # --------------
@@ -64,9 +66,9 @@ class PaymentProviderMollie(models.Model):
         :return: fees map for the mollie method and payment provider (here values are fees)
         :rtype: dict
         """
-        mollie_provider = self.filtered(lambda acq: acq.code == 'mollie')
+        mollie_providers = self.filtered(lambda acq: acq.code == 'mollie')
 
-        if not mollie_provider or not (order or (amount and currency and partner_id)):
+        if not mollie_providers or not (order or (amount and currency and partner_id)):
             return fees_by_provider
 
         country_id = False
@@ -77,13 +79,15 @@ class PaymentProviderMollie(models.Model):
         elif partner_id:
             country_id = self.sudo().env['res.partner'].browse(partner_id).country_id
 
-        global_fees = mollie_provider._compute_fees(amount, currency, country_id)
-        for mollie_method in mollie_provider.mollie_methods_ids:
-            fees_by_provider[mollie_method] = global_fees
+        for mollie_provider in mollie_providers:
+            global_fees = mollie_provider._compute_fees(amount, currency, country_id)
+            for mollie_method in mollie_provider.mollie_methods_ids:
+                fees_key = (mollie_provider, mollie_method)
+                fees_by_provider[fees_key] = global_fees
 
-            # this way method can override global fees (it can even removes global fees)
-            if mollie_method.fees_active:
-                fees_by_provider[mollie_method] = mollie_method._compute_fees(amount, currency, country_id)
+                if mollie_method.fees_active:
+                    fees_by_provider[fees_key] = mollie_method._compute_fees(amount, currency, country_id)
+
         return fees_by_provider
 
     # --------------------------------------------------------
@@ -282,9 +286,9 @@ class PaymentProviderMollie(models.Model):
 
         try:
             response = requests.request(method, url, params=params, data=data, headers=headers, timeout=60)
-            result = response.json()
             if response.status_code == 204:
                 return True  # returned no content
+            result = response.json()
             if response.status_code not in [200, 201]:  # doc reference https://docs.mollie.com/overview/handling-errors
                 error_msg = f"Error[{response.status_code}]: {result.get('title')} - {result.get('detail')}"
                 _logger.exception("Error from mollie: %s", result)

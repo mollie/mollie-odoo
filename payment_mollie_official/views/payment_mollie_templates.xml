@@ -37,9 +37,9 @@
                     Test Mode
                 </span>
                 <!-- === Extra fees badge === -->
-                <t t-if="fees_by_provider.get(payment_method)">
+                <t t-if="fees_by_provider.get((provider, payment_method))">
                     <span class="badge rounded-pill bg-secondary ml-1">
-                        + <t t-esc="fees_by_provider.get(payment_method)"
+                        + <t t-esc="fees_by_provider.get((provider, payment_method))"
                                 t-options="{'widget': 'monetary', 'display_currency': currency}"/>
                         Fees
                     </span>
@@ -60,6 +60,12 @@
             </div>
             <div class="clearfix" t-if="payment_method.payment_issuer_ids">
                 <t t-call="payment_mollie_official.mollie_issuers_list"/>
+            </div>
+            <div class="clearfix" t-if="payment_method.method_code == 'billie' and order and not order.partner_id.commercial_company_name">
+                <div class="alert alert-warning mb-0">
+                    <h6> <i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Company Name Needed </h6>
+                    <p class="mb-0"> Company name is necessary for Billie payments. Please add company name in address. <a href="/shop/checkout"> <b>Go To Addresses </b> <i class="fa fa-arrow-right" aria-hidden="true"></i> </a> </p>
+                </div>
             </div>
         </div>
     </t>

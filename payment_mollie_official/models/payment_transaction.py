@@ -6,10 +6,12 @@ from werkzeug import urls
 
 from odoo.http import request
 from odoo.addons.payment_mollie.controllers.main import MollieController
+from odoo.exceptions import ValidationError
 
 from odoo import _, api, fields, models, tools
 
 _logger = logging.getLogger(__name__)
+
 
 class PaymentTransaction(models.Model):
     _inherit = 'payment.transaction'
@@ -55,6 +57,8 @@ class PaymentTransaction(models.Model):
         mollie_payment = self.provider_id._api_mollie_get_payment_data(provider_reference)
         payment_status = mollie_payment.get('status')
         if payment_status == 'paid':
+            if mollie_payment.get('amountCaptured') and float(mollie_payment['amountCaptured']['value']) < self.amount:
+                self.amount = mollie_payment['amountCaptured']['value']
             self._set_done()
         elif payment_status == 'pending':
             self._set_pending()
@@ -442,6 +446,12 @@ class PaymentTransaction(models.Model):
         partner = self.partner_id
         if not partner:
             return result
+
+        # organizationName is required for billie
+        if self.mollie_payment_method == 'billie':
+            if not partner.commercial_company_name:
+                raise ValidationError(_('Company name is necessary for Billie payments. Go to address and add company name.'))
+            result['organizationName'] = partner.commercial_company_name
 
         # Build the name becasue 'givenName' and 'familyName' is required.
         # So we will repeat the name is one is not present
