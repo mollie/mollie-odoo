@@ -2,7 +2,7 @@
 
 {
     'name': 'Mollie Balance Sync',
-    'version': '16.0.0.0',
+    'version': '17.0.0.0',
     'description': '',
     'summary': 'This module sync balances from mollie',
     'author': 'Mollie',
@@ -18,6 +18,7 @@
         'views/mollie_transaction_queue_views.xml',
         'views/account_journal.xml',
         'views/bank_statement.xml',
+        'wizard/sync_mollie_statement_line_views.xml',
     ],
     'assets': {
         'web.assets_backend': [
@@ -25,7 +26,4 @@
             'mollie_balance_sync/static/src/js/info_widget.js',
         ]
     },
-    'images': [
-        'static/description/cover.png',
-    ],
 }

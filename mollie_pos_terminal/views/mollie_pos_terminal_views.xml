@@ -36,6 +36,9 @@
         <field name="model">mollie.pos.terminal</field>
         <field name="arch" type="xml">
             <tree js_class="mollie_sync_terminal_tree">
+                <header>
+                    <button name="action_sync_terminals" type="object" class="btn btn-secondary" string="Sync Terminal" display="always" />
+                </header>
                 <field name="name" />
                 <field name="terminal_id" />
                 <field name="profile_id" />

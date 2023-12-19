@@ -15,6 +15,7 @@ class MolliePosTerminal(models.Model):
     name = fields.Char("Transaction ID")
     mollie_uid = fields.Char("Mollie UID")
     terminal_id = fields.Many2one('mollie.pos.terminal')
+    session_id = fields.Many2one('pos.session')
     mollie_latest_response = fields.Json('Response', default={})
     status = fields.Selection([
         ('open', 'Open'),
@@ -31,6 +32,7 @@ class MolliePosTerminal(models.Model):
                 'name': response.get('id'),
                 'mollie_uid': data.get('mollie_uid'),
                 'terminal_id': data.get('terminal_id'),
+                'session_id': data.get('session_id'),
                 'mollie_latest_response': response,
                 'status': response.get('status')
             })
@@ -72,3 +74,4 @@ class MolliePosTerminal(models.Model):
                     'mollie_latest_response': payment_status,
                     'status': payment_status.get('status')
                 })
+                self.env["bus.bus"].sudo()._sendone(mollie_payment.session_id._get_bus_channel_name(), "MOLLIE_TERMINAL_RESPONSE", mollie_payment.session_id.config_id.id)

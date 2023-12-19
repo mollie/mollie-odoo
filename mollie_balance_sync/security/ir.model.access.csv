@@ -1,3 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_mollie_balance_account,access_mollie_balance_account,model_mollie_balance_account,account.group_account_user,1,1,1,1
 access_mollie_transaction_queue,access_mollie_transaction_queue,model_mollie_transaction_queue,account.group_account_user,1,1,1,1
+access_sync_mollie_statement_line,access_sync_mollie_statement_line,model_sync_mollie_statement_line,base.group_user,1,1,1,1

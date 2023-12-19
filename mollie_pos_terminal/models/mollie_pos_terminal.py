@@ -90,6 +90,17 @@ class MolliePosTerminal(models.Model):
             }
         }
 
+    def action_sync_terminals(self):
+        return {
+            "name": _("Sync Terminal"),
+            "type": "ir.actions.act_window",
+            "res_model": "sync.mollie.terminal",
+            "target": "new",
+            "views": [[False, "form"]],
+            "context": {"is_modal": True},
+        }
+
+
     # =====================
     # GENERIC TOOLS METHODS
     # =====================

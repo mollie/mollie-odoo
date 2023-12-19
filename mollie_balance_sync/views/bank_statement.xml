@@ -10,7 +10,7 @@
                 <field name="mollie_balance_json_info"/>
             </field>
             <xpath expr="//div[@id='row2_col1']" position="inside">
-                <field name="mollie_balance_json_info" class="float-end me-2" widget="balance_payment_info" attrs="{'invisible': [('mollie_balance_json_info', '=', False)]}"/>
+                <field name="mollie_balance_json_info" class="float-end me-2" widget="balance_payment_info" invisible="not mollie_balance_json_info"/>
             </xpath>
         </field>
     </record>

@@ -7,7 +7,10 @@
         <field name="inherit_id" ref="point_of_sale.pos_payment_method_view_form"/>
         <field name="arch" type="xml">
             <field name="use_payment_terminal" position="after">
-                <field name="mollie_pos_terminal_id" attrs="{'invisible': [('use_payment_terminal', '!=', 'mollie')]}" options="{'no_create': True}"/>
+                <field name="mollie_pos_terminal_id" invisible="use_payment_terminal != 'mollie'" options="{'no_create': True}"/>
+            </field>
+            <field name="split_transactions" position="after">
+                <field name="mollie_payment_default_partner" invisible="not split_transactions or use_payment_terminal != 'mollie'" />
             </field>
         </field>
     </record>

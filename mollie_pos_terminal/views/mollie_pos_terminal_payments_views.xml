@@ -17,6 +17,7 @@
                         <group>
                             <field name="terminal_id" />
                             <field name="mollie_uid" />
+                            <field name="session_id" />
                         </group>
                     </group>
                 </sheet>
@@ -32,6 +33,7 @@
                 <field name="name" />
                 <field name="mollie_uid" />
                 <field name="terminal_id" />
+                <field name="session_id" />
                 <field name="status" widget="badge" decoration-info="status == 'pending'" decoration-success="status == 'paid'" decoration-danger="status in ['failed', 'expired', 'canceled']" />
             </tree>
         </field>

@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <templates id="balance_payment_template" xml:space="preserve">
     <t t-name="drg_balance_payment_info" owl="1">
-        <Dialog title="env._t('Information')" footer="false">
+        <Dialog title="'Information'" footer="false">
             <table class="table table-bordered">
                 <tbody>
                     <t t-call="drg_balance_payment_info_line">

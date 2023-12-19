@@ -6,6 +6,9 @@
         <field name="model">mollie.transaction.queue</field>
         <field name="arch" type="xml">
             <tree>
+                <header>
+                    <button name="action_generate_statement_lines_from_queue" type="object" class="btn btn-secondary" string="Generate Statement Lines" display="always" />
+                </header>
                 <field name="transaction_date" />
                 <field name="payment_ref" />
                 <field name="amount" decoration-danger="amount &lt; 0" decoration-success="amount &gt; 0"/>

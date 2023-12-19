@@ -29,6 +29,11 @@ class MollieTransactionQueue(models.Model):
 
     @api.depends('statement_line_ids', 'statement_line_ids.is_reconciled')
     def _compute_queue_state(self):
+        """
+        not_created: statement line not created
+        created: statement line created
+        reconciled: queue related statement line reconciled
+        """
         for line in self:
             if line.statement_line_ids:
                 if line.statement_line_ids[0].is_reconciled:
@@ -39,6 +44,9 @@ class MollieTransactionQueue(models.Model):
                 line.state = 'not_created'
 
     def _cron_generate_mollie_statements_from_queue(self):
+        """ This method create bank statement lines from queue
+        first 100 not created queue line at a time
+        """
         transaction_queue = self.search([('state', '=', 'not_created')], order='transaction_date asc', limit=100)
         transaction_line_data = {}
         for line in transaction_queue:
@@ -50,6 +58,10 @@ class MollieTransactionQueue(models.Model):
             self._create_bank_statements_from_queue(journal, lines)
 
     def _create_bank_statements_from_queue(self, journal, transaction_queue):
+        """
+        :journal: journal record for create statement line
+        :transaction_queue: transaction queue records for create statement lines
+        """
         transaction_lines = []
         for line in transaction_queue:
             transaction_line = {
@@ -68,6 +80,9 @@ class MollieTransactionQueue(models.Model):
 
     # set metadata from transaction queue line, payment ref, partner
     def _prepare_extra_queue_data(self):
+        """update transaction lines
+        :return dict: metadata, orderId, partner, payment reference
+        """
         self.ensure_one()
         extra_data = {}
         mollie_acquires = self.env['payment.provider'].search([('code', '=', 'mollie')])
@@ -105,6 +120,11 @@ class MollieTransactionQueue(models.Model):
         return True
 
     def _generate_balance_payment_ref(self, payment_data, tx_type):
+        """generate payment reference
+        :payment_data dict: payment data from mollie api
+        :tx_type str: transaction type
+        :return str: payment reference
+        """
         metadata = payment_data.get('metadata') or {}
         ref = ""
         if metadata.get('reference'):
@@ -123,6 +143,17 @@ class MollieTransactionQueue(models.Model):
             raise ValidationError(_('You cannot delete lines with reconciled statements.'))
         self.mapped('statement_line_ids').unlink()
         return super().unlink()
+
+    def action_generate_statement_lines_from_queue(self):
+        """open wizard for generate statement lines"""
+        return {
+            "name": _("Generate Statements"),
+            "type": "ir.actions.act_window",
+            "res_model": "sync.mollie.statement.line",
+            "target": "new",
+            "views": [[False, "form"]],
+            "context": {"is_modal": True},
+        }
 
     # =================
     # API CALLS METHODS

@@ -1,6 +1,6 @@
 {
     'name': 'Mollie Pos Terminal',
-    'version': '16.0.0.2',
+    'version': '17.0.0.0',
     'description': '',
     'summary': 'Connect your pos with mollie terminal',
     'author': 'Mollie',
@@ -19,12 +19,8 @@
         'wizard/mollie_sync_terminal.xml',
     ],
     'assets': {
-        'web.assets_backend': [
-            'mollie_pos_terminal/static/src/views/*.js',
-            'mollie_pos_terminal/static/src/views/*.xml',
-        ],
-        'point_of_sale.assets': [
-            'mollie_pos_terminal/static/src/js/*'
+        'point_of_sale._assets_pos': [
+            'mollie_pos_terminal/static/**/*',
         ],
     },
     'images': [

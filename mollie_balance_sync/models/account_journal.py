@@ -2,7 +2,6 @@
 
 import json
 import logging
-import pytz
 import requests
 
 from datetime import datetime
@@ -14,7 +13,7 @@ from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
 
-TIMEOUT = 20
+TIMEOUT = 60
 LIMIT = 250
 
 
@@ -167,10 +166,19 @@ class AccountJournal(models.Model):
     # =====================
 
     def _parse_mollie_date(self, date_str):
+        """ mollie date time string to without timezone datetime
+        :params date_str str : mollie response date
+        :return: datetime without timezone
+        :rtype: datetime
+        """
         tz_time = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S%z")
         return tz_time.replace(tzinfo=None)
 
     def _get_transaction_id(self, transaction):
+        """ get transaction id based on transaction type
+        :params transaction dict : transaction data
+        :return: transaction_id
+        """
         transaction_id = ''
         if transaction['type'] in ['payment', 'unauthorized-direct-debit', 'failed-payment', 'chargeback-reversal', 'application-fee', 'split-payment']:
             transaction_id = transaction['context']['paymentId']
@@ -187,6 +195,10 @@ class AccountJournal(models.Model):
         return transaction_id
 
     def _get_mollie_api_key(self, bearer=True):
+        """
+        :param bearer str: prefix required by mollie
+        :return : api key
+        """
         if not self.mollie_api_key:
             return False
         api_key = ''
@@ -195,6 +207,11 @@ class AccountJournal(models.Model):
         return api_key + self.mollie_api_key
 
     def _mollie_api_server_call(self, endpoint):
+        """
+        :param endpoint str: The endpoint to be reached by the request
+        :rtype: dict
+        :raise: UserError if an HTTP, connection, timeout error occurs
+        """
         self.ensure_one()
         endpoint = f'/v2/{endpoint.strip("/")}'
         url = urls.url_join('https://api.mollie.com/', endpoint)
