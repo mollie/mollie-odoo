@@ -65,7 +65,8 @@ class MollieInit(models.TransientModel):
         line_to_sync = self.settlement_lines.filtered('do_sync')
         journal = self.journal_id
         if line_to_sync and journal:
-            settlements_data = self.journal_id._api_get_settlements(limit=LIMIT)
+            limit = MAX_LIMIT if self.show_previous_statements else LIMIT
+            settlements_data = self.journal_id._api_get_settlements(limit=limit)
             mollie_ids_to_sync = line_to_sync.mapped('settlement_id')
 
             new_list = []

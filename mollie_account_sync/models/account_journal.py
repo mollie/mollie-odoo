@@ -11,7 +11,7 @@ from odoo.exceptions import UserError, ValidationError
 
 _logger = logging.getLogger(__name__)
 
-TIMEOUT = 20
+TIMEOUT = 60
 API_DEBUG = False
 
 
