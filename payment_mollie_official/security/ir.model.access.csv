@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_mollie_payment_issuer_user,mollie_payment_issuer_user,model_mollie_payment_method_issuer,base.group_user,1,1,1,1
+access_mollie_payment_issuer_public,mollie_payment_issuer_public,model_mollie_payment_method_issuer,,1,0,0,0
+access_mollie_voucher_line_user,mollie_voucher_line_user,model_mollie_voucher_line,base.group_user,1,1,1,1
+access_mollie_voucher_line_public,mollie_voucher_line_public,model_mollie_voucher_line,,1,0,0,0

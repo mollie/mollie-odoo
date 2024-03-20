@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="mollie_method_form" name="Mollie Payment Method Form" inherit_id="payment.method_form">
+    <xpath expr="//input[@name='o_payment_radio']" position="before">
+        <t t-set="inline_form_xml_id" t-value="pm_sudo._get_inline_form_xml_id(inline_form_xml_id, provider_sudo)"/>
+    </xpath>
+</template>
+
+<template id="mollie_creditcard_component">
+    <t t-set="has_mollie_customer_id" t-value="request.env.user.sudo().mollie_customer_id"/>
+    <t t-set="mollie_components_enabled" t-value="provider_sudo.mollie_use_components"/>
+    <div>
+        <div t-if="mollie_components_enabled and has_mollie_customer_id" class="ml-2">
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="mollieCardType" id="mollieSavedCard" value="saved_card" checked="checked"/>
+                <label class="form-check-label mt-0" for="mollieSavedCard">Use Saved Card </label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="mollieCardType" id="mollieInlineCard" value="component"/>
+                <label class="form-check-label mt-0" for="mollieInlineCard">Fill Card Details</label>
+            </div>
+        </div>
+        <div id="o_mollie_component" t-att-class="has_mollie_customer_id and 'd-none' or ''" t-if="mollie_components_enabled" t-att-data-profile_id="provider_sudo.mollie_profile_id" t-att-data-mode="provider_sudo.state">
+            <div class="row o_mollie_form mb-1">
+                <div class="col-md-12">
+                    <label class="label text-muted mb-1" for="mollie-card-holder">Card Holder</label>
+                    <div id="mollie-card-holder" class="mollie_input border rounded bg-white p-2"></div>
+                    <div id="mollie-card-holder-error" class="text-danger small"></div>
+                </div>
+                <div class="col-md-12">
+                    <label class="label text-muted mb-1 mt-3" for="mollie-card-number">Card Number</label>
+                    <div id="mollie-card-number" class="mollie_input border rounded bg-white p-2"></div>
+                    <div id="mollie-card-number-error" class="text-danger small"></div>
+                </div>
+                <div class="col-md-6">
+                    <label class="label text-muted mb-1 mt-3" for="mollie-expiry-date">Expiry Date</label>
+                    <div id="mollie-expiry-date" class="mollie_input border rounded bg-white p-2"></div>
+                    <div id="mollie-expiry-date-error" class="text-danger small"></div>
+                </div>
+                <div class="col-md-6">
+                    <label class="label text-muted mb-1 mt-3" for="mollie-verification-code">Verification Code</label>
+                    <div id="mollie-verification-code" class="mollie_input border rounded bg-white p-2"></div>
+                    <div id="mollie-verification-code-error" class="text-danger small"></div>
+                </div>
+            </div>
+        </div>
+        <div id="o_mollie_save_card" t-att-class="has_mollie_customer_id and 'd-none' or ''" t-if="provider_sudo.mollie_show_save_card" groups="!base.group_public">
+            <label>
+                <input name="o_mollie_save_card" type="checkbox"/>
+                    Save my card details
+            </label>
+        </div>
+    </div>
+</template>
+
+<template id="mollie_issuers_list">
+    <div class="row o_mollie_issuer_container">
+        <t t-foreach="pm_sudo.brand_ids" t-as="issuer">
+            <div class="col-md-6 col-xs-12">
+                <label t-attf-class="bg-white rounded w-100 p-2 border position-relative mt-3 o_mollie_issuer #{issuer_index == 0 and 'active border-primary' or '' }" t-att-data-mollie-issuer="issuer.code">
+                    <span class="payment_option_name">
+                        <i class="fa fa-check-circle me-1"></i>
+                        <t t-esc="issuer.name"/>
+                    </span>
+                    <span class="float-end" t-field="issuer.image" t-options='{"widget": "image", "alt-field": "name", "class": "mollie_issuer_icon"}'/>
+                </label>
+            </div>
+        </t>
+    </div>
+</template>
+
+<template id="redirect_form"  inherit_id="payment_mollie.redirect_form">
+    <xpath expr="//form" position="replace">
+        <form  t-att-action="api_url" method="get" t-att-data-qrsrc="qr_src">
+            <input t-if="ref" name="ref" type="hidden" t-att-value="ref"/>
+            <t t-foreach="extra_params" t-as="param">
+                <input t-att-name="param" type="hidden" t-att-value="param_value"/>
+            </t>
+        </form>
+    </xpath>
+</template>
+
+</odoo>
