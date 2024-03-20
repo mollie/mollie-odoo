@@ -1,7 +1,6 @@
 # coding: utf-8
 import logging
-import json
-from odoo import fields, http
+from odoo import http
 from odoo.http import request
 
 _logger = logging.getLogger(__name__)

@@ -100,7 +100,6 @@ class MolliePosTerminal(models.Model):
             "context": {"is_modal": True},
         }
 
-
     # =====================
     # GENERIC TOOLS METHODS
     # =====================

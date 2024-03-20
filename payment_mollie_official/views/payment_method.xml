@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="payment_method_form_inh" model="ir.ui.view">
+        <field name="name">Mollie Payment Method Form</field>
+        <field name="model">payment.method</field>
+        <field name="inherit_id" ref="payment.payment_method_form"/>
+        <field name="arch" type="xml">
+            <field name="code" position="after">
+                <field name="code" invisible="1"/>
+                <field name="mollie_enable_qr_payment" invisible="code not in ['bancontact'] or context.get('provider_code') != 'mollie'"/>
+                <field name="journal_id" invisible="context.get('provider_code') != 'mollie'"/>
+            </field>
+            <field name="supported_currency_ids" position="after">
+                <div class="text-warning" style="max-width: 500px;" invisible="context.get('provider_code') != 'mollie'">
+                    Note: mollie will ignore <b>Supported Countries?</b> and <b>Supported Currencies?</b> configuration. Instead, it will exclusively display the payment methods tailored to the countries and currencies associated with the orders or invoices.
+                </div>
+            </field>
+            <page name="brands" position="after">
+                <page string="Voucher Configuration" name="mollie_voucher_config" invisible="code != 'voucher' or context.get('provider_code') != 'mollie'">
+                    <field name="mollie_voucher_ids">
+                        <tree editable="bottom">
+                            <field name="mollie_voucher_category"/>
+                            <field name="category_ids" widget="many2many_tags"/>
+                            <field name="product_ids" widget="many2many_tags"/>
+                        </tree>
+                    </field>
+                </page>
+            </page>
+        </field>
+    </record>
+
+</odoo>

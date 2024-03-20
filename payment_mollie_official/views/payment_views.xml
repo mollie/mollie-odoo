@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="acquirer_form_view_mollie" model="ir.ui.view">
+        <field name="name">payment.provider.form.inherit</field>
+        <field name="model">payment.provider</field>
+        <field name="inherit_id" ref="payment_mollie.payment_provider_form"/>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <field name="mollie_api_key" position="replace">
+                <field name="mollie_api_key" string="API Key" required="code == 'mollie' and state == 'enabled'" password="True"/>
+                <field name="mollie_api_key_test" required="code == 'mollie' and state == 'test'" password="True"/>
+                <field name="mollie_use_components" />
+                <field name="mollie_profile_id" password="True" invisible="not mollie_use_components" required="code == 'mollie' and mollie_use_components"/>
+                <label string=" " for="mollie_profile_id" invisible="not mollie_use_components"></label>
+                <small class="text-muted" invisible="not mollie_use_components"> Credit card option will not be displayed without profile ID.
+                    <br/>
+                    <b>
+                        <a href="https://www.mollie.com/dashboard/developers/api-keys" target="_new"> Get your API keys <i class="fa fa-arrow-right"></i></a>
+                    </b>
+                </small>
+                <field name="mollie_show_save_card" />
+            </field>
+
+            <a name="action_view_payment_methods" position="attributes">
+                <attribute name="context">{'provider_code': code, 'payment_provider_id': id}</attribute>
+            </a>
+
+            <a name="action_view_payment_methods" position="after">
+                <a type="object" name="action_sync_mollie" class="btn btn-link" role="button" invisible="code != 'mollie'">
+                    <i class="fa fa-refresh o_button_icon"/> Sync Mollie Methods
+                </a>
+            </a>
+        </field>
+    </record>
+
+    <!-- <record id="payment_method_tree" model="ir.ui.view">
+        <field name="name">payment.method.form.inherit.mollie</field>
+        <field name="model">payment.method</field>
+        <field name="inherit_id" ref="payment.payment_method_tree"/>
+        <field name="arch" type="xml">
+            <field name="sequence"  position="before">
+                <header>
+                    <button string="Sync Mollie Methods" type="object" invisible="context.get('provider_code') != 'mollie'" name="action_sync_mollie_methods" display="always"/>
+                </header>
+            </field>
+        </field>
+    </record> -->
+
+</odoo>
