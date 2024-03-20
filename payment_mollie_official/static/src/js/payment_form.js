@@ -87,6 +87,7 @@ odoo.define('mollie.payment.form', function (require) {
                         sticky: false,
                     });
                     this._enableButton();
+                    $.unblockUI();
                 }
                 return result.token || false;
             });
