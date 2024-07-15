@@ -467,7 +467,7 @@ class PaymentTransaction(models.Model):
         result["streetAndNumber"] = self.partner_address or ' '
         result["postalCode"] = self.partner_zip or ' '
         result["city"] = self.partner_city or ' '
-        result["country"] = self.partner_country_id and self.partner_country_id.code or ' '
+        result["country"] = self.partner_country_id and self.partner_country_id.code
         return result
 
     @api.model

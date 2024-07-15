@@ -41,6 +41,9 @@
                         </div>
                     </div>
                     <field name="mollie_last_sync" readonly="1" attrs="{'invisible': [('mollie_last_sync', '=', False)]}"/>
+                    <div style="white-space: nowrap;" attrs="{'invisible': [('mollie_last_sync', '=', False)]}">
+                        <button type="object" name="action_sync_mollie_previous_statement_lines" class="btn btn-sm btn-primary"><i class="fa fa-refresh"/> SYNC PREVIOUS STATEMENTS</button>
+                    </div>
                 </group>
             </xpath>
         </field>

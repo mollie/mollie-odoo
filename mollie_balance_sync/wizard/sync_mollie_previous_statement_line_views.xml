@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="sync_mollie_previous_statement_line_view_form" model="ir.ui.view">
+        <field name="name">sync.mollie.previous.statement.line.view.form</field>
+        <field name="model">sync.mollie.previous.statement.line</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="alert alert-info" role="alert">
+                        All statements of this date range will be added in queue and ignored already sync statements.
+                    </div>
+                    <group>
+                        <label for="date_begin" string="Date Range"/>
+                        <div class="o_row">
+                            <field name="date_begin" widget="daterange" options="{'related_end_date': 'date_end'}"/>
+                            <i class="fa fa-long-arrow-right mx-2" aria-label="Arrow icon" title="Arrow"/>
+                            <field name="date_end" widget="daterange" options="{'related_start_date': 'date_begin'}"/>
+                        </div>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Sync Now" class="btn btn-primary" type="object" name="sync_previous_statement_line"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

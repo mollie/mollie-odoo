@@ -107,7 +107,7 @@ class AccountJournal(models.Model):
             self.mollie_last_sync = fields.Datetime.now()
             self.mollie_initialize = True
 
-    def _get_mollie_balance_transaction_recursive(self, balance_url, sync_from_date=None, last_transaction_id=None):
+    def _get_mollie_balance_transaction_recursive(self, balance_url, sync_from_date=None, sync_to_date=None, last_transaction_id=None):
         """ This method used to fetch balance transaction recursively
 
             You must pass sync_from_date or last_transaction_id to stop recursive calls.
@@ -116,6 +116,8 @@ class AccountJournal(models.Model):
             raise UserError(_('Method needs at least one stopping pointes'))
 
         transaction_lines = []
+        if sync_to_date:
+            all_balance_transaction_ids = self.env['mollie.transaction.queue'].search([]).mapped('balance_transaction_id')
         transactions_response = self._mollie_api_server_call(balance_url)
         if transactions_response and transactions_response.get('count'):
             transactions = transactions_response['_embedded']['balance_transactions']
@@ -125,6 +127,8 @@ class AccountJournal(models.Model):
                 transaction_date = self._parse_mollie_date(transaction['createdAt'])
                 if (last_transaction_id == transaction['id']) or (sync_from_date and sync_from_date > transaction_date):
                     break
+                if sync_to_date and (sync_to_date < transaction_date or transaction['id'] in all_balance_transaction_ids):
+                    continue
 
                 amount = float(transaction['initialAmount']['value'])
 
@@ -152,7 +156,7 @@ class AccountJournal(models.Model):
                 links = transactions_response.get('_links')
                 if links and links.get('next'):
                     next_balance_url = links.get('next')['href'].split('/v2/')[-1]
-                    transaction_lines += self._get_mollie_balance_transaction_recursive(next_balance_url, sync_from_date=sync_from_date, last_transaction_id=last_transaction_id)
+                    transaction_lines += self._get_mollie_balance_transaction_recursive(next_balance_url, sync_from_date=sync_from_date, sync_to_date=sync_to_date, last_transaction_id=last_transaction_id)
         return transaction_lines
 
     def _create_mollie_transaction_queue(self, transaction_vals):
@@ -161,6 +165,23 @@ class AccountJournal(models.Model):
             return
         transaction_vals.reverse()
         self.env['mollie.transaction.queue'].create(transaction_vals)
+
+    def action_sync_mollie_previous_statement_lines(self):
+        """open wizard for sync mollie previous statement lines"""
+        return {
+            "name": _("Sync Previous Statements"),
+            "type": "ir.actions.act_window",
+            "res_model": "sync.mollie.previous.statement.line",
+            "target": "new",
+            "views": [[False, "form"]],
+        }
+
+    def _sync_mollie_previous_balance_statement(self, date_begin, date_end):
+        balance_id = self.mollie_balance_account_id.balance_id
+        balance_url = f"/balances/{balance_id}/transactions?limit={LIMIT}"
+        transaction_lines = self._get_mollie_balance_transaction_recursive(balance_url, sync_from_date=date_begin, sync_to_date=date_end)
+        if transaction_lines:
+            self._create_mollie_transaction_queue(transaction_lines)
 
     # =====================
     # GENERIC TOOLS METHODS
