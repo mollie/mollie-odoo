@@ -238,7 +238,9 @@ class PaymentAcquirerMollie(models.Model):
             if partner and partner.country_id:
                 extra_params['billingCountry'] = partner.country_id.code
 
-        if not has_voucher_line:
+        if has_voucher_line:
+            extra_params['orderLineCategories'] = ','.join(has_voucher_line)
+        else:
             methods = methods.filtered(lambda m: m.method_code != 'voucher')
 
         # Hide based on country
@@ -251,7 +253,16 @@ class PaymentAcquirerMollie(models.Model):
         supported_methods = self.sudo()._api_mollie_get_active_payment_methods(extra_params=extra_params)  # sudo as public user do not have access to keys
         methods = methods.filtered(lambda m: m.method_code in supported_methods.keys())
 
-        return methods
+        mollie_issuers = {}
+        for method, method_data in supported_methods.items():
+            issuers = method_data.get('issuers')
+            if issuers:
+                mollie_method = self.env['mollie.payment.method'].search([('method_code', '=', method), ('acquirer_id', '=', self.id)])
+                if mollie_method:
+                    issuers_codes = list(map(lambda issuer: issuer['id'], issuers))
+                    mollie_issuers[mollie_method[0].id] = mollie_method[0].payment_issuer_ids.filtered(lambda issuer: issuer.active and issuer.issuers_code in issuers_codes).ids  # always use first method, didn't occuer any case to get multiple methods but handle it
+
+        return methods.with_context(mollie_issuers=mollie_issuers)
 
     # -----------
     # API methods
