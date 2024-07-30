@@ -151,7 +151,7 @@ class MollieVoucherLines(models.Model):
     method_id = fields.Many2one('mollie.payment.method', string='Mollie Method')
     category_ids = fields.Many2many('product.category', string='Product Categories')
     product_ids = fields.Many2many('product.template', string='Products')
-    mollie_voucher_category = fields.Selection([('meal', 'Meal'), ('eco', 'Eco'), ('gift', 'Gift')], required=True)
+    mollie_voucher_category = fields.Selection([('meal', 'Meal'), ('eco', 'Eco'), ('gift', 'Gift'), ('consume', 'Consume'), ('sports', 'Sports'), ('additional', 'Additional')], required=True)
 
 
 class ProductTemplate(models.Model):
