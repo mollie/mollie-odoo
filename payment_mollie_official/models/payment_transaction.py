@@ -399,7 +399,7 @@ class PaymentTransaction(models.Model):
                 category = line.product_id.product_tmpl_id._get_mollie_voucher_category()
                 if category:
                     line_data.update({
-                        'category': category
+                        'category': category[0]
                     })
             lines.append(line_data)
         if self.fees:
