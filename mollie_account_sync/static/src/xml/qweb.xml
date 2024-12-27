@@ -14,7 +14,7 @@
 
     <t t-name="drg_payment_info_line" owl="1">
         <t t-foreach="data" t-as="d" t-key="d_index">
-            <t t-if="typeof data[d] === 'object' &amp;&amp; data[d] !== null">
+            <t t-if="typeof data[d] === 'object' &amp;&amp; data[d] !== null &amp;&amp; !Array.isArray(data[d])">
                 <t t-call="drg_payment_info">
                     <t t-set="data" t-value="data[d]"/>
                 </t>
