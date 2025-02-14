@@ -126,7 +126,7 @@ class MolliePaymentMethod(models.Model):
 
     def _get_mollie_method_supported_issuers(self):
         mollie_issuers = self.env.context.get('mollie_issuers', [])
-        if mollie_issuers.get(self.id):
+        if mollie_issuers.get(self.id) and self.method_code != 'ideal':
             return self.payment_issuer_ids.filtered(lambda issuer: issuer.id in mollie_issuers[self.id])
         return []
 

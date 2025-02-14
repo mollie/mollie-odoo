@@ -2,7 +2,7 @@
 
 {
     'name': 'Mollie Payments Extended',
-    'version': '16.0.0.5',
+    'version': '16.0.0.6',
     'category': 'eCommerce',
     'license': 'LGPL-3',
     'author': 'Mollie',

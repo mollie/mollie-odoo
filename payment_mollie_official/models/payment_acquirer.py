@@ -117,7 +117,7 @@ class PaymentProviderMollie(models.Model):
 
             # Manage issuer for the method
             issuers_data = method_info.get('issuers')
-            if issuers_data:
+            if issuers_data and method_info['id'] != 'ideal':
                 issuer_ids = self._get_issuers_ids(issuers_data)
                 if issuer_ids:
                     create_vals['payment_issuer_ids'] = [(6, 0, issuer_ids)]
@@ -134,18 +134,13 @@ class PaymentProviderMollie(models.Model):
                 create_vals['payment_icon_ids'] = [(6, 0, [icon.id])]
             mollie_methods += MolliePaymentMethod.create(create_vals)
 
-        for method_code, method_data in methods_data.items():
-            issuers_data = method_data.get('issuers', [])
-            mollie_method = mollie_methods.filtered(lambda m: m.method_code == method_code)
-            # remove the issuer if it removed from mollie (iban2 removed the issuers support)
-            mollie_supported_issuer_codes = [issuer_info['id'] for issuer_info in issuers_data]
-            issuers_to_delete = mollie_method.payment_issuer_ids.filtered(lambda issuer: issuer.issuers_code not in mollie_supported_issuer_codes)
-            if issuers_to_delete:
-                issuers_to_delete.unlink()
-
         # Activate methods & update method data
         for method in mollie_methods:
             method.active = methods_data.get(method.method_code, {}).get('status') == 'activated'
+
+            if method.method_code == 'ideal':
+                method.payment_issuer_ids.unlink()
+                continue
 
     def _get_issuers_ids(self, issuers_data):
         """ Create/Update the mollie issuers based on issuers data received from
