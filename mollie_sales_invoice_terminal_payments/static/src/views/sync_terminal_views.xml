@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<templates>
+    <t t-name="MollieSalesInvoiceTerminaPayments.sync_terminal_button" owl="1">
+        <button type="button" class="btn btn-secondary" t-on-click="onClickSyncMolliePaymentsTerminal">
+            Sync Terminal
+        </button>
+    </t>
+
+    <t t-name="MolliePaymentsTerminalListView.buttons" t-inherit="web.ListView.Buttons" t-inherit-mode="primary" owl="1">
+        <xpath expr="//t[contains(@t-if, 'isExportEnable')]" position="before">
+            <t t-call="MollieSalesInvoiceTerminaPayments.sync_terminal_button"/>
+        </xpath>
+    </t>
+
+</templates>

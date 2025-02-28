@@ -1,0 +1,33 @@
+# -*- coding: utf-8 -*-
+
+{
+    'name': 'Mollie Direct Payments Terminal',
+    'version': '16.0.0.0',
+    'description': '',
+    'summary': 'Pay Sales orders & Invoices seamlessly via Mollie Terminal',
+    'author': 'Mollie',
+    'maintainer': 'Droggol Infotech Private Limited',
+    'license': 'OPL-1',
+    'depends': [
+        'sale_management', 'account', 'payment_mollie_official'
+    ],
+    'data': [
+        'security/ir.model.access.csv',
+        'security/security.xml',
+        'wizard/mollie_sync_payments_terminal.xml',
+        'wizard/mollie_payments_terminal_wizard.xml',
+        'views/account_move_view.xml',
+        'views/sale_order_view.xml',
+        'views/mollie_payments_terminal_views.xml',
+        'views/payment_provider_views.xml',
+    ],
+    'images': [
+        'static/description/cover.png',
+    ],
+    'assets': {
+        'web.assets_backend': [
+            'mollie_sales_invoice_terminal_payments/static/src/views/*.js',
+            'mollie_sales_invoice_terminal_payments/static/src/views/*.xml',
+        ],
+    }
+}
