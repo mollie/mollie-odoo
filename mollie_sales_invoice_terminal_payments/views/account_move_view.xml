@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_move_form_mollie_invoice_terminal" model="ir.ui.view">
+        <field name="name">view.move.form.mollie.invoice.terminal</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <field name="mollie_terminal_payment_enabled" invisible="1"/>
+                <button name="action_mollie_terminal_payment" string="Mollie Invoice Terminal" type="object"
+                    invisible="state != 'posted' or amount_residual &lt;= 0 or not mollie_terminal_payment_enabled or mollie_terminal_active_transaction"/>
+            </xpath>
+            <xpath expr="//sheet" position="before">
+                <field name="mollie_terminal_active_transaction" invisible="1"/>
+                <div class="alert alert-info text-center" role="alert"
+                    invisible="not mollie_terminal_active_transaction">
+                    Request sent to mollie terminal.
+                    <button name="action_mollie_terminal_payment_status" class="btn btn-sm btn-outline-info ms-2" icon="fa-refresh" string="Check Status"
+                            type="object"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

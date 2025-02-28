@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="payment_provider_form" model="ir.ui.view">
+        <field name="name">Mollie Provider Form</field>
+        <field name="model">payment.provider</field>
+        <field name="inherit_id" ref="payment_mollie.payment_provider_form"/>
+        <field name="arch" type="xml">
+            <page name="messages" position="after">
+                <page string="Mollie Terminal" name="mollie_config" invisible="code != 'mollie'">
+                    <group>
+                        <group>
+                            <field name="mollie_sale_order_terminal_payment_enabled"/>
+                            <field name="mollie_account_move_terminal_payment_enabled"/>
+                        </group>
+                    </group>
+                    <a type="object" name="action_open_terminal_list" class="btn btn-link"
+                        role="button">
+                        View Terminals
+                        <i class="oi oi-fw o_button_icon oi-arrow-right"/>
+                    </a>
+                </page>
+            </page>
+        </field>
+    </record>
+
+</odoo>
