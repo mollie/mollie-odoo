@@ -7,7 +7,7 @@
         <field name="arch" type="xml">
             <form>
                 <div class="text-center" invisible="mollie_terminal_api_key">
-                    <i class="fa fa-exclamation-triangle d-inline-block text-danger rounded-circle" style="background: #ffe3e3;padding: 15px;font-size: 20px;" aria-hidden="true"></i>
+                    <i class="fa fa-exclamation-triangle d-inline-block text-danger rounded-circle" style="background: #ffe3e3;padding: 15px;font-size: 20px;" title="API Key not set" aria-hidden="true"></i>
                     <h3>Api key is not set.</h3>
                     <p>Please set api key from pos configuration.</p>
                 </div>
