@@ -7,7 +7,7 @@
         <field name="arch" type="xml">
             <form>
                 <div class="text-center" invisible="remaining_mollie_transaction_count">
-                    <i class="fa fa-exclamation-triangle d-inline-block text-danger rounded-circle" style="background: #ffe3e3;padding: 15px;font-size: 20px;" aria-hidden="true"></i>
+                    <i class="fa fa-exclamation-triangle d-inline-block text-danger rounded-circle" title="No record found" style="background: #ffe3e3;padding: 15px;font-size: 20px;" aria-hidden="true"></i>
                     <p>No record found in queue for generate statement line.</p>
                 </div>
                 <div invisible="not remaining_mollie_transaction_count">

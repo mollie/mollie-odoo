@@ -32,7 +32,7 @@
                         <field name="mollie_balance_account_id" domain="[('journal_id','=',id)]" options="{'no_create_edit': True, 'no_quick_create': True, 'no_open': True}" invisible="bank_statements_source != 'mollie_balance_sync'" readonly="mollie_initialize" />
                         <button type="object" invisible="not mollie_api_key or mollie_initialize" name="action_sync_mollie_balance_account" class="btn-link ps-0"><i class="fa fa-refresh"/> Sync Balance Accounts</button>
                     </div>
-                    <div class="alert alert-warning" colspan="2" invisible="mollie_initialize or not mollie_balance_account_id" required="mollie_balance_account_id and not mollie_initialize">
+                    <div class="alert alert-warning" title="Initial Sync Needed" colspan="2" invisible="mollie_initialize or not mollie_balance_account_id" required="mollie_balance_account_id and not mollie_initialize">
                         <p class="fw-bolder mb-0"> Initial Sync Needed </p>
                         <p> Select the date from where you want to load balance lines </p>
                         <div class="oe_inline" style="display: inline;">
