@@ -7,7 +7,7 @@
     'summary': 'This module sync balances from mollie',
     'author': 'Mollie',
     'maintainer': 'Droggol Infotech Private Limited',
-    'license': 'LGPL-3',
+    'license': 'OPL-1',
     'category': '',
     'depends': [
         'account_accountant'
