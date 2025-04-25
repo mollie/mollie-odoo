@@ -133,5 +133,27 @@ patch(PaymentScreen.prototype, {
 
     },
 
+    updateSelectedPaymentline(amount = false) {
+        if (!this.selectedPaymentLine) {
+            return;
+        } // do nothing if no selected payment line
+        if (amount === false) {
+            if (this.numberBuffer.get() === null) {
+                amount = null;
+            } else if (this.numberBuffer.get() === "") {
+                amount = 0;
+            } else {
+                amount = this.numberBuffer.getFloat();
+            }
+        }
+        if (this.selectedPaymentLine.payment_method_id.mollie_voucher_category && amount > this.selectedPaymentLine.payment_method_id.limit_amount) {
+            this.dialog.add(AlertDialog, {
+                title: _t("Error"),
+                body: _t("Amount exceeds the limit amount of the Voucher."),
+            });
+            return false;
+        }
+        return super.updateSelectedPaymentline(...arguments);
+    },
 
 });

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="pos_mollie_voucher_view_form" model="ir.ui.view">
+        <field name="name">pos.mollie.voucher.view.form</field>
+        <field name="model">pos.mollie.voucher</field>
+        <field name="arch" type="xml">
+            <form>
+                <header />
+                <sheet>
+                    <div class="oe_button_box" name="button_box" />
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger"
+                        invisible="active" />
+                    <group>
+                        <field name="mollie_voucher_category" required="1"/>
+                        <field name="category_ids" widget="many2many_tags" />
+                        <field name="product_ids" widget="many2many_tags" />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="pos_mollie_voucher_view_tree" model="ir.ui.view">
+        <field name="name">pos.mollie.voucher.view.list</field>
+        <field name="model">pos.mollie.voucher</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="mollie_voucher_category" />
+                <field name="category_ids" widget="many2many_tags" />
+                <field name="product_ids" widget="many2many_tags" />
+            </list>
+        </field>
+    </record>
+
+    <record id="pos_mollie_voucher_action" model="ir.actions.act_window">
+        <field name="name">POS Mollie Voucher</field>
+        <field name="res_model">pos.mollie.voucher</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem
+        id="mollie_pos_reminal_menu"
+        name="POS Mollie Voucher"
+        action="pos_mollie_voucher_action"
+        parent="point_of_sale.menu_point_config_product" />
+
+</odoo>

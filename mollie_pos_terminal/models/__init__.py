@@ -5,3 +5,5 @@ from . import pos_order
 from . import pos_payment_method
 from . import mollie_pos_terminal
 from . import mollie_pos_terminal_payments
+from . import pos_mollie_voucher
+from . import product

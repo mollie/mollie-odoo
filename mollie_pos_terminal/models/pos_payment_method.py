@@ -10,11 +10,17 @@ class PosPaymentMethod(models.Model):
     mollie_pos_terminal_id = fields.Many2one('mollie.pos.terminal', string='Mollie Pos Terminal', domain="[('status', '=', 'active')]")
     mollie_latest_response = fields.Json('History', default={})
     mollie_payment_default_partner = fields.Many2one('res.partner')
+    mollie_voucher_category = fields.Selection([
+        ('meal', 'Meal'),
+        ('eco', 'Eco'),
+        ('gift', 'Gift'),
+        ('sport_culture', 'Sports & Culture'),
+    ], string='Voucher Category', copy=False)
 
     @api.model
     def _load_pos_data_fields(self, config_id):
         result = super()._load_pos_data_fields(config_id)
-        result += ['mollie_payment_default_partner']
+        result += ['mollie_payment_default_partner', 'mollie_voucher_category']
         return result
 
     def _get_payment_terminal_selection(self):

@@ -97,6 +97,7 @@ export class PaymentMollie extends PaymentInterface {
             'amount': line.amount,
             'session_id': this.pos.session.id,
             'payment_method_id': this.payment_method_id.id,
+            'mollie_voucher_category': this.payment_method_id.mollie_voucher_category,
         }
     }
 
