@@ -5,6 +5,13 @@
         <xpath expr="//PaymentScreenPaymentLines" position="attributes">
             <attribute name="sendMollieStatusCheck.bind">sendMollieStatusCheck</attribute>
         </xpath>
+        <xpath expr="//div[hasclass('paymentmethod')]" position="attributes">
+            <attribute name="t-if">checkVoucher(paymentMethod)</attribute>
+        </xpath>
+        <xpath expr="//span[hasclass('payment-name')]" position="after">
+            <span class="voucher-amount ms-auto" t-if="paymentMethod.mollie_voucher_category"
+                t-esc="getVoucherAmountDisplayText(paymentMethod)" />
+        </xpath>
     </t>
 
     <t t-name="mollie_payment_terminal.PaymentScreenPaymentLines" t-inherit="point_of_sale.PaymentScreenPaymentLines" t-inherit-mode="extension">
@@ -21,4 +28,3 @@
     </t>
 
 </templates>
-
