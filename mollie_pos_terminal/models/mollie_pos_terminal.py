@@ -74,12 +74,12 @@ class MolliePosTerminal(models.Model):
     def _prepare_payment_payload(self, data):
         base_url = self.get_base_url()
         webhook_url = urls.url_join(base_url, '/pos_mollie/webhook/')
-        return {
+        result = {
             "amount": {
                 "currency": data['curruncy'],
                 "value": f"{data['amount']:.2f}"
             },
-            "description": data['description'],
+            "description": f"{data['description']} Voucher Payment" if data.get('mollie_voucher_category') else data['description'],
             "webhookUrl": webhook_url,
             "redirectUrl": webhook_url,
             "method": "pointofsale",
@@ -89,6 +89,27 @@ class MolliePosTerminal(models.Model):
                 "order_id": data['order_id'],
             }
         }
+        if data.get('mollie_voucher_category'):
+            result.update({
+                "lines": [
+                {
+                    "description": "Voucher payment",
+                    "quantity": 1,
+                    "unitPrice": {
+                        "currency": data['curruncy'],
+                        "value": f"{data['amount']:.2f}"
+                    },
+                    "totalAmount": {
+                        "currency": data['curruncy'],
+                        "value": f"{data['amount']:.2f}"
+                    },
+                    "categories": [
+                        data.get('mollie_voucher_category')
+                    ]
+                }
+                ],
+            })
+        return result
 
     # =====================
     # GENERIC TOOLS METHODS

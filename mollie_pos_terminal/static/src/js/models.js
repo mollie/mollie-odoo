@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { register_payment_method, Payment } from "point_of_sale.models";
+import { register_payment_method, Payment, Order } from "point_of_sale.models";
 import { PaymentMollie } from "@mollie_pos_terminal/js/payment_mollie";
 const Registries = require('point_of_sale.Registries');
 
@@ -30,3 +30,14 @@ const PosMolliePayment = (Payment) => class PosMolliePayment extends Payment {
     }
 }
 Registries.Model.extend(Payment, PosMolliePayment);
+
+const PosMollie = (Order) => class PosMollie extends Order {
+    add_paymentline(payment_method) {
+        var result = super.add_paymentline(...arguments);
+        if (payment_method.limit_amount && result) {
+            result.set_amount(payment_method.limit_amount);
+        }
+        return result;
+    }
+}
+Registries.Model.extend(Order, PosMollie);

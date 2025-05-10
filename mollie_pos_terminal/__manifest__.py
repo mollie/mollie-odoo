@@ -1,6 +1,6 @@
 {
     'name': 'Mollie Pos Terminal',
-    'version': '16.0.0.3',
+    'version': '16.0.0.4',
     'description': '',
     'summary': 'Connect your pos with mollie terminal',
     'author': 'Mollie',
@@ -14,6 +14,7 @@
         'security/ir.model.access.csv',
         'views/mollie_pos_terminal_views.xml',
         'views/mollie_pos_terminal_payments_views.xml',
+        'views/pos_mollie_voucher_views.xml',
         'views/res_config_settings_views.xml',
         'views/pos_payment_method_views.xml',
         'wizard/mollie_sync_terminal.xml',
@@ -24,7 +25,9 @@
             'mollie_pos_terminal/static/src/views/*.xml',
         ],
         'point_of_sale.assets': [
-            'mollie_pos_terminal/static/src/js/*'
+            'mollie_pos_terminal/static/src/js/*',
+            'mollie_pos_terminal/static/src/xml/*',
+            'mollie_pos_terminal/static/src/scss/*'
         ],
     },
     'images': [

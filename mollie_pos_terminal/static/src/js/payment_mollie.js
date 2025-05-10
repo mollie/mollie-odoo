@@ -39,6 +39,7 @@ export const PaymentMollie = PaymentInterface.extend({
             'order_id': order.uid,
             'curruncy': this.pos.currency.name,
             'amount': line.amount,
+            'mollie_voucher_category': this.payment_method.mollie_voucher_category,
         }
     },
 
