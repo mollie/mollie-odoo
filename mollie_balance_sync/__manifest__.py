@@ -2,7 +2,7 @@
 
 {
     'name': 'Mollie Balance Sync',
-    'version': '17.0.0.1',
+    'version': '17.0.0.2',
     'description': '',
     'summary': 'This module sync balances from mollie',
     'author': 'Mollie',
