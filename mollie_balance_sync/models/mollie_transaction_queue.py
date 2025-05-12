@@ -76,7 +76,7 @@ class MollieTransactionQueue(models.Model):
         json_info['balance_transaction_id'] = self.balance_transaction_id
         payment_data = self._api_get_transaction_data(json_info)
         if payment_data:
-            if payment_data.get('metadata'):
+            if payment_data.get('metadata') and isinstance(payment_data.get('metadata'), dict):
                 json_info.update(payment_data['metadata'])
             if payment_data.get('orderId'):
                 json_info['mollie_order_id'] = payment_data.get('orderId')
@@ -107,7 +107,7 @@ class MollieTransactionQueue(models.Model):
     def _generate_balance_payment_ref(self, payment_data, tx_type):
         metadata = payment_data.get('metadata') or {}
         ref = ""
-        if metadata.get('reference'):
+        if isinstance(payment_data.get('metadata'), dict) and metadata.get('reference'):
             ref = '-'.join([metadata.get('reference'), tx_type])
             if metadata.get('transaction_id'):
                 ref += '- #' + str(metadata.get('transaction_id'))
