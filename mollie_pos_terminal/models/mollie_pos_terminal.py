@@ -7,6 +7,8 @@ from odoo.exceptions import ValidationError
 
 _logger = logging.getLogger(__name__)
 
+LIST_TERMINAL_PAGER_LIMIT = 250
+
 
 class MolliePosTerminal(models.Model):
     _name = 'mollie.pos.terminal'
@@ -26,12 +28,12 @@ class MolliePosTerminal(models.Model):
 
     def _sync_mollie_terminals(self):
         existing_terminals = self.search([])
-        terminals_data = self._api_get_terminals()  # TODO: manage pager for 250+ terminals
+        terminals_data = self._api_get_terminals()
 
-        if not terminals_data.get('count'):
+        if not terminals_data:
             return
 
-        for terminal in terminals_data['_embedded']['terminals']:
+        for terminal in terminals_data:
             terminal_found = existing_terminals.filtered(lambda x: x.terminal_id == terminal['id'])
             currency = self.env['res.currency'].search([('name', '=', terminal['currency'])])
 
@@ -55,9 +57,17 @@ class MolliePosTerminal(models.Model):
     # API CALLS METHODS
     # =================
 
-    def _api_get_terminals(self):
+    def _api_get_terminals(self, params=None):
         """ Fetch terminals data from mollie api """
-        return self._mollie_api_call('/terminals', method='GET')
+        result = self._mollie_api_call('/terminals', method='GET', params={'limit': LIST_TERMINAL_PAGER_LIMIT, **(params or {})})
+        terminals_data = []
+        if result.get('count') > 0:
+            terminals_data = result['_embedded']['terminals']
+
+        if result.get('count') == LIST_TERMINAL_PAGER_LIMIT:  # Only when pager size is reached
+            last_terminal = terminals_data.pop()  # Mollie Terminal List API's pager also returns terminal given in 'from' parameter so we pop it to avoid duplicates.
+            terminals_data += self._api_get_terminals(params={'from': last_terminal['id']})
+        return terminals_data
 
     def _api_make_payment_request(self, data):
         payment_payload = self._prepare_payment_payload(data)
@@ -128,7 +138,28 @@ class MolliePosTerminal(models.Model):
     # GENERIC TOOLS METHODS
     # =====================
 
-    def _mollie_api_call(self, endpoint, data=None, method='POST', silent=False):
+    def _mollie_generate_querystring(self, params):
+        """ Mollie uses dictionaries in querystrings with square brackets like this
+        https://api.mollie.com/v2/methods?amount[value]=125.91&amount[currency]=EUR
+        :param dict params: parameters which needs to be converted in mollie format
+        :return: querystring in mollie's format
+        :rtype: string
+        """
+        if not params:
+            return None
+        parts = []
+        for param, value in sorted(params.items()):
+            if not isinstance(value, dict):
+                parts.append(urls.url_encode({param: value}))
+            else:
+                # encode dictionary with square brackets
+                for key, sub_value in sorted(value.items()):
+                    composed = f"{param}[{key}]"
+                    parts.append(urls.url_encode({composed: sub_value}))
+        if parts:
+            return "&".join(parts)
+
+    def _mollie_api_call(self, endpoint, data=None, params=None, method='POST', silent=False):
         company = self.company_id or self.env.company
 
         headers = {
@@ -138,11 +169,12 @@ class MolliePosTerminal(models.Model):
 
         endpoint = f'/v2/{endpoint.strip("/")}'
         url = urls.url_join('https://api.mollie.com/', endpoint)
+        querystring_params = self._mollie_generate_querystring(params)
 
         _logger.info('Mollie POS Terminal CALL on: %s', url)
 
         try:
-            response = requests.request(method, url, json=data, headers=headers, timeout=60)
+            response = requests.request(method, url, params=querystring_params, json=data, headers=headers, timeout=60)
             response.raise_for_status()
         except requests.exceptions.HTTPError:
             error_details = response.json()
