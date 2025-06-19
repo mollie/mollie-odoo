@@ -49,6 +49,8 @@ class MolliePosTerminal(models.Model):
             return {}
         mollie_payment = self.search(domain, limit=1)
         if mollie_payment:
+            if mollie_payment.status in ['open', 'pending']:
+                mollie_payment._mollie_process_webhook({'id': mollie_payment.name}, order_type='pos')
             return mollie_payment.mollie_latest_response
         return {}
 

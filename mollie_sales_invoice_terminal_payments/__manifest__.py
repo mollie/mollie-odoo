@@ -2,7 +2,7 @@
 
 {
     'name': 'Mollie Direct Payments Terminal',
-    'version': '18.0.0.0',
+    'version': '18.0.0.2',
     'description': '',
     'summary': 'Pay Sales orders & Invoices seamlessly via Mollie Terminal',
     'author': 'Mollie',
