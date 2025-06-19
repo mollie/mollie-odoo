@@ -50,7 +50,7 @@ class PaymentTransaction(models.Model):
     def _process_notification_data(self, notification_data):
         super()._process_notification_data(notification_data)
 
-        # We post process immediately for invoices
-        if self.provider_code != 'mollie' and not self.terminal_id and not self.payment_method_code == 'pointofsale' and self.invoice_ids:
+        # We post process immediately for terminal payments
+        if self.provider_code != 'mollie' or not self.terminal_id or self.payment_method_code != 'pointofsale':
             return
         self._post_process()
