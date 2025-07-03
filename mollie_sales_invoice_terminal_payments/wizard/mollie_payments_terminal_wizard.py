@@ -39,10 +39,14 @@ class MolliePaymentsTerminalWizard(models.TransientModel):
         if not payment_method:
             raise ValidationError(_('Payment method "Mollie POS" not found.'))
 
-        transaction = self.env['payment.transaction'].sudo().create({
+        PaymentTransaction = self.env['payment.transaction'].sudo()
+        prefix = self.order_id.name if self.order_id else self.move_id.name
+        reference = PaymentTransaction._compute_reference(provider.code, prefix)
+
+        transaction = PaymentTransaction.create({
             'provider_id': provider.id,
             'payment_method_id': payment_method.id,
-            'reference': self.order_id.name if self.order_id else self.move_id.name,
+            'reference': reference,
             'amount': self.amount_total if self.order_id else self.amount_residual,
             'currency_id': self.currency_id.id,
             'partner_id': self.order_id.partner_id.id if self.order_id else self.move_id.partner_id.id,

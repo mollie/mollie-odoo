@@ -53,4 +53,4 @@ class PaymentTransaction(models.Model):
         # We post process immediately for terminal payments
         if self.provider_code != 'mollie' or not self.terminal_id or self.payment_method_code != 'pointofsale':
             return
-        self._post_process()
+        self.filtered(lambda tx: tx.state == 'done')._post_process()
