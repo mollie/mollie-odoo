@@ -9,10 +9,10 @@ class MolliePaymentsTerminalWizard(models.TransientModel):
     _description = 'Mollie Payments Terminal Wizard'
 
     move_id = fields.Many2one('account.move', string='Invoice')
-    amount_residual = fields.Monetary(string='Amount', currency_field='currency_id', related='move_id.amount_residual',
+    amount_residual = fields.Monetary(string='Amount (Residual)', currency_field='currency_id', related='move_id.amount_residual',
                                       readonly=False, store=True)
     order_id = fields.Many2one('sale.order', string='Sale Order')
-    amount_total = fields.Monetary(string='Amount', currency_field='currency_id', related='order_id.amount_total',
+    amount_total = fields.Monetary(string='Amount (Total)', currency_field='currency_id', related='order_id.amount_total',
                                    readonly=False, store=True)
     company_id = fields.Many2one('res.company', string='Company', default=lambda self: self.env.company)
     currency_id = fields.Many2one('res.currency', related='company_id.currency_id', string='Currency', readonly=True)
