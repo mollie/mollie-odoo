@@ -75,7 +75,7 @@
     </record>
 
     <menuitem
-        id="mollie_pos_reminal_menu"
+        id="mollie_pos_terminal_menu"
         name="Mollie Pos Terminal"
         action="mollie_pos_terminal_action"
         parent="point_of_sale.menu_point_config_product"/>

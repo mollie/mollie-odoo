@@ -40,7 +40,7 @@
     </record>
 
     <menuitem
-        id="mollie_pos_reminal_menu"
+        id="mollie_pos_voucher_menu"
         name="POS Mollie Voucher"
         action="pos_mollie_voucher_action"
         parent="point_of_sale.menu_point_config_product" />

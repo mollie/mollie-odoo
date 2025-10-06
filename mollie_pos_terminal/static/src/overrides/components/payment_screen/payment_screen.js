@@ -16,25 +16,6 @@ patch(PaymentScreenPaymentLines, {
 });
 
 patch(PaymentScreen.prototype, {
-    setup() {
-        super.setup(...arguments);
-        onMounted(() => {
-            const pendingPaymentLine = this.currentOrder.payment_ids.find(
-                (paymentLine) =>
-                    paymentLine.payment_method_id.use_payment_terminal === "mollie" &&
-                    !paymentLine.is_done() &&
-                    paymentLine.get_payment_status() !== "pending"
-            );
-            if (!pendingPaymentLine) {
-                return;
-            }
-
-            pendingPaymentLine.payment_method_id.payment_terminal.set_most_recent_mollie_uid(
-                pendingPaymentLine.mollieUID
-            );
-        });
-    },
-
     async _isOrderValid(isForceValidate) {
 
         let mollieLine = this.currentOrder.payment_ids.find(
@@ -66,6 +47,15 @@ patch(PaymentScreen.prototype, {
     },
 
     async addNewPaymentLine(paymentMethod) {
+
+        if (paymentMethod.use_payment_terminal == 'mollie' && this.pos.getPendingPaymentLine("mollie")) {
+            this.dialog.add(AlertDialog, {
+                title: _t("Error"),
+                body: _t("There is already an electronic payment in progress."),
+            });
+            return;
+        }
+
         let refundOrderId = false;
         for (let line of this.currentOrder.lines) {
             refundOrderId = line?.refunded_orderline_id?.raw?.order_id || false;

@@ -56,10 +56,6 @@ export class PaymentMollie extends PaymentInterface {
         await this.handleMollieStatusResponse();
     }
 
-    set_most_recent_mollie_uid(id) {
-        this.most_recent_mollie_uid = id;
-    }
-
     pending_mollie_line() {
         return this.pos.getPendingPaymentLine("mollie");
     }
@@ -123,7 +119,7 @@ export class PaymentMollie extends PaymentInterface {
 
         var data = this._mollie_pay_data(params);
         var line = order.payment_ids.find((paymentLine) => paymentLine.uuid === uuid);
-        line.setMollieUID(this.most_recent_mollie_uid);
+        line.mollie_uid = this.most_recent_mollie_uid;
         return this._submit_mollie_payment(data).then((data) => {
             return this._mollie_handle_response(data);
         });
@@ -150,7 +146,6 @@ export class PaymentMollie extends PaymentInterface {
         }
         line.set_payment_status('waitingCard');
         return this.waitForPaymentConfirmation();
-
     }
 
     waitForPaymentConfirmation() {
@@ -168,9 +163,10 @@ export class PaymentMollie extends PaymentInterface {
         const line = this.pending_mollie_line();
         const paymentStatus = await this.env.services.orm.silent
             .call('mollie.pos.terminal.payments', 'get_mollie_payment_status', [
-                []], {
-                mollie_uid: line.mollieUID
-            })
+            ], {
+                mollie_uid: line.mollie_uid,
+                transaction_id: line.transaction_id
+            });
 
         if (!paymentStatus) {
             this._handle_odoo_connection_failure();

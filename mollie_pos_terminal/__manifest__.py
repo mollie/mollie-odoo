@@ -1,6 +1,6 @@
 {
     'name': 'Mollie Pos Terminal',
-    'version': '18.0.0.4',
+    'version': '18.0.0.5',
     'description': '',
     'summary': 'Connect your pos with mollie terminal',
     'author': 'Mollie',
