@@ -1,7 +1,7 @@
-<p align="center">
+<!-- <p align="center">
   <img src="https://info.mollie.com/hubfs/github/odoo/logo.png" width="128" height="128"/>
-</p>
-<h1 align="center">Mollie addon for Odoo 16</h1>
+</p> -->
+<h1 align="center">Mollie addons for Odoo 19</h1>
 
 ## How to configure
 
@@ -20,4 +20,4 @@ You can install both these requirements by running the following command:
 pip3 install -r requirements.txt
 ```
 
-Learn more about it: https://apps.odoo.com/apps/modules/16.0/payment_mollie_official/
+Learn more about it: https://apps.odoo.com/apps/modules/browse?series=19.0&author=Mollie

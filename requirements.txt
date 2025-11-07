@@ -1,1 +1,1 @@
-phonenumbers==8.10.19
+phonenumbers==8.12.56
