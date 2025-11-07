@@ -1,0 +1,31 @@
+div.o_mollie_issuer_container{
+    label.o_mollie_issuer {
+        cursor: pointer;
+        i.fa {
+            color: map-get($grays, '400');
+        }
+        &.active {
+            i.fa {
+                color: #26c281;
+            }
+        }
+    }
+    .payment_icon_list {
+        @include o-position-absolute($top: 4px, $left: auto, $bottom: auto, $right: 4px);
+    }
+    .payment_option_name {
+        vertical-align: middle;
+    }
+    .mollie_issuer_icon {
+        max-height: 28px !important;
+    }
+}
+
+.mollie_input {
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+    min-height: 40px;
+    > .mollie-component {
+        display: flex;
+    }
+}

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="payment_transaction_form" model="ir.ui.view">
+        <field name="name">Mollie sync Transaction Form</field>
+        <field name="model">payment.transaction</field>
+        <field name="inherit_id" ref="payment.payment_transaction_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='payment_id']" position="after">
+                <field name="mollie_reminder_payment_id" readonly="1" invisible="provider_code != 'mollie' or not mollie_reminder_payment_id"/>
+            </xpath>
+            <xpath expr="//field[@name='provider_reference']" position="after">
+                <field name="mollie_origin_payment_reference" readonly="1" invisible="provider_code != 'mollie' or not mollie_origin_payment_reference"/>
+                <field name="mollie_payment_shipment_reference" readonly="1" invisible="provider_code != 'mollie' or not mollie_payment_shipment_reference"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
