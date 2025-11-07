@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="mollie_pos_terminal_view_form" model="ir.ui.view">
+        <field name="name">mollie.pos.terminal.view.form</field>
+        <field name="model">mollie.pos.terminal</field>
+        <field name="arch" type="xml">
+            <form>
+            <header>
+                <field name="status" widget="statusbar" />
+            </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="toggle_mollie_debug"
+                            invisible="mollie_debug_logging"
+                            class="oe_stat_button"
+                            groups="base.group_no_one"
+                            type="object" icon="fa-code">
+                            <div class="o_stat_info o_field_widget">
+                                <span class="o_stat_text text-danger">No debug</span>
+                            </div>
+                        </button>
+                        <button name="toggle_mollie_debug"
+                            invisible="not mollie_debug_logging"
+                            class="oe_stat_button"
+                            groups="base.group_no_one"
+                            type="object" icon="fa-code">
+                            <div class="o_stat_info o_field_widget">
+                                <span class="text-success">Debug requests</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-exchange" string="Transaction" name="show_form_and_tree" type="object" />
+                    </div>
+                    <div class="oe_title" name="event_type_title">
+                        <h1><field name="name" class="mb-2"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="terminal_id" />
+                            <field name="profile_id" />
+                            <field name="serial_number" />
+                            <field name="mollie_debug_logging" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="currency_id" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="mollie_pos_terminal_view_tree" model="ir.ui.view">
+        <field name="name">mollie.pos.terminal.view.list</field>
+        <field name="model">mollie.pos.terminal</field>
+        <field name="arch" type="xml">
+            <list>
+                <header>
+                    <button name="action_sync_terminals" type="object" class="btn btn-secondary" string="Sync Terminal" display="always" />
+                </header>
+                <field name="name" />
+                <field name="terminal_id" />
+                <field name="profile_id" />
+                <field name="serial_number" />
+                <field name="currency_id" />
+                <field name="status" widget="badge" decoration-info="status == 'pending'" decoration-success="status == 'active'" decoration-danger="status == 'inactive'" />
+            </list>
+        </field>
+    </record>
+
+    <record id="mollie_pos_terminal_action" model="ir.actions.act_window">
+        <field name="name">Mollie Pos Terminals</field>
+        <field name="res_model">mollie.pos.terminal</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem
+        id="mollie_pos_terminal_menu"
+        name="Mollie Pos Terminal"
+        action="mollie_pos_terminal_action"
+        parent="point_of_sale.menu_point_config_product"/>
+
+</odoo>

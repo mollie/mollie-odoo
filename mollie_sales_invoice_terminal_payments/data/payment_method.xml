@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+<record id="payment_method_mollie_terminal" model="payment.method">
+    <field name="name">Mollie terminal</field>
+    <field name="code">pointofsale</field>
+    <field name="sequence">1000</field>
+    <field name="active">False</field>
+    <field name="image" type="base64" file="mollie_sales_invoice_terminal_payments/static/img/method-icon.png"/>
+    <field name="support_tokenization">False</field>
+    <field name="support_express_checkout">False</field>
+    <field name="support_refund">partial</field>
+    <field name="supported_country_ids" eval="[Command.set([
+        ref('base.be'),
+        ref('base.nl'),
+        ref('base.de'),
+        ref('base.at'),
+        ref('base.ch'),
+        ref('base.fr'),
+        ref('base.uk'),
+        ref('base.it'),
+        ref('base.es'),
+        ref('base.pt'),
+        ref('base.se'),
+        ref('base.dk'),
+        ref('base.fi'),
+        ref('base.pl'),
+        ref('base.bg'),
+        ref('base.hr'),
+        ref('base.cy'),
+        ref('base.cz'),
+        ref('base.ee'),
+        ref('base.gr'),
+        ref('base.hu'),
+        ref('base.is'),
+        ref('base.ie'),
+        ref('base.lv'),
+        ref('base.lt'),
+        ref('base.li'),
+        ref('base.lu'),
+        ref('base.mt'),
+        ref('base.ro'),
+        ref('base.sk'),
+        ref('base.si'),
+    ])]" />
+    <field name="supported_currency_ids" eval="[Command.set([
+        ref('base.EUR'),
+    ])]" />
+</record>
+
+</odoo>

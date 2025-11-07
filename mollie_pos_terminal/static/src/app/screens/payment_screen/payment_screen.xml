@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-name="mollie_payment_terminal.PaymentScreen" t-inherit="point_of_sale.PaymentScreen" t-inherit-mode="extension">
+        <xpath expr="//PaymentScreenPaymentLines" position="attributes">
+            <attribute name="sendMollieStatusCheck.bind">sendMollieStatusCheck</attribute>
+        </xpath>
+        <xpath expr="//div[hasclass('main-content')]//PaymentScreenPaymentLines" position="attributes">
+            <attribute name="sendMollieStatusCheck.bind">sendMollieStatusCheck</attribute>
+        </xpath>
+    </t>
+
+    <t t-name="mollie_payment_terminal.PaymentScreenPaymentLines" t-inherit="point_of_sale.PaymentScreenPaymentLines" t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('send_payment_cancel')]/.." position="replace">
+            <div class="d-flex">
+                <div style="cursor: pointer;" t-if="line.payment_method_id.use_payment_terminal == 'mollie'" class="button send_status_check py-3 text-center mx-0 flex-grow-1 text-bg-primary highlight" title="Check Paymet" t-on-click="() => this.props.sendMollieStatusCheck(line)">
+                    Check Status
+                </div>
+                <div style="cursor: pointer;" t-if="line.payment_method_id.use_payment_terminal != 'mollie'" class="button send_force_done py-3 text-center mx-0 flex-grow-1 border" title="Force Done" t-on-click="() => this.props.sendForceDone(line)">
+                    Force done
+                </div>
+                <div style="cursor: pointer;" class="button send_payment_cancel py-3 text-center mx-0 flex-grow-1 border" title="Cancel Payment Request" t-on-click="() => this.props.sendPaymentCancel(line)">
+                    Cancel
+                </div>
+            </div>
+        </xpath>
+    </t>
+
+    <t t-name="PaymentScreenMethods" t-inherit="point_of_sale.PaymentScreenMethods"
+        t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('paymentmethod')]" position="attributes">
+            <attribute name="t-if">pos.checkVoucher(paymentMethod, currentOrder)</attribute>
+        </xpath>
+        <xpath expr="//span[hasclass('text-muted')]" position="attributes">
+            <attribute name="t-if">!paymentMethod.mollie_voucher_category</attribute>
+        </xpath>
+        <xpath expr="//span[hasclass('text-muted')]" position="after">
+            <span class="voucher-amount text-muted" t-elif="paymentMethod.mollie_voucher_category"
+                t-esc="pos.getVoucherAmountDisplayText(paymentMethod, currentOrder)" />
+        </xpath>
+    </t>
+
+</templates>

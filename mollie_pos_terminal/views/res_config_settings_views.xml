@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="res_config_settings_view_form_inherit_mollie_pos_terminal" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="point_of_sale.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <block id="pos_payment_terminals_section" position="inside">
+                <setting id="mollie_payment_terminal_setting" title="The transactions are processed by Mollie. Set your Mollie credentials on the related payment method." string="Mollie" help="Accept payments with a Mollie payment terminal">
+                    <field name="mollie_terminal_api_key" password="True" />
+                    <div invisible="not mollie_terminal_api_key">
+                        <button type="action" name="%(mollie_pos_terminal.mollie_pos_terminal_action)d" icon="fa-arrow-right" class="btn-link">View Terminals</button>
+                    </div>
+                </setting>
+            </block>
+        </field>
+    </record>
+
+</odoo>

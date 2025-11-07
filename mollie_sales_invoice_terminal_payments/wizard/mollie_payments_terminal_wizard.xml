@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="mollie_payments_terminal_wizard_form" model="ir.ui.view">
+        <field name="name">mollie.payments.terminal.wizard.form</field>
+        <field name="model">mollie.payments.terminal.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="terminal_id" required="1"/>
+                            <field name="amount_residual" required="move_id" invisible="not move_id"/>
+                            <field name="amount_total" required="order_id" invisible="not order_id"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="company_id" invisible="1"/>
+                            <field name="move_id" invisible="1"/>
+                            <field name="order_id" invisible="1"/>
+                        </group>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Confirm" class="btn btn-primary" type="object" name="terminal_confirm"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

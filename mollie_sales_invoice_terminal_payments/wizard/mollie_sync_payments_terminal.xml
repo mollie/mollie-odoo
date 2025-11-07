@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="sync_mollie_payments_terminal_view_form" model="ir.ui.view">
+        <field name="name">sync_mollie_payments_terminal_view_form</field>
+        <field name="model">sync.mollie.payments.terminal</field>
+        <field name="arch" type="xml">
+            <form>
+                <div class="text-center" invisible="mollie_api_key and mollie_provider_id">
+                    <i class="fa fa-exclamation-triangle d-inline-block text-danger rounded-circle" title="Warning" style="background: #ffe3e3;padding: 15px;font-size: 20px;" aria-hidden="true"></i>
+                    <h3>Api key is not set.</h3>
+                    <p>Please set api key from sale configuration.</p>
+                </div>
+                <div invisible="not mollie_api_key or not mollie_provider_id">
+                    This operation will sync terminal infromation from mollie.
+                </div>
+                <field name="mollie_api_key" invisible="1"></field>
+                <field name="mollie_provider_id" invisible="1"></field>
+                <footer>
+                    <button string="Sync Now" class="btn btn-primary" type="object" name="sync_now" invisible="not mollie_api_key or not mollie_provider_id"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

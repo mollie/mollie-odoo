@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="mollie_payments_terminal_view_form" model="ir.ui.view">
+        <field name="name">mollie.payments.terminal.view.form</field>
+        <field name="model">mollie.payments.terminal</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <field name="status" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" icon="fa-exchange" string="Transaction" name="show_form_and_tree"
+                                type="object"/>
+                    </div>
+                    <div class="oe_title" name="event_type_title">
+                        <h1>
+                            <field name="name" class="mb-2"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="terminal_id"/>
+                            <field name="profile_id"/>
+                            <field name="serial_number"/>
+                        </group>
+                        <group>
+                            <field name="currency_id"/>
+                            <field name="company_id" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="mollie_payments_terminal_view_list" model="ir.ui.view">
+        <field name="name">mollie.payments.terminal.view.list</field>
+        <field name="model">mollie.payments.terminal</field>
+        <field name="arch" type="xml">
+            <list>
+                <header>
+                    <button name="action_sync_terminal" type="object" string="Sync Terminal" display="always" invisible="not context.get('default_mollie_provider_id', False)"/>
+                </header>
+                <field name="name"/>
+                <field name="terminal_id"/>
+                <field name="profile_id"/>
+                <field name="serial_number"/>
+                <field name="currency_id"/>
+                <field name="company_id" invisible="1"/>
+                <field name="currency_id" invisible="1"/>
+                <field name="status" widget="badge" decoration-info="status == 'pending'"
+                       decoration-success="status == 'active'" decoration-danger="status == 'inactive'"/>
+            </list>
+        </field>
+    </record>
+
+</odoo>

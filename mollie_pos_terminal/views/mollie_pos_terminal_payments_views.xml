@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="mollie_pos_terminal_payments_view_form" model="ir.ui.view">
+        <field name="name">mollie.pos.terminal.payments.view.form</field>
+        <field name="model">mollie.pos.terminal.payments</field>
+        <field name="arch" type="xml">
+            <form>
+            <header>
+                <field name="status" widget="statusbar" />
+            </header>
+                <sheet>
+                    <div class="oe_title" name="event_type_title">
+                        <h1><field name="name" class="mb-2"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="terminal_id" />
+                            <field name="mollie_uid" />
+                            <field name="session_id" />
+                            <field name="parent_payment_id" invisible="not parent_payment_id" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="refund_payment_ids" invisible="not refund_payment_ids" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="mollie_pos_terminal_payments_view_tree" model="ir.ui.view">
+        <field name="name">mollie.pos.terminal.payments.view.list</field>
+        <field name="model">mollie.pos.terminal.payments</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name" />
+                <field name="mollie_uid" />
+                <field name="terminal_id" />
+                <field name="session_id" />
+                <field name="status" widget="badge" decoration-info="status == 'pending'" decoration-danger="status == 'refunded'" decoration-warning="status == 'open'" decoration-success="status == 'paid'" />
+            </list>
+        </field>
+    </record>
+
+    <record id="mollie_pos_terminal_payments_action" model="ir.actions.act_window">
+        <field name="name">Mollie Pos Terminals Payments</field>
+        <field name="res_model">mollie.pos.terminal.payments</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>
