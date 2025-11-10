@@ -10,7 +10,7 @@ class PosSession(models.Model):
         payment_aml = super()._create_split_account_payment(payment, amounts)
         if payment and payment.payment_method_id.use_payment_terminal == 'mollie':
             for aml in payment_aml.move_id.line_ids:
-                aml.name = aml.name + ' - ' + payment.pos_order_id.pos_reference
+                aml.name = aml.name + ' - ' + payment.pos_order_id.pos_reference if payment.pos_order_id.pos_reference else ""
         return payment_aml
 
     @api.model
