@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="sync_mollie_statement_line_view_form" model="ir.ui.view">
+        <field name="name">sync_mollie_statement_line_view_form</field>
+        <field name="model">sync.mollie.statement.line</field>
+        <field name="arch" type="xml">
+            <form>
+                <div class="text-center" invisible="remaining_mollie_transaction_count">
+                    <i class="fa fa-exclamation-triangle d-inline-block text-danger rounded-circle" style="background: #ffe3e3;padding: 15px;font-size: 20px;" aria-hidden="true"></i>
+                    <p>No record found in queue for generate statement line.</p>
+                </div>
+                <div invisible="not remaining_mollie_transaction_count">
+                    This operation will generate <field name="remaining_mollie_transaction_count" readonly="1"/> statement lines from mollie transaction queue.
+                </div>
+                <footer>
+                    <button string="Sync Now" class="btn btn-primary" type="object" name="sync_now" invisible="not remaining_mollie_transaction_count"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

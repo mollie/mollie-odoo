@@ -1,0 +1,38 @@
+<?xml version="1.0" ?>
+<templates id="balance_payment_template" xml:space="preserve">
+
+    <t t-name="drg_balance_payment_info" owl="1">
+        <Dialog title="'Information'" footer="false">
+            <table class="table table-bordered">
+                <tbody>
+                    <t t-call="drg_balance_payment_info_line">
+                        <t t-set="data" t-value="tableVal"/>
+                    </t>
+                </tbody>
+            </table>
+        </Dialog>
+    </t>
+
+    <t t-name="drg_balance_payment_info_line" owl="1">
+        <t t-foreach="data" t-as="d" t-key="d_index">
+            <t t-if="typeof data[d] === 'object' &amp;&amp; data[d] !== null">
+                <t t-call="drg_balance_payment_info">
+                    <t t-set="data" t-value="data[d]"/>
+                </t>
+            </t>
+            <t t-else="">
+                <tr>
+                    <td>
+                        <strong>
+                            <t t-esc="this.formatCamelCase(d)"/>
+                        </strong>
+                    </td>
+                    <td>
+                        <t t-esc="data[d]"/>
+                    </td>
+                </tr>
+            </t>
+        </t>
+    </t>
+
+</templates>
