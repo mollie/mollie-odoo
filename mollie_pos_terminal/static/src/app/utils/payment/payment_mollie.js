@@ -132,9 +132,6 @@ export class PaymentMollie extends PaymentInterface {
      */
     _mollie_handle_response(response) {
         var line = this.pending_mollie_line();
-        if (response._links.changePaymentState) {
-            window.open(response._links.changePaymentState.href, '_blank');
-        }
 
         // manage refunds
         if (response.status == 'pending' && line.amount < 0) {
