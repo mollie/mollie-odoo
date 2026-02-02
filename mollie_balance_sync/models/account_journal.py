@@ -46,27 +46,45 @@ class AccountJournal(models.Model):
         available_sources.append(("mollie_balance_sync", _("Mollie Balance Synchronization")))
         return available_sources
 
+    def _api_get_balances(self, params=None):
+        """ Fetch balances data from mollie api """
+        result = self._mollie_api_server_call('/balances', params={'limit': LIMIT, **(params or {})})
+        balances_data = []
+        if result.get('count') > 0:
+            balances_data = result['_embedded']['balances']
+
+        if result.get('count') == LIMIT:  # Only when pager size is reached
+            last_terminal = balances_data.pop()  # Mollie Balance List API's pager also returns balances given in 'from' parameter so we pop it to avoid duplicates.
+            balances_data += self._api_get_balances(params={'from': last_terminal['id']})
+        return balances_data
+
     def action_sync_mollie_balance_account(self):
         """ This method fetches balance account details from the mollie and
         Creates `mollie.balance.account` record in odoo"""
 
-        list_balances = self._mollie_api_server_call('/balances')
-        if not list_balances.get('count'):
+        list_balances = self._api_get_balances()
+        if not list_balances:
             return
 
         mollie_balance_accounts = []
         BalanceAccount = self.env['mollie.balance.account']
-        existing_mollie_balance_accounts = BalanceAccount.search([('journal_id', '=', self.id)]).mapped('balance_id')
-        for balance_acc in list_balances['_embedded']['balances']:
-            if balance_acc['id'] not in existing_mollie_balance_accounts and balance_acc.get('transferDestination'):
+        existing_mollie_balance_accounts = BalanceAccount.search([('journal_id', '=', self.id)])
+        for balance_acc in list_balances:
+            if balance_acc.get('transferDestination'):
                 transferDestination = balance_acc['transferDestination']
-                mollie_balance_accounts.append({
-                    'name': transferDestination['beneficiaryName'],
-                    'bank_account_number': transferDestination['bankAccount'],
-                    'bank_account_id': transferDestination.get('bankAccountId') or '',
-                    'balance_id': balance_acc['id'],
-                    'journal_id': self.id
-                })
+                balance_account_match = existing_mollie_balance_accounts.filtered(lambda l: l.balance_id == balance_acc['id'])
+                if not balance_account_match:
+                    mollie_balance_accounts.append({
+                        'name': f"{transferDestination['beneficiaryName']} - {balance_acc['description']}",
+                        'bank_account_number': transferDestination['bankAccount'],
+                        'bank_account_id': transferDestination.get('bankAccountId') or '',
+                        'balance_id': balance_acc['id'],
+                        'journal_id': self.id
+                    })
+                else:
+                    balance_account_match.write({
+                        'name': f"{transferDestination['beneficiaryName']} - {balance_acc['description']}",
+                    })
         if mollie_balance_accounts:
             BalanceAccount.create(mollie_balance_accounts)
 
@@ -136,10 +154,14 @@ class AccountJournal(models.Model):
                 amount = float(transaction['initialAmount']['value'])
 
                 if transaction.get('deductions'):
+                    deduction_type = 'deductions'
+                    # Set deduction type to 'reserve' if it exceeds 10% of the initial amount
+                    if abs(float(transaction['deductions']['value'])) > 0.10 * float(transaction['initialAmount']['value']):
+                        deduction_type = 'reserve'
                     transaction_lines += [{
                         'balance_transaction_id': transaction['id'],
                         'transaction_date': transaction_date,
-                        'payment_ref': ' '.join(['deductions :', transaction['type'], '#' + transaction_id]),
+                        'payment_ref': ' '.join([deduction_type + ' :', transaction['type'], '#' + transaction_id]),
                         'amount': float(transaction['deductions']['value']),
                         'transaction_id': transaction_id,
                         'journal_id': self.id
@@ -231,7 +253,28 @@ class AccountJournal(models.Model):
             api_key += 'Bearer '
         return api_key + self.mollie_api_key
 
-    def _mollie_api_server_call(self, endpoint):
+    def _mollie_generate_querystring(self, params):
+        """ Mollie uses dictionaries in querystrings with square brackets like this
+        https://api.mollie.com/v2/methods?amount[value]=125.91&amount[currency]=EUR
+        :param dict params: parameters which needs to be converted in mollie format
+        :return: querystring in mollie's format
+        :rtype: string
+        """
+        if not params:
+            return None
+        parts = []
+        for param, value in sorted(params.items()):
+            if not isinstance(value, dict):
+                parts.append(urls.url_encode({param: value}))
+            else:
+                # encode dictionary with square brackets
+                for key, sub_value in sorted(value.items()):
+                    composed = f"{param}[{key}]"
+                    parts.append(urls.url_encode({composed: sub_value}))
+        if parts:
+            return "&".join(parts)
+
+    def _mollie_api_server_call(self, endpoint, params=None):
         """
         :param endpoint str: The endpoint to be reached by the request
         :rtype: dict
@@ -240,6 +283,7 @@ class AccountJournal(models.Model):
         self.ensure_one()
         endpoint = f'/v2/{endpoint.strip("/")}'
         url = urls.url_join('https://api.mollie.com/', endpoint)
+        querystring_params = self._mollie_generate_querystring(params)
         headers = {
             'content-type': 'application/json',
             'Authorization': self._get_mollie_api_key()
@@ -247,7 +291,7 @@ class AccountJournal(models.Model):
         _logger.info('Mollie SYNC CALL on: %s', endpoint)
 
         try:
-            req = requests.get(url, timeout=TIMEOUT, headers=headers)
+            req = requests.get(url, params=querystring_params, timeout=TIMEOUT, headers=headers)
             req.raise_for_status()
             return req.json()
         except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
