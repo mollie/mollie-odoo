@@ -14,17 +14,15 @@ patch(PosStore.prototype, {
         });
     },
     getVoucherAmounts(pm, order) {
-        const taxIncluded = order.config_id.iface_tax_included === "total";
         const voucherAmount = order.get_orderlines().reduce((sum, line) =>
             line.product_id.mollie_voucher_category === pm.mollie_voucher_category
-                ? sum + (taxIncluded ? line.price_subtotal_incl : line.price_subtotal)
+                ? sum + (line.get_price_with_tax())
                 : sum, 0);
 
         const totalPaid = order.payment_ids.reduce((sum, payment) =>
             payment.payment_method_id.id === pm.id && payment.payment_status === 'done'
                 ? sum + payment.amount
                 : sum, 0);
-
         return { voucherAmount, totalPaid };
     },
     getVoucherAmountDisplayText(pm, order) {

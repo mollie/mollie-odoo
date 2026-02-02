@@ -16,6 +16,32 @@ patch(PaymentScreenPaymentLines, {
 });
 
 patch(PaymentScreen.prototype, {
+    onMounted() {
+        super.onMounted();
+        this.getMolliePendingPaymentLine();
+    },
+    /**
+     * getMolliePendingPaymentLine
+     * Checks and retrieves the pending Mollie payment line from all the orders.
+     */
+    getMolliePendingPaymentLine() {
+        const paymentLine = this.pos.getPendingPaymentLine("mollie");
+        this.pos.paymentTerminalInProgress = Boolean(paymentLine);
+    },
+
+    async sendPaymentRequest(line) {
+        await super.sendPaymentRequest(...arguments);
+        this.getMolliePendingPaymentLine();
+    },
+
+    deletePaymentLine(uuid) {
+        const line = this.paymentLines.find((line) => line.uuid === uuid);
+        if (line.payment_method_id.use_payment_terminal === "mollie") {
+            this.pos.paymentTerminalInProgress = false;
+        }
+        return super.deletePaymentLine(...arguments);
+    },
+
     async _isOrderValid(isForceValidate) {
 
         let mollieLine = this.currentOrder.payment_ids.find(
@@ -28,7 +54,11 @@ patch(PaymentScreen.prototype, {
             && mollieLine.payment_method_id.mollie_payment_default_partner
             && !this.currentOrder.get_partner()) {
             var partner = mollieLine.payment_method_id.mollie_payment_default_partner['id']
+            var pricelist = this.currentOrder.pricelist_id;
             this.currentOrder.set_partner(partner);
+            if (pricelist) {
+                this.currentOrder.set_pricelist(pricelist);
+            }
         }
 
         return super._isOrderValid(...arguments)
@@ -47,14 +77,6 @@ patch(PaymentScreen.prototype, {
     },
 
     async addNewPaymentLine(paymentMethod) {
-
-        if (paymentMethod.use_payment_terminal == 'mollie' && this.pos.getPendingPaymentLine("mollie")) {
-            this.dialog.add(AlertDialog, {
-                title: _t("Error"),
-                body: _t("There is already an electronic payment in progress."),
-            });
-            return;
-        }
 
         let refundOrderId = false;
         for (let line of this.currentOrder.lines) {

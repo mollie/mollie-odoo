@@ -4,7 +4,7 @@ import psycopg2
 import requests
 from werkzeug import urls
 
-from odoo import fields, models, _, api, SUPERUSER_ID
+from odoo import fields, models, service, _, api, SUPERUSER_ID
 from odoo.exceptions import ValidationError
 from odoo.modules.registry import Registry
 
@@ -209,16 +209,21 @@ class MolliePosTerminal(models.Model):
             return "&".join(parts)
 
     def _mollie_api_call(self, endpoint, data=None, params=None, method='POST', silent=False):
-        company = self.company_id or self.env.company
-
-        headers = {
-            'content-type': 'application/json',
-            "Authorization": f'Bearer {company.mollie_terminal_api_key}',
-        }
 
         endpoint = f'/v2/{endpoint.strip("/")}'
         url = urls.url_join('https://api.mollie.com/', endpoint)
         querystring_params = self._mollie_generate_querystring(params)
+
+        # User agent strings used by mollie to find issues in integration
+        odoo_version = service.common.exp_version()['server_version']
+        mollie_extended_app_version = self.env.ref('base.module_mollie_pos_terminal').installed_version
+
+        company = self.company_id or self.env.company
+        headers = {
+            'content-type': 'application/json',
+            "Authorization": f'Bearer {company.mollie_terminal_api_key}',
+            "User-Agent": f'Odoo/{odoo_version} MolliePOSOdoo/{mollie_extended_app_version}',
+        }
 
         _logger.info('Mollie POS Terminal CALL on: %s', url)
 

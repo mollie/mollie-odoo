@@ -1,6 +1,6 @@
 {
     'name': 'Mollie Pos Terminal',
-    'version': '18.0.0.5',
+    'version': '18.0.0.6',
     'description': '',
     'summary': 'Connect your pos with mollie terminal',
     'author': 'Mollie',
@@ -17,6 +17,7 @@
         'views/pos_mollie_voucher_views.xml',
         'views/res_config_settings_views.xml',
         'views/pos_payment_method_views.xml',
+        'views/pos_payment_views.xml',
         'wizard/mollie_sync_terminal.xml',
     ],
     'assets': {

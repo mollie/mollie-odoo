@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pos_make_payment_mollie_inherit" model="ir.ui.view">
+        <field name="name">pos.make.payment.view.form.inherit</field>
+        <field name="model">pos.make.payment</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_payment"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='payment_name']" position="after">
+                <field name="use_payment_terminal" invisible="1" />
+                <field name="mollie_transaction_id" invisible="1" />
+                <!-- Show Mollie refund checkbox only when payment method is Mollie -->
+                <field name="refund_via_mollie"
+                    invisible="use_payment_terminal != 'mollie'"
+                />
+                <!-- Show max refund amount when checkbox is ticked and we have a value -->
+                <field name="mollie_max_refund_amount" readonly="1" force_save="1"
+                    invisible="not refund_via_mollie or mollie_max_refund_amount == 0" />
+                <!-- Show error message if there's an issue -->
+                <field name="mollie_refund_error" readonly="1" force_save="1"
+                    invisible="not refund_via_mollie or not mollie_refund_error"
+                    decoration-danger="mollie_refund_error" />
+            </xpath>
+        </field>
+    </record> 
+</odoo>

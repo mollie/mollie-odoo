@@ -32,18 +32,21 @@ export class PaymentMollie extends PaymentInterface {
      */
     async send_payment_cancel(order, uuid) {
 
-        this.env.services.dialog.add(ConfirmationDialog, {
-            title: _t('Cancel mollie payment'),
-            body: _t('First cancel transaction on POS device. Only use force cancel if that fails'),
-            confirmLabel: _t('Force Cancel'),
-            confirm: () => {
-                super.send_payment_cancel(...arguments);
-                const paymentLine = this.pending_mollie_line();
-                paymentLine.set_payment_status('retry');
-                return true;
-            },
-            cancelLabel: _t('Discard'),
-            cancel: () => { },
+        return new Promise((resolve) => {
+            this.env.services.dialog.add(ConfirmationDialog, {
+                title: _t('Cancel mollie payment'),
+                body: _t('First cancel transaction on POS device. Only use force cancel if that fails'),
+                confirmLabel: _t('Force Cancel'),
+                confirm: () => {
+                    super.send_payment_cancel(...arguments);
+                    const paymentLine = this.pending_mollie_line();
+                    paymentLine.set_payment_status('retry');
+                    resolve(true);
+                    return true;
+                },
+                cancelLabel: _t('Discard'),
+                cancel: () => { resolve(false); },
+            });
         });
     }
 
@@ -87,7 +90,7 @@ export class PaymentMollie extends PaymentInterface {
         return {
             ...params,
             'mollie_uid': this.most_recent_mollie_uid,
-            'description': order.name,
+            'description': _t("Order %s", order.pos_reference),
             'order_id': order.uuid,
             'curruncy': this.pos.currency.name,
             'amount': line.amount,
