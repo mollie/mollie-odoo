@@ -8,7 +8,7 @@ class PaymentCaptureWizard(models.TransientModel):
     _inherit = 'payment.capture.wizard'
 
     mollie_wizard_line_ids = fields.One2many('mollie.payment.capture.wizard.line', 'wizard_id', string='Wizard Line', compute='_compute_mollie_wizard_lines', readonly=False, store=True)
-    mollie_amount_to_capture = fields.Monetary(compute='_compute_mollie_amount_to_capture', string='Amount To Capture')
+    mollie_amount_to_capture = fields.Monetary(compute='_compute_mollie_amount_to_capture', string='Amount To Capture (Mollie)')
 
     @api.depends('mollie_wizard_line_ids')
     def _compute_mollie_amount_to_capture(self):
