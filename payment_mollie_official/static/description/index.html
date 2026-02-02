@@ -251,6 +251,23 @@
 
 <div class="card mx-auto w-md-75">
     <div class="card-header bg-200">
+        <h4 class="m-0">v18.0.0.2</h4>
+    </div>
+    <div class="card-body">
+        <div> <b class="text-success"> NEW </b> Removed Order API (soon to be deprecated) and now it works using only Payment API.</div>
+        <div> <b class="text-success"> NEW </b> Added Capture support </div>
+        <div> <b class="text-warning"> UPDATE </b> Improved partial capture handling by restricting unsupported methods and voiding any remaining balance from the Mollie dashboard. </div>
+        <div> <b class="text-warning"> UPDATE </b> Improved the sale and invoice line preparation logic for Mollie payments. </div>
+        <div> <b class="text-warning"> UPDATE </b> Improved transaction lookup by updating the Mollie search domain. </div>
+        <div> <b class="text-danger"> FIX </b> Minor Fixes. </div>
+        <div> <b class="text-danger"> <i class="fa fa-exclamation-triangle" aria-hidden="true"></i> REMOVED </b> Shipping API Wizard (replaced by capture API). </div>
+        <div> <b class="text-danger"> <i class="fa fa-exclamation-triangle" aria-hidden="true"></i> REMOVED </b> Auto capture shipment - Use capture wizard on sale order (like default Odoo)</div>
+        <div> <b class="text-danger"> <i class="fa fa-exclamation-triangle" aria-hidden="true"></i> REMOVED </b> Auto update delivered quantity action </div>
+    </div>
+</div>
+
+<div class="card mx-auto w-md-75">
+    <div class="card-header bg-200">
         <h4 class="m-0">v18.0.0.1</h4>
     </div>
     <div class="card-body">

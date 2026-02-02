@@ -25,6 +25,8 @@ class PaymentProviderMollie(models.Model):
     mollie_use_components = fields.Boolean(string='Mollie Components', default=True)
     mollie_show_save_card = fields.Boolean(string='Single-Click payments')
     mollie_debug_logging = fields.Boolean('Debug logging', help="Log requests in order to ease debugging")
+
+    # TODO: Deprecated field, not used anywhere, removed in future
     mollie_auto_capture = fields.Boolean('Auto Capture')
     mollie_set_delivery_line_qty = fields.Boolean('Set Delivery Line Qty')
     mollie_automation_action_id = fields.Many2one('base.automation', string='Automation Action')
@@ -53,38 +55,6 @@ class PaymentProviderMollie(models.Model):
                     })
             except psycopg2.Error:
                 pass
-
-    # -----------------
-    # AUTOMATION ACTION
-    # -----------------
-
-    def create_delivered_qty_action(self):
-        if self.env.ref('base.module_stock').state != 'installed':
-            raise ValidationError('Install "Inventory" module for automatically set delivered quantity.')
-        picking_model_id = self.env.ref('stock.model_stock_picking').id
-        self.mollie_automation_action_id = self.env['base.automation'].create({
-            'name': 'Set Shipping line Delivered Quantity',
-            'active': True,
-            'trigger': 'on_create_or_write',
-            'filter_pre_domain': "['&', ('picking_type_code', '=', 'outgoing'), ('state', '!=', 'done')]",
-            'filter_domain': "['&', ('picking_type_code', '=', 'outgoing'), ('state', '=', 'done')]",
-            'model_id': picking_model_id,
-            'action_server_ids': [Command.create({
-                'name': 'Test',
-                'state': 'code',
-                'model_id': picking_model_id,
-                'code': """
-for transfer in records:
-    delivery_line = transfer.sale_id.order_line.filtered(lambda line:line.is_delivery and not line.qty_delivered)
-    if delivery_line and delivery_line.product_id.service_type == 'manual':
-        delivery_line.write({'qty_delivered': 1})
-"""
-            })]
-        }).id
-
-    def unlink_delivered_qty_action(self):
-        if self.mollie_automation_action_id:
-            self.mollie_automation_action_id.unlink()
 
     # ----------------
     # PAYMENT FEATURES
@@ -152,7 +122,7 @@ for transfer in records:
 
         try:
             response = requests.request(method, url, params=querystring_params, data=json_data, headers=headers, timeout=60)
-            if response.status_code == 204:
+            if response.status_code in [204, 202]:
                 return True  # returned no content
             result = response.json()
             if response.status_code not in [200, 201]:  # doc reference https://docs.mollie.com/overview/handling-errors
@@ -194,16 +164,14 @@ for transfer in records:
                 result[method['id']] = method
         return result
 
-    def _api_mollie_create_payment_record(self, api_type, payment_data, params=None, silent_errors=False):
-        """ Create the payment records on the mollie. It calls payment or order
-        API based on 'api_type' param.
+    def _api_mollie_create_payment_record(self, payment_data, params=None, silent_errors=False):
+        """ Create the payment records on the mollie.
         :param str api_type: api is selected based on this parameter
         :param dict payment_data: payment data
         :return: details of created payment record
         :rtype: dict
         """
-        endpoint = '/orders' if api_type == 'order' else '/payments'
-        return self._mollie_make_request(endpoint, data=payment_data, params=params, method="POST", silent_errors=silent_errors)
+        return self._mollie_make_request('/payments', data=payment_data, params=params, method="POST", silent_errors=silent_errors)
 
     def _api_mollie_get_payment_data(self, transaction_reference, force_payment=False):
         """ Fetch the payment records based `transaction_reference`. It is used
@@ -213,6 +181,8 @@ for transfer in records:
         :rtype: dict
         """
         mollie_data = {}
+
+        # Order API deprecated remove the order support in future version
         if transaction_reference.startswith('ord_'):
             mollie_data = self._mollie_make_request(f'/orders/{transaction_reference}', params={'embed': 'payments'}, method="GET")
         if transaction_reference.startswith('tr_'):    # This is not used
@@ -275,23 +245,20 @@ for transfer in records:
         """
         return self._mollie_make_request(f'/payments/{payment_reference}/captures', method="GET")
 
-    def _api_mollie_sync_shipment(self, order_reference, shipment_data):
+    def _api_mollie_sync_capture(self, order_reference, capture_data):
         """ Capture amount from mollie
-        update delivered quantity
         :param str order_reference: order record reference
-        :param dict payment_data: delivered quantity data
+        :param dict capture_data: captured amount data
 
         """
-        return self._mollie_make_request(f'/orders/{order_reference}/shipments', data=shipment_data, method="POST", silent_errors=True)
+        return self._mollie_make_request(f'/payments/{order_reference}/captures', data=capture_data, method="POST")
 
-    def _api_mollie_cancel_remaining_shipment(self, order_reference, data):
-        """ cancel remaining shipment on the mollie.
+    def _api_mollie_void_remaining_payment(self, order_reference):
+        """ Void remaining amount from mollie
         :param str order_reference: order record reference
-        :param dict data: shipment data for cancel.
-        :return: details of Order
-        :rtype: dict
+
         """
-        return self._mollie_make_request(f'/orders/{order_reference}/lines', data=data, method="DELETE", silent_errors=True)
+        return self._mollie_make_request(f'/payments/{order_reference}/release-authorization', method="POST")
 
     # -------------------------
     # Helper methods for mollie

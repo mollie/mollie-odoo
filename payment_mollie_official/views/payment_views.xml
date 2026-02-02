@@ -51,17 +51,6 @@
                     </div>
                 </button>
             </xpath>
-            <xpath expr="//group[@name='payment_form']" position="inside">
-                <field name="mollie_auto_capture" invisible="code != 'mollie'" />
-                <field name="mollie_automation_action_id" invisible="1" nolabel="1"/>
-                <label class="o_form_label" for="mollie_automation_action_id" string="Auto update delivered quantity" invisible="code != 'mollie'"/>
-                <div invisible="code != 'mollie'">
-                    <button type="object" class="btn btn-secondary" name="create_delivered_qty_action" invisible="mollie_automation_action_id">Enable</button>
-                    <button type="object" class="btn btn-secondary" name="unlink_delivered_qty_action" invisible="not mollie_automation_action_id">Disable</button>
-                    <br/>
-                    <small class="text-muted">Set delivered quantity in shipping line when delivery Orders are done.</small>
-                </div>
-            </xpath>
         </field>
     </record>
 
