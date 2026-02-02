@@ -303,7 +303,6 @@ class PaymentTransaction(models.Model):
                 lines = self._mollie_get_invoice_lines(invoice)
 
             payment_data.update({
-                'billingAddress': self._prepare_mollie_address(),
                 'lines': lines
             })
 
@@ -316,12 +315,14 @@ class PaymentTransaction(models.Model):
                 lines = self._mollie_get_order_lines(order)
 
             payment_data.update({
-                'billingAddress': self._prepare_mollie_address(),
                 'lines': lines,
             })
         else:
             # Payment api parameters
             payment_data['description'] = self.reference
+
+        if (self.invoice_ids or self.sale_order_ids) and self.payment_method_code in const.BILLING_ADDRESS_REQUIRED_METHODS:
+            payment_data['billingAddress'] = self._prepare_mollie_address()
 
         # Mollie rejects some local ips/URLs
         # https://help.mollie.com/hc/en-us/articles/213470409
@@ -412,7 +413,7 @@ class PaymentTransaction(models.Model):
                 category = line.product_id.product_tmpl_id._get_mollie_voucher_category()
                 if category:
                     line_data.update({
-                        'categories': [category[0]]
+                        'categories': category
                     })
             lines.append(line_data)
         return lines

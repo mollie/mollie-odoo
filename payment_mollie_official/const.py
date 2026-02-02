@@ -16,3 +16,6 @@ NON_PARTIAL_PAYMENT_METHODS = ['billie', 'in3', 'klarna', 'riverty', 'voucher']
 
 # Payment methods that require multiple captures
 MULTI_CAPTURE_METHODS = ['klarna', 'billie']
+
+# Billing Address Requirement for specific payment methods
+BILLING_ADDRESS_REQUIRED_METHODS = ['klarna', 'billie', 'riverty', 'in3']

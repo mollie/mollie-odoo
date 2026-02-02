@@ -14,10 +14,9 @@ patch(PosStore.prototype, {
         });
     },
     getVoucherAmounts(pm, order) {
-        const taxIncluded = this.config.iface_tax_included === "total";
         const voucherAmount = order.getOrderlines().reduce((sum, line) =>
             line.product_id.mollie_voucher_category === pm.mollie_voucher_category
-                ? sum + (taxIncluded ? line.priceIncl : line.priceExcl)
+                ? sum + (line.priceIncl)
                 : sum, 0);
 
         const totalPaid = order.payment_ids.reduce((sum, payment) =>

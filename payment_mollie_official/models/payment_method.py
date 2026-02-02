@@ -140,26 +140,53 @@ class PaymentMethod(models.Model):
 
         is_partial_payment = False
 
-        amount_payment_link = float(request.params.get('amount', '0'))  # for payment links
+
         if kwargs.get('sale_order_id'):
             order_sudo = self.env['sale.order'].browse(kwargs['sale_order_id']).sudo()
-            extra_params['amount'] = {'value': "%.2f" % (amount_payment_link or order_sudo.amount_total), 'currency': order_sudo.currency_id.name}
+
+            # payment_amount attribute is sent when user is paying via payment links. In that case payment amount is different than order amount.
+            payment_amount = float(request.params.get('payment_amount')) if request.params.get('payment_amount') else False
+            extra_params['amount'] = {'value': "%.2f" % (payment_amount or order_sudo.amount_total), 'currency': order_sudo.currency_id.name}
+
             if order_sudo.partner_invoice_id.country_id:
                 extra_params['billingCountry'] = order_sudo.partner_invoice_id.country_id.code
 
-            if amount_payment_link and order_sudo.amount_total != amount_payment_link:
+            # ------------------ Check for partial payment ------------------
+
+
+            # amount_selection attribute is sent when user use downpayment option to pay partial amount.
+            is_downpayment = False
+
+            # if payment_amount is that means it is payment link or partial payment via downpayment option
+            if payment_amount:
+                if payment_amount < order_sudo.amount_total:
+                    is_partial_payment = True
+
+            # sent when downpayent option manually selected in portal
+            amount_selection = request.params.get('amount_selection') if request else None
+            if amount_selection == 'down_payment':
+                is_downpayment = True
                 is_partial_payment = True
+            elif amount_selection == 'full_amount' and payment_amount != order_sudo.amount_total:
+                extra_params['amount'] = {'value': "%.2f" % (order_sudo.amount_total), 'currency': order_sudo.currency_id.name} # reset payment amount to full amount
+                is_partial_payment = False
+
+            # Default case for partial payment (when portal page is loaded first time)
+            needs_prepayment = order_sudo.prepayment_percent and order_sudo.prepayment_percent != 1.0
+            if not payment_amount and not amount_selection and needs_prepayment:
+                is_partial_payment = True
+                is_downpayment = True
 
             has_voucher_line = order_sudo.mapped('order_line.product_id.product_tmpl_id')._get_mollie_voucher_category()
-            # we will not use order api if it is downpayment also we will user downpayment amount
-            if request and request.params.get('downpayment') == 'true':
+
+            if is_downpayment:
                 extra_params['amount'] = {'value': "%.2f" % order_sudo._get_prepayment_required_amount(), 'currency': order_sudo.currency_id.name}
-            elif all(line.product_uom_qty % 1 == 0 for line in order_sudo.order_line):
-                extra_params['resource'] = 'orders'
 
         if not kwargs.get('sale_order_id') and request and request.params.get('invoice_id'):
             invoice_id = request.params.get('invoice_id')
             invoice = self.env['account.move'].sudo().browse(int(invoice_id))
+
+            amount_payment_link = float(request.params.get('amount', '0'))  # for payment links
             if invoice.exists():
                 extra_params['amount'] = {'value': "%.2f" % (amount_payment_link or invoice.amount_residual), 'currency': invoice.currency_id.name}
                 if invoice.partner_id.country_id:
