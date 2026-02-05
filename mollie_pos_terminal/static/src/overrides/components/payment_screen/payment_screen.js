@@ -41,7 +41,11 @@ patch(PaymentScreen.prototype, {
             && mollieLine.payment_method.mollie_payment_default_partner
             && !this.currentOrder.get_partner()) {
             var partner = this.pos.db.get_partner_by_id(mollieLine.payment_method.mollie_payment_default_partner[0]);
+            var pricelist = this.currentOrder.pricelist;
             this.currentOrder.set_partner(partner);
+            if (pricelist) {
+                this.currentOrder.set_pricelist(pricelist);
+            }
         }
 
         return super._isOrderValid(...arguments)
@@ -62,7 +66,7 @@ patch(PaymentScreen.prototype, {
     getVoucherAmounts(pm, order) {
         const voucherAmount = round_pr(order.get_orderlines().reduce((sum, line) =>
             line.product.mollie_voucher_category === pm.mollie_voucher_category
-                ? sum + (line.get_display_price())
+                ? sum + (line.get_price_with_tax())
                 : sum, 0), this.pos.currency.rounding);
 
         const totalPaid = round_pr(order.paymentlines.reduce((sum, payment) =>

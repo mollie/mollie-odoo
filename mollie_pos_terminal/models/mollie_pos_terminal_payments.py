@@ -45,6 +45,8 @@ class MolliePosTerminal(models.Model):
             return {}
         mollie_payment = self.search(domain, limit=1)
         if mollie_payment:
+            if mollie_payment.status in ['open', 'pending']:
+                mollie_payment._mollie_process_webhook({'id': mollie_payment.name}, order_type='pos', notify=False)
             return mollie_payment.mollie_latest_response
         return {}
 
@@ -62,7 +64,7 @@ class MolliePosTerminal(models.Model):
             return mollie_payment.terminal_id._api_cancel_mollie_payment(mollie_payment.name)
         return {}
 
-    def _mollie_process_webhook(self, webhook_data, order_type='pos'):
+    def _mollie_process_webhook(self, webhook_data, order_type='pos', notify=True):
         mollie_payment = self.sudo().search([('name', '=', webhook_data.get('id'))], limit=1)
         if mollie_payment:
             payment_status = mollie_payment.terminal_id._api_get_mollie_payment_status(webhook_data.get('id'))
@@ -71,4 +73,5 @@ class MolliePosTerminal(models.Model):
                     'mollie_latest_response': payment_status,
                     'status': payment_status.get('status')
                 })
-                self.env["bus.bus"].sudo()._sendone(mollie_payment.session_id._get_bus_channel_name(), "MOLLIE_TERMINAL_RESPONSE", mollie_payment.session_id.config_id.id)
+                if notify:
+                    self.env["bus.bus"].sudo()._sendone(mollie_payment.session_id._get_bus_channel_name(), "MOLLIE_TERMINAL_RESPONSE", mollie_payment.session_id.config_id.id)

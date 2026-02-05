@@ -2,7 +2,7 @@ import logging
 import requests
 from werkzeug import urls
 
-from odoo import fields, models, _
+from odoo import fields, models, service, _
 from odoo.exceptions import ValidationError
 
 _logger = logging.getLogger(__name__)
@@ -75,6 +75,12 @@ class MolliePosTerminal(models.Model):
         self.env['mollie.pos.terminal.payments']._create_mollie_payment_request(result, {**data, 'terminal_id': self.id})
         return result
 
+    def _api_make_refund_request(self, data):
+        refund_payload, mollie_origin_transaction_id = self._prepare_refund_payload(data)
+        result = self._mollie_api_call(f'/payments/{mollie_origin_transaction_id}/refunds', data=refund_payload, method='POST', silent=True)
+        self.env['mollie.pos.terminal.payments']._create_mollie_payment_request(result, {**data, 'terminal_id': self.id})
+        return result
+
     def _api_cancel_mollie_payment(self, transaction_id):
         return self.sudo()._mollie_api_call(f'/payments/{transaction_id}', method='DELETE', silent=True)
 
@@ -124,6 +130,20 @@ class MolliePosTerminal(models.Model):
             })
         return result
 
+    def _prepare_refund_payload(self, data):
+        return {
+            "amount": {
+                "currency": data['curruncy'],
+                "value": f"{abs(data['amount']):.2f}"
+            },
+            "metadata": {
+                "mollie_uid": data['mollie_uid'],
+                # "order_id": data['order_id'],
+                "payment_method_id": data['payment_method_id'],
+                'order_type': 'pos'
+            }
+        }, data['mollie_origin_transaction_id']
+
     def action_sync_terminals(self):
         return {
             "name": _("Sync Terminal"),
@@ -160,16 +180,21 @@ class MolliePosTerminal(models.Model):
             return "&".join(parts)
 
     def _mollie_api_call(self, endpoint, data=None, params=None, method='POST', silent=False):
-        company = self.company_id or self.env.company
-
-        headers = {
-            'content-type': 'application/json',
-            "Authorization": f'Bearer {company.mollie_terminal_api_key}',
-        }
 
         endpoint = f'/v2/{endpoint.strip("/")}'
         url = urls.url_join('https://api.mollie.com/', endpoint)
         querystring_params = self._mollie_generate_querystring(params)
+
+        # User agent strings used by mollie to find issues in integration
+        odoo_version = service.common.exp_version()['server_version']
+        mollie_extended_app_version = self.env.ref('base.module_mollie_pos_terminal').installed_version
+
+        company = self.company_id or self.env.company
+        headers = {
+            'content-type': 'application/json',
+            "Authorization": f'Bearer {company.mollie_terminal_api_key}',
+            "User-Agent": f'Odoo/{odoo_version} MolliePOSOdoo/{mollie_extended_app_version}',
+        }
 
         _logger.info('Mollie POS Terminal CALL on: %s', url)
 
