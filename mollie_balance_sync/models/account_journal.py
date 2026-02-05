@@ -284,9 +284,13 @@ class AccountJournal(models.Model):
         endpoint = f'/v2/{endpoint.strip("/")}'
         url = urls.url_join('https://api.mollie.com/', endpoint)
         querystring_params = self._mollie_generate_querystring(params)
+        key = self._get_mollie_api_key()
+        if not key:
+            _logger.warning("No Mollie API key defined. Skip API Call")
+            return {}
         headers = {
             'content-type': 'application/json',
-            'Authorization': self._get_mollie_api_key()
+            'Authorization': key
         }
         _logger.info('Mollie SYNC CALL on: %s', endpoint)
 
