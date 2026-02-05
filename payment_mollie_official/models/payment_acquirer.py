@@ -89,7 +89,7 @@ class PaymentProviderMollie(models.Model):
 
         try:
             response = requests.request(method, url, params=params, data=data, headers=headers, timeout=60)
-            if response.status_code == 204:
+            if response.status_code in [204, 202]:
                 return True  # returned no content
             result = response.json()
             if response.status_code not in [200, 201]:  # doc reference https://docs.mollie.com/overview/handling-errors
@@ -122,16 +122,13 @@ class PaymentProviderMollie(models.Model):
                 result[method['id']] = method
         return result or {}
 
-    def _api_mollie_create_payment_record(self, api_type, payment_data, params=None, silent_errors=False):
-        """ Create the payment records on the mollie. It calls payment or order
-        API based on 'api_type' param.
-        :param str api_type: api is selected based on this parameter
+    def _api_mollie_create_payment_record(self, payment_data, params=None, silent_errors=False):
+        """ Create the payment records on the mollie.
         :param dict payment_data: payment data
         :return: details of created payment record
         :rtype: dict
         """
-        endpoint = '/orders' if api_type == 'order' else '/payments'
-        return self._mollie_make_request(endpoint, data=payment_data, params=params, method="POST", silent_errors=silent_errors)
+        return self._mollie_make_request('/payments', data=payment_data, params=params, method="POST", silent_errors=silent_errors)
 
     def _api_mollie_get_payment_data(self, transaction_reference, force_payment=False):
         """ Fetch the payment records based `transaction_reference`. It is used
@@ -176,8 +173,7 @@ class PaymentProviderMollie(models.Model):
         :rtype: dict
         """
         refund_data = {'amount': {'value': "%.2f" % amount, 'currency': currency}}
-        data = self._mollie_make_request(f'/payments/{payment_reference}/refunds', data=refund_data, method="POST")
-        return data
+        return self._mollie_make_request(f'/payments/{payment_reference}/refunds', data=refund_data, method="POST")
 
     def _api_mollie_refund_data(self, payment_reference, refund_reference):
         """ Get data for the refund from mollie.
@@ -194,6 +190,30 @@ class PaymentProviderMollie(models.Model):
         :rtype: dict
         """
         return self._mollie_make_request(f'/customers/{customer_id}', method="GET", silent_errors=silent_errors)
+
+    def _api_mollie_get_capture_data(self, payment_reference):
+        """ Fetch capture records based `payment_reference`. It is used
+        to verify child transaction's state after capture the payment.
+        :param str payment_reference: payment reference
+        :return: details of capture records
+        :rtype: dict
+        """
+        return self._mollie_make_request(f'/payments/{payment_reference}/captures', method="GET")
+
+    def _api_mollie_sync_capture(self, order_reference, capture_data):
+        """ Capture amount from mollie
+        :param str order_reference: order record reference
+        :param dict capture_data: captured amount data
+
+        """
+        return self._mollie_make_request(f'/payments/{order_reference}/captures', data=capture_data, method="POST")
+
+    def _api_mollie_void_remaining_payment(self, order_reference):
+        """ Void remaining amount from mollie
+        :param str order_reference: order record reference
+
+        """
+        return self._mollie_make_request(f'/payments/{order_reference}/release-authorization', method="POST")
 
     # -------------------------
     # Helper methods for mollie
