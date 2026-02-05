@@ -37,6 +37,7 @@ class MolliePosTerminal(models.Model):
                         'payment_status': payment_status.get('status'),
                         'pos_order_id': order.id
                     })
+                    order._action_set_partner(payment_method_id)
                     order.action_pos_order_paid()
                     order._send_order()
                 if order.config_id.self_ordering_mode == 'kiosk':

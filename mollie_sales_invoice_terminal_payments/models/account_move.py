@@ -11,7 +11,6 @@ class AccountMove(models.Model):
     def _get_mollie_terminal_payment_context(self):
         context = super()._get_mollie_terminal_payment_context()
         context.update({
-            'default_move_id': self.id,
-            'default_currency_id': self.currency_id.id
+            'default_move_id': self.id
         })
         return context

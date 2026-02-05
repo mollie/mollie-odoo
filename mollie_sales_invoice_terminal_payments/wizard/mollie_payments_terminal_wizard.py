@@ -15,7 +15,7 @@ class MolliePaymentsTerminalWizard(models.TransientModel):
     amount_total = fields.Monetary(string='Amount', currency_field='currency_id', related='order_id.amount_total',
                                    readonly=False, store=True)
     company_id = fields.Many2one('res.company', string='Company', default=lambda self: self.env.company)
-    currency_id = fields.Many2one('res.currency', string='Currency', readonly=True)
+    currency_id = fields.Many2one('res.currency', related='company_id.currency_id', string='Currency', readonly=True)
     terminal_id = fields.Many2one('mollie.payments.terminal', string='Mollie Terminal', required=True, domain="[('company_id', '=', company_id), ('status', '=', 'active')]")
 
     def terminal_confirm(self):

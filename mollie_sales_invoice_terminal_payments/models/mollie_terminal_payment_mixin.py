@@ -13,7 +13,7 @@ class MollieTerminalPaymentMixin(models.AbstractModel):
         for record in self:
             record.mollie_terminal_payment_enabled = False
             record.mollie_terminal_active_transaction = False
-            mollie_provider = self.env['payment.provider'].sudo().search([('code', '=', 'mollie'), ('state', '!=', 'disabled')])
+            mollie_provider = self.env['payment.provider'].sudo().search([('code', '=', 'mollie'), ('state', '!=', 'disabled'), ('company_id', '=', record.company_id.id)])
             field_name = f"mollie_{self._name.replace('.', '_')}_terminal_payment_enabled"
             if field_name not in mollie_provider._fields:
                 continue
@@ -43,6 +43,16 @@ class MollieTerminalPaymentMixin(models.AbstractModel):
 
     def action_mollie_terminal_payment_status(self):
         # webhook will call from Mollie So this button just use to refresh the page
+        if self.mollie_terminal_active_transaction:
+            # TODO: Optimize by removing redundant get-payments API call once structure is simplified.
+            # This API call currently ensures transaction status is updated in case the webhook is missed.
+            transaction_ids = self.transaction_ids.filtered(lambda t: t.provider_code == 'mollie' and t.state in ['draft', 'pending'])
+            for transaction_id in transaction_ids:
+                payment_data = transaction_id.provider_id._mollie_make_request(
+                    f'/payments/{transaction_id.provider_reference}', method="GET"
+                )
+                if payment_data.get('status') != 'open':
+                    transaction_id.sudo()._handle_notification_data('mollie', payment_data)
         return True
 
     def _get_mollie_terminal_payment_context(self):

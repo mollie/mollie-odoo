@@ -9,7 +9,7 @@
                 <sheet>
                     <group>
                         <group>
-                            <field name="terminal_id" domain="[('currency_id', '=', currency_id)]" required="1"/>
+                            <field name="terminal_id" required="1" />
                             <field name="amount_residual" required="move_id" invisible="not move_id"/>
                             <field name="amount_total" required="order_id" invisible="not order_id"/>
                             <field name="currency_id" invisible="1"/>

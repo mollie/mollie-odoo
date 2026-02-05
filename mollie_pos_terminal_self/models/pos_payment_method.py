@@ -20,3 +20,12 @@ class PosPaymentMethod(models.Model):
             }
             result = self.mollie_payment_request(payment_data)
             return result and result.get('status') == 'open'
+
+class PosOrder(models.Model):
+    _inherit = 'pos.order'
+
+    def _action_set_partner(self, payment_method_id):
+        payment_method = self.env['pos.payment.method'].sudo().browse(payment_method_id)
+        if payment_method.use_payment_terminal == 'mollie' and payment_method.split_transactions and payment_method.mollie_payment_default_partner:
+            self.sudo().write({'partner_id': payment_method.mollie_payment_default_partner.id})
+        return True

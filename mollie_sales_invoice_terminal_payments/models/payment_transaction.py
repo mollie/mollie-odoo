@@ -51,6 +51,6 @@ class PaymentTransaction(models.Model):
         super()._process_notification_data(notification_data)
 
         # We post process immediately for invoices
-        if self.provider_code != 'mollie' or not self.terminal_id or not self.payment_method_code == 'pointofsale' or not self.invoice_ids:
+        if self.provider_code != 'mollie' or not self.terminal_id or not self.payment_method_code == 'pointofsale':
             return
         self.filtered(lambda tx: tx.state == 'done')._finalize_post_processing()
