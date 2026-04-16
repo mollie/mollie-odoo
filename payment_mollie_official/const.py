@@ -19,3 +19,4 @@ MULTI_CAPTURE_METHODS = ['klarna', 'billie']
 
 # Billing Address Requirement for specific payment methods
 BILLING_ADDRESS_REQUIRED_METHODS = ['klarna', 'billie', 'riverty', 'in3']
+
