@@ -362,6 +362,7 @@ class PaymentTransaction(models.Model):
         :rtype: dict
         """
         lines = []
+        lines_amount_total = 0.0
         for line in order.order_line.filtered(lambda l: not l.display_type):  # ignore notes and section lines
             if line.price_total == 0:
                 continue
@@ -375,6 +376,7 @@ class PaymentTransaction(models.Model):
             if is_negative_line:
                 line_type = 'discount'
                 unit_price = -abs(unit_price)
+            lines_amount_total += line.price_total
             line_data = {
                 'description': line.name,
                 'type': line_type,
@@ -405,6 +407,8 @@ class PaymentTransaction(models.Model):
                         'categories': category
                     })
             lines.append(line_data)
+        if self.provider_id.mollie_rounding_adjustment:
+            self._prepare_rounding_adjustment_line(order, lines, lines_amount_total)
         return lines
 
     def _mollie_get_invoice_lines(self, invoice):
@@ -415,7 +419,7 @@ class PaymentTransaction(models.Model):
         :return: List of dicts representing Mollie-compatible invoice lines
         """
         lines = []
-
+        lines_amount_total = 0.00
         for line in invoice.invoice_line_ids.filtered(lambda l: l.display_type not in ['line_section', 'line_note']):
             if line.price_total == 0:
                 continue
@@ -430,7 +434,7 @@ class PaymentTransaction(models.Model):
                 line_type = 'discount'
                 unit_price = -abs(unit_price)
 
-
+            lines_amount_total += line.price_total
             line_data = {
                 'description': line.name,
                 'type': line_type,
@@ -451,7 +455,29 @@ class PaymentTransaction(models.Model):
                 line_data['productUrl'] = urls.url_join(base_url, line.product_id.website_url)
 
             lines.append(line_data)
+        if self.provider_id.mollie_rounding_adjustment:
+            self._prepare_rounding_adjustment_line(invoice, lines, lines_amount_total)
         return lines
+
+    def _prepare_rounding_adjustment_line(self, record, lines, lines_amount_total):
+        lines_amount_total = record.currency_id.round(lines_amount_total)
+        rounding_difference = record.currency_id.round(self.amount - lines_amount_total)
+        if rounding_difference != 0:
+            rounding_line_type = 'digital' if rounding_difference > 0 else 'discount'
+            line_data = {
+                'description': self.provider_id.rounding_line_description or _("Rounding Adjustment"),
+                'type': rounding_line_type,
+                'quantity': 1,
+                'unitPrice': {
+                    'currency': record.currency_id.name,
+                    'value': "%.2f" % rounding_difference,
+                },
+                'totalAmount': {
+                    'currency': record.currency_id.name,
+                    'value': "%.2f" % rounding_difference,
+                },
+            }
+            lines.append(line_data)
 
     def _prepare_mollie_address(self):
         """ This method prepare address used in order api of mollie

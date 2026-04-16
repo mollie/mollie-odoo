@@ -23,6 +23,8 @@ class PaymentProviderMollie(models.Model):
 
     mollie_use_components = fields.Boolean(string='Mollie Components', default=True)
     mollie_show_save_card = fields.Boolean(string='Single-Click payments')
+    mollie_rounding_adjustment = fields.Boolean(string="Rounding Adjustment")
+    rounding_line_description = fields.Char(string="Rounding Line Description", translate=True)
 
     # ----------------
     # PAYMENT FEATURES

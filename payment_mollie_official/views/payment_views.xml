@@ -30,6 +30,19 @@
                     <i class="fa fa-refresh o_button_icon"/> Sync Mollie Methods
                 </a>
             </a>
+            <xpath expr="//group[@name='payment_followup']" position="after">
+                <group string="Rounding Adjustment" name="rounding_adjustment"
+                    invisible="code != 'mollie'">
+                    <field name="mollie_rounding_adjustment" />
+                    <field name="rounding_line_description" invisible="not mollie_rounding_adjustment" />
+                    <div colspan="2" class="text-muted small mb-2">
+                        When global rounding is enabled in Odoo, order or invoice totals may differ
+                        from the sum of their lines. Enable this option to add a rounding adjustment
+                        line on the Mollie side so the payment amount matches exactly. No changes
+                        are made in Odoo; the adjustment is handled entirely on the Mollie side.
+                    </div>
+                </group>
+            </xpath>
         </field>
     </record>
 
