@@ -30,6 +30,8 @@ class PaymentProviderMollie(models.Model):
     mollie_auto_capture = fields.Boolean('Auto Capture')
     mollie_set_delivery_line_qty = fields.Boolean('Set Delivery Line Qty')
     mollie_automation_action_id = fields.Many2one('base.automation', string='Automation Action')
+    mollie_rounding_adjustment = fields.Boolean(string="Rounding Adjustment")
+    rounding_line_description = fields.Char(string="Rounding Line Description", translate=True)
 
     def toggle_mollie_debug(self):
         for provider in self:
