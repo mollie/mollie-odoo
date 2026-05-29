@@ -9,7 +9,6 @@ paymentForm.include({
 
     events: Object.assign({}, paymentForm.prototype.events, {
         'click .o_mollie_issuer': '_onClickIssuer',
-        'change input[name="mollieCardType"]': '_onChangeCardType',
     }),
 
     /**
@@ -44,12 +43,7 @@ paymentForm.include({
         if (!$creditCardContainer.length || this.mollieComponentLoaded) {
             return this._super(...arguments);
         }
-        const checkedRadio = this.el.querySelector('input[name="o_payment_radio"]:checked');
-        const inlineForm = this._getInlineForm(checkedRadio);
-        const useSavedCard = inlineForm.querySelector('#mollieSavedCard')?.checked;
-        if (!useSavedCard) {
-            await this._setupMollieComponent();
-        }
+        await this._setupMollieComponent();
     },
 
     /**
@@ -103,12 +97,7 @@ paymentForm.include({
         this._mollieCardToken = false;
         const _super = this._super.bind(this);
 
-        // TODO: put next 3 lines function (it keeps repeating)
-        const checkedRadio = this.el.querySelector('input[name="o_payment_radio"]:checked');
-        const inlineForm = this._getInlineForm(checkedRadio);
-        const useSavedCard = inlineForm.querySelector('#mollieSavedCard')?.checked;
-
-        if (providerCode === 'mollie' && paymentMethodCode === 'card' && this.mollieComponentLoaded && !useSavedCard) {
+        if (providerCode === 'mollie' && paymentMethodCode === 'card' && this.mollieComponentLoaded) {
             this._mollieCardToken = await this._prepareMollieCardToken();
             // TODO: What if there no token
         }
@@ -145,26 +134,16 @@ paymentForm.include({
         const inlineForm = this._getInlineForm(checkedRadio);
 
         if (paymentContext.providerCode === 'mollie') {
-
-            if (paymentContext.paymentMethodCode === 'card') {
-                const useSavedCard = inlineForm.querySelector('#mollieSavedCard')?.checked;
-
-                if(this._mollieCardToken && !useSavedCard) {
-                    transactionRouteParams['mollie_card_token'] = this._mollieCardToken;
-                }
-
-                if (inlineForm.querySelector('input[name="o_mollie_save_card"]') || useSavedCard) {
-                    transactionRouteParams['mollie_save_card'] = inlineForm.querySelector('input[name="o_mollie_save_card"]').checked || useSavedCard;
-                }
-
+            if (this._mollieCardToken && paymentContext.paymentMethodCode === 'card') {
+                transactionRouteParams['mollie_card_token'] = this._mollieCardToken;
             }
-            const activeIssuer = inlineForm.querySelector('.o_mollie_issuer.active')
-            if (activeIssuer) {
-                transactionRouteParams['mollie_payment_issuer'] = inlineForm.querySelector('.o_mollie_issuer.active').dataset.mollieIssuer;
+            if (inlineForm) {
+                const activeIssuer = inlineForm.querySelector('.o_mollie_issuer.active')
+                if (activeIssuer) {
+                    transactionRouteParams['mollie_payment_issuer'] = inlineForm.querySelector('.o_mollie_issuer.active').dataset.mollieIssuer;
+                }
             }
-
         }
-
         return transactionRouteParams;
     },
 
@@ -176,19 +155,6 @@ paymentForm.include({
         let $container = $(ev.currentTarget).closest('.o_mollie_issuer_container');
         $container.find('.o_mollie_issuer').removeClass('active border-primary');
         $(ev.currentTarget).addClass('active border-primary');
-    },
-
-    /**
-     * @private
-     * @param {MouseEvent} ev
-     */
-    _onChangeCardType: function (ev) {
-        this.$('#o_mollie_component').toggleClass('d-none', $(ev.currentTarget).val() !== 'component');
-        this.$('#o_mollie_save_card').toggleClass('d-none', $(ev.currentTarget).val() !== 'component');
-
-        if ($(ev.currentTarget).val() == 'component' && !this.mollieComponentLoaded) {
-            this._setupMollieComponent();
-        }
     },
 
     /**

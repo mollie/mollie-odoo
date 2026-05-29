@@ -18,7 +18,6 @@
                         <a href="https://www.mollie.com/dashboard/developers/api-keys" target="_new"> Get your API keys <i class="fa fa-arrow-right"></i></a>
                     </b>
                 </small>
-                <field name="mollie_show_save_card" />
                 <field name="mollie_debug_logging" invisible="1"/>
             </field>
 

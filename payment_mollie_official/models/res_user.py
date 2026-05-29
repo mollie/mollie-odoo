@@ -7,12 +7,5 @@ from odoo import fields, models
 class ResUsers(models.Model):
     _inherit = 'res.users'
 
+    # Deprecated field, will be removed in upcoming version
     mollie_customer_id = fields.Char()
-
-    def _mollie_validate_customer_id(self, provider):
-        self.ensure_one()
-        customer_id = self.sudo().mollie_customer_id
-        if customer_id:
-            customer_data = provider._api_get_customer_data(customer_id, silent_errors=True)
-            if customer_data.get('status_code') == 410:    # customer ID deleted
-                self.mollie_customer_id = False
