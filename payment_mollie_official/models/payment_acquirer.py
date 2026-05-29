@@ -22,7 +22,6 @@ class PaymentProviderMollie(models.Model):
     mollie_profile_id = fields.Char("Mollie Profile ID", groups="base.group_user")
 
     mollie_use_components = fields.Boolean(string='Mollie Components', default=True)
-    mollie_show_save_card = fields.Boolean(string='Single-Click payments')
     mollie_rounding_adjustment = fields.Boolean(string="Rounding Adjustment")
     rounding_line_description = fields.Char(string="Rounding Line Description", translate=True)
 
@@ -35,7 +34,8 @@ class PaymentProviderMollie(models.Model):
         super()._compute_feature_support_fields()
         self.filtered(lambda p: p.code == 'mollie').update({
             'support_refund': 'partial',
-            'support_manual_capture': 'partial'
+            'support_manual_capture': 'partial',
+            'support_tokenization': True
         })
 
     # --------------
@@ -270,3 +270,43 @@ class PaymentProviderMollie(models.Model):
         :rtype: list
         """
         return self.search([('code', '=', 'mollie')]).with_context(active_test=False).mapped('payment_method_ids.code')
+
+    def _mollie_get_customer_id(self, partner):
+        """ Get or create a Mollie customer ID for the given partner.
+
+        Checks existing payment.token records from Mollie for the partner to
+        retrieve a customer ID. Validates it via API and creates a new one if
+        no valid ID is found.
+
+        :param recordset partner: res.partner record
+        :return: Mollie customer ID or False
+        :rtype: str or False
+        """
+        self.ensure_one()
+        existing_token = self.env['payment.token'].sudo().search([
+            ('partner_id', '=', partner.id),
+            ('provider_id', '=', self.id),
+            ('company_id', '=', self.company_id.id),
+            ('mollie_customer_id', '!=', False),
+        ], limit=1, order='create_date desc')
+
+        if existing_token and self._mollie_validate_customer_id(existing_token.mollie_customer_id):
+            return existing_token.mollie_customer_id
+
+        customer_data = self._api_mollie_create_customer_id()
+        if customer_data and customer_data.get('id'):
+            return customer_data['id']
+        return False
+
+    def _mollie_validate_customer_id(self, customer_id):
+        """ Validate a Mollie customer ID via API.
+
+        :param str customer_id: Mollie customer ID to validate
+        :return: True if valid, False if deleted/invalid
+        :rtype: bool
+        """
+        self.ensure_one()
+        customer_data = self._api_get_customer_data(customer_id, silent_errors=True)
+        if not customer_data or customer_data.get('status'):
+            return False
+        return True

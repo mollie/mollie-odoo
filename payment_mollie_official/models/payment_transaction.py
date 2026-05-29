@@ -20,7 +20,6 @@ class PaymentTransaction(models.Model):
 
     mollie_payment_issuer = fields.Char()
     mollie_card_token = fields.Char()
-    mollie_save_card = fields.Boolean()
     mollie_reminder_payment_id = fields.Many2one('account.payment', string="Mollie Reminder Payment", readonly=True)
     mollie_origin_payment_reference = fields.Char()
 
@@ -50,10 +49,14 @@ class PaymentTransaction(models.Model):
                 return
 
         if payment_status == 'paid':
+            if self.tokenize and not self.token_id:
+                self._mollie_tokenize_from_notification_data(mollie_payment)
             self._set_done()
         elif payment_status == 'pending':
             self._set_pending()
         elif payment_status == 'authorized':
+            if self.tokenize and not self.token_id:
+                self._mollie_tokenize_from_notification_data(mollie_payment)
             self._set_authorized()
         elif payment_status in ['expired', 'canceled', 'failed']:
             self._set_canceled("Mollie: " + _("Mollie: canceled due to status: %s", payment_status))
@@ -62,6 +65,35 @@ class PaymentTransaction(models.Model):
         else:
             _logger.info("Received data with invalid payment status: %s", payment_status)
             self._set_error("Mollie: " + _("Received data with invalid payment status: %s", payment_status))
+
+    def _mollie_tokenize_from_notification_data(self, payment_data):
+        """ Create a new token based on the notification data.
+
+        :param dict notification_data: The notification data built with Mollie objects.
+                                       See `_process_notification_data`.
+        :return: None
+        """
+        self.ensure_one()
+
+        if 'customerId' not in payment_data or 'mandateId' not in payment_data:
+            return
+
+        token = self.env['payment.token'].create({
+            'provider_id': self.provider_id.id,
+            'payment_method_id': self.payment_method_id.id,
+            'partner_id': self.partner_id.id,
+            'payment_details': payment_data.get('details', {}).get('cardNumber', False),
+            'provider_ref': payment_data.get('mandateId'),
+            'mollie_customer_id': payment_data.get('customerId'),
+        })
+        self.write({
+            'token_id': token,
+            'tokenize': False,
+        })
+        _logger.info(
+            "Token %(token_id)s created for partner %(partner_id)s from transaction %(ref)s.",
+            {'token_id': token.id, 'partner_id': self.partner_id.id, 'ref': self.reference},
+        )
 
     def _get_specific_rendering_values(self, processing_values):
         """ Override of payment to return Mollie-specific rendering values.
@@ -157,6 +189,28 @@ class PaymentTransaction(models.Model):
         if child_void_tx and payment_data:
             child_void_tx._set_canceled()
         return child_void_tx
+
+    def _send_payment_request(self):
+        """ Override of payment to send a payment request to Mollie with a confirmed PaymentIntent.
+
+        Note: self.ensure_one()
+
+        :return: None
+        :raise: UserError if the transaction is not linked to a token
+        """
+        if self.provider_code != 'mollie':
+            return super()._send_payment_request()
+
+        # Prepare the payment request to Mollie.
+        if not self.token_id:
+            raise UserError("Mollie: " + _("The transaction is not linked to a token."))
+
+        # Send the payment request to Mollie.
+        payment_data = self._mollie_create_payment_record()
+        if not payment_data:  # The payment data might be missing if Mollie failed to create it.
+            return  # There is nothing to process; the transaction is in error at this point.
+
+        self._handle_notification_data('mollie', payment_data)
 
     def _create_payment(self, **extra_create_values):
         """ Overridden method to create reminder payment for vouchers."""
@@ -331,24 +385,28 @@ class PaymentTransaction(models.Model):
         if self.mollie_card_token:
             method_specific_parameters['cardToken'] = self.mollie_card_token
 
-        # Add if transaction has save card option
-        if self.mollie_save_card and not self.env.user.has_group('base.group_public'):  # for security
-            user_sudo = self.env.user.sudo()
-            user_sudo._mollie_validate_customer_id(self.provider_id)    # check customer ID exist else delete it (we will generate new one)
-            mollie_customer_id = user_sudo.mollie_customer_id
-            if not mollie_customer_id:
-                customer_id_data = self.provider_id._api_mollie_create_customer_id()
-                if customer_id_data and customer_id_data.get('id'):
-                    user_sudo.mollie_customer_id = customer_id_data.get('id')
-                    mollie_customer_id = user_sudo.mollie_customer_id
+        if self.tokenize and not self.env.user.has_group('base.group_public') and self.payment_method_code in const.MANDATE_METHODS:
+            mollie_customer_id = self.provider_id._mollie_get_customer_id(self.partner_id)
             if mollie_customer_id:
-                method_specific_parameters['customerId'] = mollie_customer_id
+                method_specific_parameters.update({
+                    "customerId": mollie_customer_id,
+                    "sequenceType": "first",
+                })
 
         # Add if transaction has issuer
         if self.mollie_payment_issuer:
             method_specific_parameters['issuer'] = self.mollie_payment_issuer
 
         payment_data.update(method_specific_parameters)
+
+        if self.token_id:
+            payment_data.update({
+                "customerId": self.token_id.mollie_customer_id,
+                "mandateId": self.token_id.provider_ref,
+                "sequenceType": "recurring",
+            })
+            payment_data.pop("method")
+
         method_record = self.provider_id.payment_method_ids.filtered(lambda m: m.code == self.payment_method_id.code)
         if method_record.mollie_enable_qr_payment:
             params['include'] = 'details.qrCode'

@@ -93,7 +93,7 @@ class PaymentMethod(models.Model):
         return self.env['account.payment.method'].search([('code', '=', code)], limit=1)
 
     def _get_compatible_payment_methods(
-        self, provider_ids, partner_id, currency_id=None, force_tokenization=False,
+        self, provider_ids, partner_id, currency_id=None,
         is_express_checkout=False, **kwargs
     ):
         """ Search and return the payment methods matching the compatibility criteria.
@@ -106,7 +106,7 @@ class PaymentMethod(models.Model):
         """
 
         result_pms = super()._get_compatible_payment_methods(
-            provider_ids, partner_id, currency_id=currency_id, force_tokenization=force_tokenization,
+            provider_ids, partner_id, currency_id=currency_id,
             is_express_checkout=is_express_checkout, **kwargs
         )
 
@@ -176,7 +176,7 @@ class PaymentMethod(models.Model):
             if is_downpayment:
                 extra_params['amount'] = {'value': "%.2f" % order_sudo._get_prepayment_required_amount(), 'currency': order_sudo.currency_id.name}
 
-        if not kwargs.get('sale_order_id') and request and request.params.get('invoice_id'):
+        elif request and request.params.get('invoice_id'):
             invoice_id = request.params.get('invoice_id')
             invoice = self.env['account.move'].sudo().browse(int(invoice_id))
             amount_payment_link = float(request.params.get('amount', '0'))  # for payment links
@@ -186,6 +186,16 @@ class PaymentMethod(models.Model):
                     extra_params['billingCountry'] = invoice.partner_id.country_id.code
                 if (amount_payment_link and invoice.amount_total != amount_payment_link) or invoice.amount_total != invoice.amount_residual:
                     is_partial_payment = True
+
+        elif request and request.params.get('pos_order_id'):
+            order_sudo = self.env['pos.order'].browse(request.params.get('pos_order_id')).sudo()
+            extra_params['amount'] = {'value': "%.2f" % (order_sudo.amount_total), 'currency': order_sudo.currency_id.name}
+
+        elif 'amount' not in extra_params and kwargs.get('force_tokenization'):
+            extra_params['amount'] = {'value': "0.00", 'currency': self.env.company.currency_id.name}
+
+        if kwargs.get('force_tokenization'):
+            mollie_allowed_methods = mollie_allowed_methods.filtered(lambda m: m.code in const.MANDATE_METHODS)
 
         partner = self.env['res.partner'].browse(partner_id)
         if not extra_params.get('billingCountry') and partner.country_id:
@@ -226,7 +236,7 @@ class PaymentMethod(models.Model):
         inline_form_xml_id = original_xml_id
         if provider_sudo._get_code() == 'mollie':
             # TODO: map word creditcard with PAYMENT_METHODS_MAPPING
-            if self.code == 'card' and (provider_sudo.mollie_use_components or provider_sudo.mollie_show_save_card):    # inline card
+            if self.code == 'card' and (provider_sudo.mollie_use_components):    # inline card
                 inline_form_xml_id = 'payment_mollie_official.mollie_creditcard_component'
             elif self.mollie_has_issuers and self.code != 'ideal':  # Issuers is removed for ideal as mollie does not support issuers anymore
                 inline_form_xml_id = 'payment_mollie_official.mollie_issuers_list'
