@@ -6,7 +6,6 @@ import phonenumbers
 from werkzeug import urls
 
 from odoo.addons.payment_mollie_official import const
-from odoo.addons.payment_mollie.controllers.main import MollieController
 from odoo.exceptions import ValidationError, UserError
 
 from odoo import _, api, fields, models, tools
@@ -19,7 +18,6 @@ class PaymentTransaction(models.Model):
 
     mollie_payment_issuer = fields.Char()
     mollie_card_token = fields.Char()
-    mollie_save_card = fields.Boolean()
     mollie_reminder_payment_id = fields.Many2one('account.payment', string="Mollie Reminder Payment", readonly=True)
     mollie_origin_payment_reference = fields.Char()
 
@@ -36,37 +34,28 @@ class PaymentTransaction(models.Model):
         if self.state == 'done':
             return
 
-        # Update the payment method.
-        payment_method_type = payment_data.get('method', '')
-        if payment_method_type == 'creditcard':
-            payment_method_type = payment_data.get('details', {}).get('cardLabel', '').lower()
-        payment_method = self.env['payment.method']._get_from_code(
-            payment_method_type, mapping=const.PAYMENT_METHODS_MAPPING
-        )
-        self.payment_method_id = payment_method or self.payment_method_id
-
         payment_status = payment_data.get('status')
-        
+
         if payment_data.get('amountCaptured') and float(payment_data['amountCaptured']['value']) > 0.0:
             self._process_capture_transactions_status(payment_data['id'], payment_status)
             if payment_status != 'paid' or payment_status == 'paid' and self.state == 'done':
                 return
 
-        # Update the payment state.
-        if payment_status in ('pending', 'open'):
-            self._set_pending()
-        elif payment_status == 'authorized':
-            self._set_authorized()
-        elif payment_status == 'paid':
-            self._set_done()
-        elif payment_status in ['expired', 'canceled', 'failed']:
-            self._set_canceled(_("Cancelled payment with status: %s", payment_status))
-        else:
-            _logger.info(
-                "Received data with invalid payment status (%s) for transaction %s.",
-                payment_status, self.reference
-            )
-            self._set_error(_("Received data with invalid payment status: %s.", payment_status))
+        return super()._apply_updates(payment_data)
+
+    def _extract_token_values(self, payment_data):
+        """Override of `payment` to extract the token values from the payment data."""
+        if self.provider_code != 'mollie':
+            return super()._extract_token_values(payment_data)
+
+        if 'customerId' not in payment_data or 'mandateId' not in payment_data:
+            return {}
+
+        return {
+            'payment_details': payment_data.get('details', {}).get('cardNumber', False),
+            'provider_ref': payment_data['mandateId'],
+            'mollie_customer_id': payment_data.get('customerId'),
+        }
 
     def _get_specific_rendering_values(self, processing_values):
         """ Override of payment to return Mollie-specific rendering values.
@@ -80,39 +69,61 @@ class PaymentTransaction(models.Model):
         if self.provider_code != 'mollie':
             return super()._get_specific_rendering_values(processing_values)
 
-        payment_data = self._mollie_create_payment_record()
+        payload = self._mollie_prepare_payment_request_payload()
+
+        params = {}
+        if self.payment_method_id.mollie_enable_qr_payment:
+            params['include'] = 'details.qrCode'
+
+        try:
+            payment_data = self._send_api_request('POST', '/payments', json=payload, params=params)
+        except ValidationError as error:
+            self._set_error(str(error))
+            return {}
+
+            # The provider reference is set now to allow fetching the payment status after redirection
+        self.provider_reference = payment_data.get('id')
 
         # if checkout links are not present means payment has been done via card token
         # and there is no need to checkout on mollie
         if payment_data.get("_links", {}).get("checkout"):
             mollie_checkout_url = payment_data["_links"]["checkout"]["href"]
+            url_params = urls.url_parse(mollie_checkout_url).decode_query()
             qr_src = payment_data.get('details', {}).get('qrCode', {}).get('src')
-            return {'api_url': mollie_checkout_url, 'extra_params': urls.url_parse(mollie_checkout_url).decode_query(), 'qr_src': qr_src}
+            return {'api_url': mollie_checkout_url, 'url_params': url_params, 'qr_src': qr_src}
         else:
+            mollie_redirect_url = payment_data.get('redirectUrl')
             return {
-                'api_url': payment_data.get('redirectUrl'),
-                'ref': self.reference
+                'api_url': mollie_redirect_url,
+                'url_params': urls.url_parse(mollie_redirect_url).decode_query(),
             }
 
-    def _send_refund_request(self):
-        """ Override of payment to send a refund request to Authorize.
-
-        Note: self.ensure_one()
-
-        :param float amount_to_refund: The amount to refund
-        :param bool create_refund_transaction: Whether a refund transaction should be created or not
-        :return: The refund transaction if any
-        :rtype: recordset of `payment.transaction`
-        """
-        refund_tx = super()._send_refund_request()
+    def _send_payment_request(self):
+        """Override of `payment` to send a payment request to Mollie."""
         if self.provider_code != 'mollie':
-            return refund_tx
+            return super()._send_payment_request()
 
-        payment_data = self.provider_id._api_mollie_get_payment_data(self.provider_reference, force_payment=True)
-        refund_data = self.provider_id._api_mollie_refund(self.amount, self.currency_id.name, payment_data.get('id'))
-        refund_tx.provider_reference = refund_data.get('id')
+        # Send the payment request to Mollie.
+        payload = self._mollie_prepare_payment_request_payload()
+        payment_data = self._send_api_request('POST', '/payments', json=payload)
+        if not payment_data:  # The payment data might be missing if Mollie failed to create it.
+            return  # There is nothing to process; the transaction is in error at this point.
 
-        return refund_tx
+        # Handle the payment request response
+        self.provider_reference = payment_data.get('id')
+        self._process('mollie', payment_data)
+
+    def _send_refund_request(self):
+        """ Override of payment to send a refund request to Mollie. """
+        if self.provider_code != 'mollie':
+            return super()._send_refund_request()
+
+        payment_data = self.provider_id._api_mollie_get_payment_data(self.source_transaction_id.provider_reference, force_payment=True)
+        refund_data = self.provider_id._api_mollie_refund(abs(self.amount), self.currency_id.name, payment_data.get('id'))
+        if not refund_data:
+            return
+        self.provider_reference = refund_data.get('id')
+        self._process('mollie', refund_data)
 
     def _send_capture_request(self):
         """ Override of `payment` to send a capture request to Mollie. """
@@ -242,58 +253,26 @@ class PaymentTransaction(models.Model):
             )
         return message
 
-    def _mollie_create_payment_record(self, silent_errors=False):
-        """ This method payment/order record in mollie based on api type.
 
-        :param str api_type: api is selected based on this parameter
-        :return: data of created record received from mollie api
+    def _mollie_prepare_payment_request_payload(self):
+        """ Create the payload for the payment request based on the transaction values.
+
+        :return: The request payload
         :rtype: dict
         """
-        self.ensure_one()
-        payment_data, params = self._mollie_prepare_payment_payload()
-        result = self.provider_id._api_mollie_create_payment_record(payment_data, params=params, silent_errors=silent_errors)
-
-        # We are setting provider reference as we are receiving it before 3DS payment
-        # So we can verify the validity of the transecion
-        if result and result.get('id'):
-            self.provider_reference = result.get('id')
-        return result
-
-    def _mollie_prepare_payment_payload(self):
-        """ This method prepare the payload based in api type.
-
-        Note: this method are splitted so we can write test cases
-
-        :param str api_type: api is selected based on this parameter
-        :return: data of created record received from mollie api
-        :rtype: dict
-        """
-        base_url = self.provider_id.get_base_url()
-        redirect_url = urls.url_join(base_url, MollieController._return_url)
-        params = {}
-        payment_data = {
+        payment_data = super()._mollie_prepare_payment_request_payload()
+        provider = self.provider_id
+        payment_data.update({
             'method': const.PAYMENT_METHODS_MAPPING.get(
                 self.payment_method_code, self.payment_method_code
             ),
-            'amount': {
-                'currency': self.currency_id.name,
-                'value': "%.2f" % self.amount
-            },
             'metadata': {
                 'transaction_id': self.id,
                 'reference': self.reference,
             },
-            'locale': self.provider_id._mollie_user_locale(),
-            'redirectUrl': f'{redirect_url}?ref={self.reference}'
-        }
-        provider = self.provider_id
-
+        })
         if provider.capture_manually and payment_data.get('method') in const.CAPTURE_METHODS:
             payment_data['captureMode'] = 'manual'
-
-        payment_data.update({
-            'description': self.reference,
-        })
 
         if self.invoice_ids:
             invoice = self.invoice_ids[0]
@@ -317,18 +296,14 @@ class PaymentTransaction(models.Model):
             payment_data.update({
                 'lines': lines,
             })
-        else:
-            # Payment api parameters
-            payment_data['description'] = self.reference
-
         if (self.invoice_ids or self.sale_order_ids) and self.payment_method_code in const.BILLING_ADDRESS_REQUIRED_METHODS:
             payment_data['billingAddress'] = self._prepare_mollie_address()
 
         # Mollie rejects some local ips/URLs
         # https://help.mollie.com/hc/en-us/articles/213470409
-        webhook_url = urls.url_join(base_url, MollieController._webhook_url)
-        if "://localhost" not in webhook_url and "://192.168." not in webhook_url and "://127." not in webhook_url:
-            payment_data['webhookUrl'] = f'{webhook_url}?ref={self.reference}'
+        webhook_url = payment_data['webhookUrl']
+        if webhook_url and ("://localhost" in webhook_url or "://192.168." in webhook_url or "://127." in webhook_url):
+            del payment_data['webhookUrl']
 
         method_specific_parameters = {}
         # Add if transaction has cardToken
@@ -336,27 +311,32 @@ class PaymentTransaction(models.Model):
             method_specific_parameters['cardToken'] = self.mollie_card_token
 
         # Add if transaction has save card option
-        if self.mollie_save_card and not self.env.user.has_group('base.group_public'):  # for security
-            user_sudo = self.env.user.sudo()
-            user_sudo._mollie_validate_customer_id(self.provider_id)    # check customer ID exist else delete it (we will generate new one)
-            mollie_customer_id = user_sudo.mollie_customer_id
-            if not mollie_customer_id:
-                customer_id_data = self.provider_id._api_mollie_create_customer_id()
-                if customer_id_data and customer_id_data.get('id'):
-                    user_sudo.mollie_customer_id = customer_id_data.get('id')
-                    mollie_customer_id = user_sudo.mollie_customer_id
+        if self.tokenize and not self.env.user.has_group('base.group_public') and self.payment_method_code in const.MANDATE_METHODS:  # for security
+            mollie_customer_id = self.provider_id._mollie_get_customer_id(self.partner_id)
             if mollie_customer_id:
-                method_specific_parameters['customerId'] = mollie_customer_id
+                method_specific_parameters.update({
+                    "customerId": mollie_customer_id,
+                    "sequenceType": "first",
+                })
+                if payment_data.get('captureMode') == 'manual':
+                    method_specific_parameters["captureMode"] = "automatic"
 
         # Add if transaction has issuer
         if self.mollie_payment_issuer:
             method_specific_parameters['issuer'] = self.mollie_payment_issuer
 
         payment_data.update(method_specific_parameters)
-        method_record = self.provider_id.payment_method_ids.filtered(lambda m: m.code == self.payment_method_id.code)
-        if method_record.mollie_enable_qr_payment:
-            params['include'] = 'details.qrCode'
-        return payment_data, params
+
+        if self.token_id:
+            payment_data.update({
+                "customerId": self.token_id.mollie_customer_id,
+                "mandateId": self.token_id.provider_ref,
+                "sequenceType": "recurring",
+                "description": payment_data['description'],
+            })
+            payment_data.pop("method")
+
+        return payment_data
 
     def _mollie_get_order_lines(self, order):
         """ This method prepares order line data for order api

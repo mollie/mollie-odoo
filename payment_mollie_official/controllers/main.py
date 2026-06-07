@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from odoo import http
 from odoo.http import request
 
 from odoo.exceptions import ValidationError
@@ -20,9 +19,9 @@ class MolliePaymentPortal(PaymentPortal):
             provider_id = request.env['payment.provider'].sudo().browse(int(kwargs['provider_id']))
             if provider_id.code == 'mollie':
                 if isinstance(additional_allowed_keys, tuple):
-                    additional_allowed_keys += ('mollie_card_token', 'mollie_payment_issuer', 'mollie_save_card')
+                    additional_allowed_keys += ('mollie_card_token', 'mollie_payment_issuer')
                 if isinstance(additional_allowed_keys, set):
-                    additional_allowed_keys.update(['mollie_card_token', 'mollie_payment_issuer', 'mollie_save_card'])
+                    additional_allowed_keys.update(['mollie_card_token', 'mollie_payment_issuer'])
         super(MolliePaymentPortal, MolliePaymentPortal)._validate_transaction_kwargs(kwargs, additional_allowed_keys=additional_allowed_keys)
 
     def _create_transaction(
@@ -33,7 +32,6 @@ class MolliePaymentPortal(PaymentPortal):
         mollie_custom_create_values = {
             "mollie_card_token": kwargs.pop("mollie_card_token", None),
             "mollie_payment_issuer": kwargs.pop("mollie_payment_issuer", None),
-            "mollie_save_card": kwargs.pop("mollie_save_card", None)
         }
         custom_create_values = custom_create_values or {}
         custom_create_values.update(mollie_custom_create_values)
@@ -57,9 +55,6 @@ class MolliePayment(MollieController):
             return
 
         try:
-            # verified_data = tx_sudo._send_api_request(
-            #     'GET', f'/payments/{tx_sudo.provider_reference}'
-            # )
             verified_data = tx_sudo.provider_id._api_mollie_get_payment_data(tx_sudo.provider_reference, force_payment=True)
         except ValidationError:
             _logger.error("Unable to process the payment data")

@@ -62,13 +62,9 @@ export class QrDialog extends Component {
         rpc('/payment/status/poll', {
         'csrf_token': odoo.csrf_token,
         }).then(data => {
-            if (data.success === true) {
-                if (data.display_values_list.length > 0) {
-                    if (data.display_values_list[0].state != 'draft') {
-                        window.location = data.display_values_list[0].landing_route;
-                        return;
-                    }
-                }
+            if (data.state === 'done' && data.provider_code === 'mollie') {
+                window.location = data.landing_route;
+                return;
             }
             self._recallPolling();
         }).catch(error => {

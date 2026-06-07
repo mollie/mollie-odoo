@@ -39,9 +39,3 @@ class AccountPaymentRegister(models.TransientModel):
             return True
 
         return payments
-
-
-class AccountPayment(models.Model):
-    _inherit = 'account.payment'
-
-    mollie_refund_reference = fields.Char()

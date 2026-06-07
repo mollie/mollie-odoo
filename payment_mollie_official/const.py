@@ -19,3 +19,7 @@ MULTI_CAPTURE_METHODS = ['klarna', 'billie']
 
 # Billing Address Requirement for specific payment methods
 BILLING_ADDRESS_REQUIRED_METHODS = ['klarna', 'billie', 'riverty', 'in3']
+
+# TODO: Develop logic to include the 'bacs' method for mandate support, as it requires a 0.00 amount for the first payment.
+# Payment methods that support mandate payments
+MANDATE_METHODS = ['card', 'paypal', 'belfius', 'bancontact', 'eps', 'ideal', 'kbc', 'paybybank', 'trustly']

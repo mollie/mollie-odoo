@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import json
 import logging
 import psycopg2
-import requests
 from werkzeug import urls
 
-from odoo import _, fields, models, service, api, SUPERUSER_ID, Command
-from odoo.exceptions import ValidationError
+from odoo import fields, models, service, api, SUPERUSER_ID
 from odoo.modules.registry import Registry
 
 
@@ -23,7 +20,6 @@ class PaymentProviderMollie(models.Model):
     mollie_profile_id = fields.Char("Mollie Profile ID", groups="base.group_user")
 
     mollie_use_components = fields.Boolean(string='Mollie Components', default=True)
-    mollie_show_save_card = fields.Boolean(string='Single-Click payments')
     mollie_debug_logging = fields.Boolean('Debug logging', help="Log requests in order to ease debugging")
 
     # TODO: Deprecated field, not used anywhere, removed in future
@@ -68,6 +64,7 @@ class PaymentProviderMollie(models.Model):
         self.filtered(lambda p: p.code == 'mollie').update({
             'support_refund': 'partial',
             'support_manual_capture': 'partial',
+            'support_tokenization': True,
         })
 
     # --------------
@@ -83,70 +80,6 @@ class PaymentProviderMollie(models.Model):
     # API methods
     # -----------
 
-    def _mollie_make_request(self, endpoint, params=None, data=None, method='POST', silent_errors=False):
-        """
-        Overridden method to manage 'params' rest of the things works as it is.
-
-        We are not using super as we want diffrent User-Agent for all requests.
-        We also want to use separate test api key in test mode.
-
-        Note: self.ensure_one()
-        :param str endpoint: The endpoint to be reached by the request
-        :param dict params: The querystring of the request
-        :param dict data: The payload of the request
-        :param str method: The HTTP method of the request
-        :return The JSON-formatted content of the response
-        :rtype: dict
-        :raise: ValidationError if an HTTP error occurs
-        """
-        self.ensure_one()
-
-        endpoint = f'/v2/{endpoint.strip("/")}'
-        url = urls.url_join('https://api.mollie.com/', endpoint)
-        querystring_params = self._mollie_generate_querystring(params)
-
-        # User agent strings used by mollie to find issues in integration
-        odoo_version = service.common.exp_version()['server_version']
-        mollie_extended_app_version = self.env.ref('base.module_payment_mollie_official').installed_version
-        mollie_api_key = self.mollie_api_key_test if self.state == 'test' else self.mollie_api_key
-
-        headers = {
-            "Accept": "application/json",
-            "Authorization": f'Bearer {mollie_api_key}',
-            "Content-Type": "application/json",
-            "User-Agent": f'Odoo/{odoo_version} MollieOdoo/{mollie_extended_app_version}',
-        }
-
-        error_msg, result, status_code = _("Could not establish the connection to the API."), False, None
-        json_data = None
-        if data:
-            json_data = json.dumps(data)
-
-        try:
-            response = requests.request(method, url, params=querystring_params, data=json_data, headers=headers, timeout=60)
-            if response.status_code in [204, 202]:
-                return True  # returned no content
-            result = response.json()
-            if response.status_code not in [200, 201]:  # doc reference https://docs.mollie.com/overview/handling-errors
-                error_msg = f"Error[{response.status_code}]: {result.get('title')} - {result.get('detail')}"
-                status_code = response.status_code
-                _logger.exception("Error from mollie: %s", result)
-            response.raise_for_status()
-        except requests.exceptions.RequestException:
-            if silent_errors:
-                result = {'error': error_msg, 'status_code': status_code}
-            else:
-                raise ValidationError("Mollie: " + error_msg)
-        finally:
-            if self.mollie_debug_logging:
-                message = str(json.dumps({
-                    'PARAMS': params,
-                    'DATA': data,
-                    'RESPONSE': result,
-                }, indent=4))
-                self._log_logging(self.env, message, method, url, self.id)
-        return result
-
     def _api_mollie_get_active_payment_methods(self, extra_params=None, all_methods=None):
         """ Get method data from the mollie. It will return the methods
         that are enabled in the Mollie.
@@ -160,21 +93,11 @@ class PaymentProviderMollie(models.Model):
         params = {'include': 'issuers', **extra_params}
 
         # get payment api methods
-        payemnt_api_methods = self._mollie_make_request(endpoint, params=params, method="GET", silent_errors=True)
+        payemnt_api_methods = self._send_api_request('GET', endpoint, params=params)
         if payemnt_api_methods and payemnt_api_methods.get('count'):
             for method in payemnt_api_methods['_embedded']['methods']:
                 result[method['id']] = method
         return result
-
-    def _api_mollie_create_payment_record(self, payment_data, params=None, silent_errors=False):
-        """ Create the payment records on the mollie. It calls payment or order
-        API based on 'api_type' param.
-        :param str api_type: api is selected based on this parameter
-        :param dict payment_data: payment data
-        :return: details of created payment record
-        :rtype: dict
-        """
-        return self._mollie_make_request('/payments', data=payment_data, params=params, method="POST", silent_errors=silent_errors)
 
     def _api_mollie_get_payment_data(self, transaction_reference, force_payment=False):
         """ Fetch the payment records based `transaction_reference`. It is used
@@ -187,9 +110,9 @@ class PaymentProviderMollie(models.Model):
 
         # Order API deprecated remove the order support in future version
         if transaction_reference.startswith('ord_'):
-            mollie_data = self._mollie_make_request(f'/orders/{transaction_reference}', params={'embed': 'payments'}, method="GET")
+            mollie_data = self._send_api_request('GET', f'/orders/{transaction_reference}', params={'embed': 'payments'})
         if transaction_reference.startswith('tr_'):    # This is not used
-            mollie_data = self._mollie_make_request(f'/payments/{transaction_reference}', method="GET")
+            mollie_data = self._send_api_request('GET', f'/payments/{transaction_reference}')
         if not force_payment:
             return mollie_data
 
@@ -198,7 +121,7 @@ class PaymentProviderMollie(models.Model):
             if payments:
                 # No need to handle multiple payment for same order as we create new order for each failed transaction
                 payment_id = payments[0]['id']
-                mollie_data = self._mollie_make_request(f'/payments/{payment_id}', method="GET")
+                mollie_data = self._send_api_request('GET', f'/payments/{payment_id}')
         return mollie_data
 
     def _api_mollie_create_customer_id(self):
@@ -210,7 +133,7 @@ class PaymentProviderMollie(models.Model):
         customer_data = {'name': sudo_user.name, 'metadata': {'odoo_user_id': self.env.user.id}}
         if sudo_user.email:
             customer_data['email'] = sudo_user.email
-        return self._mollie_make_request('/customers', data=customer_data, method="POST")
+        return self._send_api_request('POST', '/customers', json=customer_data)
 
     def _api_mollie_refund(self, amount, currency, payment_reference):
         """ Create the customer id for currunt user inside the mollie.
@@ -221,7 +144,7 @@ class PaymentProviderMollie(models.Model):
         :rtype: dict
         """
         refund_data = {'amount': {'value': "%.2f" % amount, 'currency': currency}}
-        return self._mollie_make_request(f'/payments/{payment_reference}/refunds', data=refund_data, method="POST")
+        return self._send_api_request('POST', f'/payments/{payment_reference}/refunds', json=refund_data)
 
     def _api_mollie_refund_data(self, payment_reference, refund_reference):
         """ Get data for the refund from mollie.
@@ -230,14 +153,14 @@ class PaymentProviderMollie(models.Model):
         :return: details of refund record
         :rtype: dict
         """
-        return self._mollie_make_request(f'/payments/{payment_reference}/refunds/{refund_reference}', method="GET")
+        return self._send_api_request('GET', f'/payments/{payment_reference}/refunds/{refund_reference}')
 
-    def _api_get_customer_data(self, customer_id, silent_errors=False):
+    def _api_get_customer_data(self, customer_id):
         """ Create the customer id for currunt user inside the mollie.
         :param str customer_id: customer_id in mollie
         :rtype: dict
         """
-        return self._mollie_make_request(f'/customers/{customer_id}', method="GET", silent_errors=silent_errors)
+        return self._send_api_request('GET', f'/customers/{customer_id}')
 
     def _api_mollie_get_capture_data(self, payment_reference):
         """ Fetch capture records based `payment_reference`. It is used
@@ -246,7 +169,7 @@ class PaymentProviderMollie(models.Model):
         :return: details of capture records
         :rtype: dict
         """
-        return self._mollie_make_request(f'/payments/{payment_reference}/captures', method="GET")
+        return self._send_api_request('GET', f'/payments/{payment_reference}/captures')
 
     def _api_mollie_sync_capture(self, order_reference, capture_data):
         """ Capture amount from mollie
@@ -254,32 +177,26 @@ class PaymentProviderMollie(models.Model):
         :param dict capture_data: captured amount data
 
         """
-        return self._mollie_make_request(f'/payments/{order_reference}/captures', data=capture_data, method="POST")
+        return self._send_api_request('POST', f'/payments/{order_reference}/captures', json=capture_data)
 
     def _api_mollie_void_remaining_payment(self, order_reference):
         """ Void remaining amount from mollie
         :param str order_reference: order record reference
 
         """
-        return self._mollie_make_request(f'/payments/{order_reference}/release-authorization', method="POST")
+        return self._send_api_request('POST', f'/payments/{order_reference}/release-authorization')
 
     # -------------------------
     # Helper methods for mollie
     # -------------------------
 
-    def _mollie_user_locale(self):
-        user_lang = self.env.context.get('lang')
-        supported_locale = self._mollie_get_supported_locale()
-        return user_lang if user_lang in supported_locale else 'en_US'
-
-    def _mollie_get_supported_locale(self):
-        return [
-            'en_US', 'nl_NL', 'nl_BE', 'fr_FR',
-            'fr_BE', 'de_DE', 'de_AT', 'de_CH',
-            'es_ES', 'ca_ES', 'pt_PT', 'it_IT',
-            'nb_NO', 'sv_SE', 'fi_FI', 'da_DK',
-            'is_IS', 'hu_HU', 'pl_PL', 'lv_LV',
-            'lt_LT', 'en_GB']
+    def _send_api_request(
+        self, method, endpoint, *, params=None, data=None, json=None, reference=None, **kwargs
+    ):
+        """ Inherited method to populate query strings. """
+        if self.code == 'mollie' and params:
+            params = self._mollie_generate_querystring(params)
+        return super()._send_api_request(method, endpoint, params=params, data=data, json=json, reference=reference, **kwargs)
 
     def _mollie_generate_querystring(self, params):
         """ Mollie uses dictionaries in querystrings with square brackets like this
@@ -308,3 +225,66 @@ class PaymentProviderMollie(models.Model):
         :rtype: list
         """
         return self.search([('code', '=', 'mollie')]).with_context(active_test=False).mapped('payment_method_ids.code')
+
+    def _mollie_get_customer_id(self, partner):
+        """ Get or create a Mollie customer ID for the given partner.
+
+        Checks existing payment.token records from Mollie for the partner to
+        retrieve a customer ID. Validates it via API and creates a new one if
+        no valid ID is found.
+
+        :param recordset partner: res.partner record
+        :return: Mollie customer ID or False
+        :rtype: str or False
+        """
+        self.ensure_one()
+        existing_token = self.env['payment.token'].sudo().search([
+            ('partner_id', '=', partner.id),
+            ('provider_id', '=', self.id),
+            ('company_id', '=', self.company_id.id),
+            ('mollie_customer_id', '!=', False),
+        ], limit=1, order='create_date desc')
+
+        if existing_token and self._mollie_validate_customer_id(existing_token.mollie_customer_id):
+            return existing_token.mollie_customer_id
+
+        customer_data = self._api_mollie_create_customer_id()
+        if customer_data and customer_data.get('id'):
+            return customer_data['id']
+        return False
+
+    def _mollie_validate_customer_id(self, customer_id):
+        """ Validate a Mollie customer ID via API.
+
+        :param str customer_id: Mollie customer ID to validate
+        :return: True if valid, False if deleted/invalid
+        :rtype: bool
+        """
+        self.ensure_one()
+        customer_data = self._api_get_customer_data(customer_id)
+        if not customer_data or customer_data.get('status'):
+            return False
+        return True
+
+    # === REQUEST HELPERS === #
+
+    def _build_request_headers(self, *args, **kwargs):
+        """ Inherited the request header to populate mollie api key. """
+        headers = super()._build_request_headers(*args, **kwargs)
+        if self.code != 'mollie':
+            return headers
+
+        if self.state == 'test':
+            headers['Authorization'] = f'Bearer {self.mollie_api_key_test}'
+
+        # User agent strings used by mollie to find issues in integration
+        odoo_version = service.common.exp_version()['server_version']
+        mollie_extended_app_version = self.env.ref('base.module_payment_mollie_official').installed_version
+        headers['User-Agent'] = f'Odoo/{odoo_version} MollieOdoo/{mollie_extended_app_version}'
+        return headers
+
+    def _parse_response_content(self, response, **kwargs):
+        """Override of `payment` to parse the response content."""
+        if self.code == 'mollie' and response.status_code in [202, 204]:
+            return True
+        return super()._parse_response_content(response, **kwargs)

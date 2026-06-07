@@ -16,9 +16,6 @@ patch(PaymentForm.prototype, {
             '.o_mollie_issuer': {
                 't-on-click': this._onClickIssuer.bind(this),
             },
-            'input[name="mollieCardType"]': {
-                't-on-change': this._onChangeCardType.bind(this),
-            },
         });
     },
 
@@ -61,12 +58,7 @@ patch(PaymentForm.prototype, {
             await super._prepareInlineForm(...arguments);
             return;
         }
-        const radio = this.el.querySelector('input[name="o_payment_radio"]:checked');
-        const inlineForm = this._getInlineForm(radio);
-        const useSavedCard = inlineForm.querySelector('#mollieSavedCard')?.checked;
-        if (!useSavedCard) {
-            await this._setupMollieComponent();
-        }
+        await this._setupMollieComponent();
     },
 
     /**
@@ -122,15 +114,12 @@ patch(PaymentForm.prototype, {
         }
 
         this._mollieCardToken = false;
-        const checkedRadio = this.el.querySelector('input[name="o_payment_radio"]:checked');
-        const inlineForm = this._getInlineForm(checkedRadio);
-        const useSavedCard = inlineForm.querySelector('#mollieSavedCard')?.checked;
 
-        if (this.mollieComponentLoaded && !useSavedCard) {
+        if (this.mollieComponentLoaded) {
             this._mollieCardToken = await this._prepareMollieCardToken();
         }
 
-        if (!this._mollieCardToken && !useSavedCard) {
+        if (!this._mollieCardToken) {
             return; // Error already displayed in _prepareMollieCardToken
         }
         await super._initiatePaymentFlow(...arguments);
@@ -166,26 +155,16 @@ patch(PaymentForm.prototype, {
         const inlineForm = this._getInlineForm(checkedRadio);
 
         if (paymentContext.providerCode === 'mollie') {
-
-            if (paymentContext.paymentMethodCode === 'card') {
-                const useSavedCard = inlineForm.querySelector('#mollieSavedCard')?.checked;
-
-                if(this._mollieCardToken && !useSavedCard) {
-                    transactionRouteParams['mollie_card_token'] = this._mollieCardToken;
-                }
-
-                if (inlineForm.querySelector('input[name="o_mollie_save_card"]') || useSavedCard) {
-                    transactionRouteParams['mollie_save_card'] = inlineForm.querySelector('input[name="o_mollie_save_card"]').checked || useSavedCard;
-                }
-
+            if (this._mollieCardToken && paymentContext.paymentMethodCode === 'card') {
+                transactionRouteParams['mollie_card_token'] = this._mollieCardToken;
             }
-            const activeIssuer = inlineForm.querySelector('.o_mollie_issuer.active')
-            if (activeIssuer) {
-                transactionRouteParams['mollie_payment_issuer'] = inlineForm.querySelector('.o_mollie_issuer.active').dataset.mollieIssuer;
+            if (inlineForm){
+                const activeIssuer = inlineForm.querySelector('.o_mollie_issuer.active')
+                if (activeIssuer) {
+                    transactionRouteParams['mollie_payment_issuer'] = inlineForm.querySelector('.o_mollie_issuer.active').dataset.mollieIssuer;
+                }
             }
-
         }
-
         return transactionRouteParams;
     },
 
@@ -197,19 +176,6 @@ patch(PaymentForm.prototype, {
         let $container = $(ev.currentTarget).closest('.o_mollie_issuer_container');
         $container.find('.o_mollie_issuer').removeClass('active border-primary');
         $(ev.currentTarget).addClass('active border-primary');
-    },
-
-    /**
-     * @private
-     * @param {MouseEvent} ev
-     */
-    _onChangeCardType: function (ev) {
-        this.el.querySelector('#o_mollie_component').classList.toggle('d-none', $(ev.currentTarget).val() !== 'component');
-        this.el.querySelector('#o_mollie_save_card').classList.toggle('d-none', $(ev.currentTarget).val() !== 'component');
-
-        if ($(ev.currentTarget).val() == 'component' && !this.mollieComponentLoaded) {
-            this._setupMollieComponent();
-        }
     },
 
     /**
@@ -230,7 +196,7 @@ patch(PaymentForm.prototype, {
         if (qrImgSrc) {
             this.services.dialog.add(QrDialog, {
                 qrImgSrc: qrImgSrc,
-                submitRedirectForm: super._processRedirectFlow(...arguments),
+                submitRedirectForm: () => super._processRedirectFlow(...arguments),
             });
             this._enableButton();
         } else {

@@ -2,7 +2,7 @@
 
 {
     'name': 'Mollie Payments Extended',
-    'version': '19.0.0.2',
+    'version': '19.0.0.3',
     'category': 'eCommerce',
     'license': 'LGPL-3',
     'author': 'Mollie',
@@ -17,7 +17,6 @@
     'depends': [
         'payment_mollie', 'product', 'account', 'base_automation'
     ],
-    'external_dependencies': {},
     'data': [
         'security/ir.model.access.csv',
         'views/payment_views.xml',
