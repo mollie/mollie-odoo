@@ -446,6 +446,25 @@
 
 <div class="card mx-auto w-md-75">
     <div class="card-header bg-200">
+        <h4 class="m-0">v19.0.0.4</h4>
+    </div>
+    <div class="card-body">
+        <div>
+            <div> <b class="text-success"> NEW </b> Improved payment method synchronization and added support to refresh payment method names and icons from Mollie. </div>
+            <div><b class="text-success"> NEW </b> Added QR code payment support for iDEAL and Bank Transfer, enabling customers to complete payments by scanning a QR code.</div>
+            <div><b class="text-info"> UPDATE </b> Improved credit invoice refund workflow by ensuring proper processing of Mollie refund callbacks and webhook-based transaction updates.</div>
+            <div><b class="text-info"> UPDATE </b> Improved phone number formatting logic to ensure correct and consistent formatting of all phone numbers.</div>
+            <div><b class="text-info"> UPDATE </b> Improved refund handling by recognizing queued, pending, processing, and refunded statuses.</div>
+            <div><b class="text-info"> UPDATE </b> Improved invoice line generation for fractional quantities by preventing division-by-zero errors during payment processing with non-integer quantities.</div>
+            <div><b class="text-info"> UPDATE </b> Improved transaction reconciliation logic by using currency-aware comparisons for remaining amounts, preventing incorrect void transactions caused by floating-point rounding differences.</div>
+            <div><b class="text-info"> UPDATE </b> Linked refund transactions created from captured payments back to their original source transactions to ensure proper traceability.</div>
+            <div><b class="text-info"> UPDATE </b> Improved payment method filtering by using Odoo's built-in country restrictions alongside the active payment methods retrieved from Mollie.</div>
+        </div>
+    </div>
+</div>
+
+<div class="card mx-auto w-md-75">
+    <div class="card-header bg-200">
         <h4 class="m-0">v19.0.0.3</h4>
     </div>
     <div class="card-body">

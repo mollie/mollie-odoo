@@ -19,15 +19,4 @@
         </field>
     </record>
 
-    <record id="account_payment_form_view_mollie" model="ir.ui.view">
-        <field name="name">account.payment.form.view.mollie</field>
-        <field name="model">account.payment</field>
-        <field name="inherit_id" ref="account.view_account_payment_form"/>
-        <field name="arch" type="xml">
-            <field name="partner_bank_id" position="after">
-                <field name="mollie_refund_reference" invisible="not mollie_refund_reference"/>
-            </field>
-        </field>
-    </record>
-
 </odoo>

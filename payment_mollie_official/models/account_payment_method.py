@@ -20,4 +20,5 @@ class AccountPaymentMethod(models.Model):
 class AccountPayment(models.Model):
     _inherit = 'account.payment'
 
+    # TODO: Deprecated field, not used anywhere, remove in future
     mollie_refund_reference = fields.Char()

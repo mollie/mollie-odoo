@@ -123,7 +123,7 @@ class PaymentTransaction(models.Model):
         if not refund_data:
             return
         self.provider_reference = refund_data.get('id')
-        self._process('mollie', refund_data)
+        self.source_transaction_id._process('mollie', payment_data)
 
     def _send_capture_request(self):
         """ Override of `payment` to send a capture request to Mollie. """
@@ -170,6 +170,13 @@ class PaymentTransaction(models.Model):
         )
         if payment_data:
             self._set_canceled()
+
+    def _create_child_transaction(self, amount, is_refund=False, **custom_create_values):
+        """ Inherit this method to create a refund transaction linked to the source payment transaction
+            when the refund is processed from a captured transaction. """
+        if self.provider_id.code == 'mollie' and is_refund and self.provider_reference.startswith('cpt_'):
+            return self.source_transaction_id._create_child_transaction(amount, is_refund, **custom_create_values)
+        return super()._create_child_transaction(amount, is_refund, **custom_create_values)
 
     def _create_payment(self, **extra_create_values):
         """ Overridden method to create reminder payment for vouchers."""
@@ -319,7 +326,7 @@ class PaymentTransaction(models.Model):
                     "sequenceType": "first",
                 })
                 if payment_data.get('captureMode') == 'manual':
-                    method_specific_parameters["captureMode"] = "automatic"
+                    del payment_data['captureMode']
 
         # Add if transaction has issuer
         if self.mollie_payment_issuer:
@@ -418,7 +425,7 @@ class PaymentTransaction(models.Model):
 
             # Mollie does not support negative quantities, but it supports negative prices as discount lines.
             # So we convert everything to positive and change the sign of unit price if needed.
-            quantity = int(abs(line.quantity))
+            quantity = int(abs(line.quantity)) or 1
             unit_price = abs(line.price_total / quantity)
 
             # Mollie does not support float quantities. So we send 1 instead of float quantity. Total as unit price.
@@ -515,7 +522,6 @@ class PaymentTransaction(models.Model):
     @api.model
     def _mollie_phone_format(self, phone):
         """ Mollie only allows E164 phone numbers so this method checks whether its validity."""
-        phone = False
         if phone:
             try:
                 parse_phone = phonenumbers.parse(self.phone, None)
@@ -543,6 +549,8 @@ class PaymentTransaction(models.Model):
                 if refund_data and refund_data.get('id'):
                     if refund_data.get('status') == 'refunded':
                         transection._set_done()
+                    elif refund_data.get('status') in ['pending', 'queued', 'processing']:
+                        transection._set_pending()
                     elif refund_data.get('status') == 'failed':
                         self._set_canceled("Mollie: " + _("Mollie: failed due to status: %s", refund_data.get('status')))
 
@@ -593,7 +601,16 @@ class PaymentTransaction(models.Model):
             remaining_amount_to_cancel = transaction_total_amount - confirmed_amount - cancelled_amount
 
             # Cancel the remaining amount if any
-            if remaining_amount_to_cancel > 0:
+            if self.currency_id.compare_amounts(remaining_amount_to_cancel, 0) > 0:
                 void_transaction = self._create_child_transaction(remaining_amount_to_cancel)
                 void_transaction._log_sent_message()
                 void_transaction._set_canceled()
+
+    def _build_action_feedback_notification(self):
+        """ Override to add the Mollie refund transaction ID to the action context for refund operations. """
+        result = super()._build_action_feedback_notification()
+        if self.operation == 'refund':
+            ctx = self.env.context.copy()
+            ctx['mollie_refund_id'] = self.id
+            result['context'] = ctx
+        return result
