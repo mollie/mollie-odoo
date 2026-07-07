@@ -6,17 +6,17 @@
         <field name="model">sync.mollie.terminal</field>
         <field name="arch" type="xml">
             <form>
-                <div class="text-center" invisible="mollie_terminal_api_key">
+                <div class="text-center" invisible="api_key_set">
                     <i class="fa fa-exclamation-triangle d-inline-block text-danger rounded-circle" style="background: #ffe3e3;padding: 15px;font-size: 20px;" aria-hidden="true"></i>
                     <h3>Api key is not set.</h3>
                     <p>Please set api key from pos configuration.</p>
                 </div>
-                <div invisible="not mollie_terminal_api_key">
+                <div invisible="not api_key_set">
                     This operation will sync terminal infromation from mollie.
                 </div>
-                <field name="mollie_terminal_api_key" invisible="1"></field>
+                <field name="api_key_set" invisible="1"></field>
                 <footer>
-                    <button string="Sync Now" class="btn btn-primary" type="object" name="sync_now" invisible="not mollie_terminal_api_key"/>
+                    <button string="Sync Now" class="btn btn-primary" type="object" name="sync_now" invisible="not api_key_set"/>
                     <button string="Cancel" class="btn-secondary" special="cancel" />
                 </footer>
             </form>
