@@ -192,7 +192,7 @@ class MolliePosTerminal(models.Model):
         company = self.company_id or self.env.company
         headers = {
             'content-type': 'application/json',
-            "Authorization": f'Bearer {company.mollie_terminal_api_key}',
+            "Authorization": f'Bearer {company.sudo().mollie_terminal_api_key}',
             "User-Agent": f'Odoo/{odoo_version} MolliePOSOdoo/{mollie_extended_app_version}',
         }
 
