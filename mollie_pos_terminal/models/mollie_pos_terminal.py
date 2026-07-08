@@ -150,7 +150,7 @@ class MolliePosTerminal(models.Model):
 
         headers = {
             'content-type': 'application/json',
-            "Authorization": f'Bearer {company.mollie_terminal_api_key}',
+            "Authorization": f'Bearer {company.sudo().mollie_terminal_api_key}',
         }
 
         endpoint = f'/v2/{endpoint.strip("/")}'
