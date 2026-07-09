@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_mollie_sync_terminal_form_multi" model="ir.ui.view">
+        <field name="name">mollie.sync.terminal.form.multi</field>
+        <field name="model">sync.mollie.terminal</field>
+        <field
+      name="inherit_id"
+      ref="mollie_pos_terminal.sync_mollie_terminal_view_form"
+    />
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('text-center')]" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath
+        expr="//i[hasclass('fa-exclamation-triangle')]"
+        position="attributes"
+      >
+                <attribute name="title">Api key is not set.</attribute>
+            </xpath>
+            <xpath expr="//div[@invisible='not api_key_set']" position="attributes">
+                <attribute name="invisible">0</attribute>
+            </xpath>
+            <xpath expr="//button[@name='sync_now']" position="attributes">
+                <attribute name="invisible">0</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>
