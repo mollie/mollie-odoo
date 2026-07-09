@@ -366,13 +366,22 @@ class PaymentTransaction(models.Model):
         """
         lines = []
         for line in order.order_line.filtered(lambda l: not l.display_type):  # ignore notes and section lines
+            # Inspired by code for v19
+            # Mollie does not support float quantities.
+            # If qty is float, we send 1 instead of float quantity. Total as unit price.
+            unit_price = abs(line.price_reduce_taxinc)
+            quantity = int(abs(line.product_uom_qty))
+            if not line.product_uom_qty.is_integer():
+                quantity = 1
+                unit_price = abs(line.price_total)
+
             line_data = {
                 'name': line.name,
                 'type': 'physical',
-                'quantity': int(line.product_uom_qty),    # Mollie does not support float.
+                'quantity': quantity,
                 'unitPrice': {
                     'currency': line.currency_id.name,
-                    'value': "%.2f" % line.price_reduce_taxinc
+                    'value': "%.2f" % unit_price,
                 },
                 'totalAmount': {
                     'currency': line.currency_id.name,
