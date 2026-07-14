@@ -6,7 +6,7 @@ import psycopg2
 import requests
 from werkzeug import urls
 
-from odoo import _, fields, models, service, api, SUPERUSER_ID, Command
+from odoo import _, fields, models, service, api, SUPERUSER_ID
 from odoo.exceptions import ValidationError
 from odoo.modules.registry import Registry
 
@@ -19,8 +19,8 @@ class PaymentProviderMollie(models.Model):
 
     # removed required_if_provider becasue we do not want to add production key during testing
     mollie_api_key = fields.Char(string="Mollie API Key", required_if_provider=False, help="The Test or Live API Key depending on the configuration of the provider", groups="base.group_system")
-    mollie_api_key_test = fields.Char(string="Test API key", groups="base.group_user")
-    mollie_profile_id = fields.Char("Mollie Profile ID", groups="base.group_user")
+    mollie_api_key_test = fields.Char(string="Test API key", groups="base.group_system")
+    mollie_profile_id = fields.Char("Mollie Profile ID", groups="base.group_system")
 
     mollie_use_components = fields.Boolean(string='Mollie Components', default=True)
     mollie_debug_logging = fields.Boolean('Debug logging', help="Log requests in order to ease debugging")
@@ -77,8 +77,16 @@ class PaymentProviderMollie(models.Model):
     def action_sync_mollie(self):
         """ This method will sync mollie methods and translations via API """
         self.ensure_one()
-        self.env['payment.method']._sync_mollie_methods(self)
-
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Sync Mollie Payment Methods',
+            'res_model': 'mollie.sync.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_provider_id': self.id,
+            }
+        }
     # -----------
     # API methods
     # -----------

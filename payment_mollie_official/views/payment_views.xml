@@ -26,7 +26,8 @@
             </a>
 
             <a name="action_view_payment_methods" position="after">
-                <a type="object" name="action_sync_mollie" class="btn btn-link" role="button" invisible="code != 'mollie'">
+                <a type="object" name="action_sync_mollie" class="btn btn-link" role="button"
+                    invisible="code != 'mollie' or state == 'disabled'">
                     <i class="fa fa-refresh o_button_icon"/> Sync Mollie Methods
                 </a>
             </a>

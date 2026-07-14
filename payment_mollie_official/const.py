@@ -1,5 +1,6 @@
 
 # Mapping of payment method codes to Mollie codes.
+# NOTE: The mapping for KBC/CBC is avoided due to the issuer display logic.
 PAYMENT_METHODS_MAPPING = {
     'apple_pay': 'applepay',
     'card': 'creditcard',

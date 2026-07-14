@@ -118,22 +118,20 @@ class PaymentMethod(models.Model):
         if not provider_ids:
             return result_pms
 
-        # all active mollie methods from provider
-        mollie_providers = self.env['payment.provider'].browse(provider_ids).filtered(lambda provider: provider._get_code() == 'mollie')
-        mollie_active_pms = mollie_providers.mapped('payment_method_ids')
-
-        if not mollie_providers:
-            return result_pms
-
         def is_mollie_method(method):
             return method.provider_ids.filtered(lambda p: p.id in provider_ids)[:1]._get_code() == 'mollie'
 
-        # mollie methods from super
+        mollie_providers = self.env['payment.provider'].browse(provider_ids).filtered(lambda provider: provider._get_code() == 'mollie')
         mollie_result_pms = result_pms.filtered(lambda m: is_mollie_method(m))
+
+        if not mollie_result_pms:
+            return result_pms
+
+        # mollie methods from super
         non_mollie_pms = result_pms - mollie_result_pms
 
         # mollie methods from which we need to filter via method api
-        mollie_allowed_methods = mollie_active_pms - non_mollie_pms
+        mollie_allowed_methods = mollie_result_pms
 
         # Fetch allowed methods via API
         has_voucher_line, extra_params = False, {'includeWallets': 'applepay'}
@@ -275,6 +273,16 @@ class PaymentMethod(models.Model):
         for odoo_method_code, mollie_method_code in const.PAYMENT_METHODS_MAPPING.items():
             if mollie_methods_data.get(mollie_method_code):
                 mollie_methods_data[odoo_method_code] = mollie_methods_data.pop(mollie_method_code)
+
+        # Reload Metadata
+        if self.env.context.get('reload_metadata'):
+            for method_code, method_info in mollie_methods_data.items():
+                mollie_method = all_methods.filtered(lambda m: m.code == method_code)
+                mollie_method.write({
+                    'name': method_info['description'],
+                    'image': self._mollie_fetch_image_by_url(method_info.get('image', {}).get('size2x')),
+                })
+            return
 
         # Create new methods if needed
         methods_to_create = mollie_methods_data.keys() - set(all_methods.mapped('code'))

@@ -158,10 +158,16 @@ class PaymentTransaction(models.Model):
         if self.provider_code != 'mollie':
             return refund_tx
 
-        payment_data = self.provider_id._api_mollie_get_payment_data(self.provider_reference, force_payment=True)
+        provider_reference = self.provider_reference
+        if self.provider_reference.startswith('cpt_'):
+            provider_reference = self.source_transaction_id.provider_reference
+        payment_data = self.provider_id._api_mollie_get_payment_data(provider_reference, force_payment=True)
         refund_data = self.provider_id._api_mollie_refund(amount_to_refund, self.currency_id.name, payment_data.get('id'))
         refund_tx.provider_reference = refund_data.get('id')
-
+        refund_tx.source_transaction_id._handle_notification_data('mollie', payment_data)
+        if self.env.context.get('dr_refund_wizard'):
+            refund_wizard = self.env['payment.refund.wizard'].sudo().browse(self.env.context.get('dr_refund_wizard'))
+            refund_wizard.payment_id.mollie_refund_reference = refund_tx.id
         return refund_tx
 
     def _get_tx_from_notification_data(self, provider_code, notification_data):
@@ -223,6 +229,13 @@ class PaymentTransaction(models.Model):
         if child_void_tx and payment_data:
             child_void_tx._set_canceled()
         return child_void_tx
+
+    def _create_child_transaction(self, amount, is_refund=False, **custom_create_values):
+        """ Inherit this method to create a refund transaction linked to the source payment transaction
+            when the refund is processed from a captured transaction. """
+        if self.provider_id.code == 'mollie' and is_refund and self.provider_reference.startswith('cpt_'):
+            return self.source_transaction_id._create_child_transaction(amount, is_refund, **custom_create_values)
+        return super()._create_child_transaction(amount, is_refund, **custom_create_values)
 
     def _create_payment(self, **extra_create_values):
         """ Overridden method to create reminder payment for vouchers."""
@@ -406,6 +419,8 @@ class PaymentTransaction(models.Model):
                     "customerId": mollie_customer_id,
                     "sequenceType": "first",
                 })
+                if payment_data.get('captureMode') == 'manual':
+                    del payment_data['captureMode']
 
         # Add if transaction has issuer
         if self.mollie_payment_issuer:
@@ -496,7 +511,7 @@ class PaymentTransaction(models.Model):
                 continue
             line_type = 'physical'
             is_negative_line = line.price_total < 0
-            quantity = int(abs(line.quantity))
+            quantity = int(abs(line.quantity)) or 1
             unit_price = abs(line.price_total / quantity)
             if not line.quantity.is_integer():
                 quantity = 1  # Mollie does not support float quantities.
@@ -590,10 +605,9 @@ class PaymentTransaction(models.Model):
     @api.model
     def _mollie_phone_format(self, phone):
         """ Mollie only allows E164 phone numbers so this method checks whether its validity."""
-        phone = False
         if phone:
             try:
-                parse_phone = phonenumbers.parse(self.phone, None)
+                parse_phone = phonenumbers.parse(phone, None)
                 if parse_phone:
                     phone = phonenumbers.format_number(
                         parse_phone, phonenumbers.PhoneNumberFormat.E164
@@ -618,6 +632,8 @@ class PaymentTransaction(models.Model):
                 if refund_data and refund_data.get('id'):
                     if refund_data.get('status') == 'refunded':
                         transection._set_done()
+                    elif refund_data.get('status') in ['pending', 'queued', 'processing']:
+                        transection._set_pending()
                     elif refund_data.get('status') == 'failed':
                         self._set_canceled("Mollie: " + _("Mollie: failed due to status: %s", refund_data.get('status')))
 
@@ -669,7 +685,7 @@ class PaymentTransaction(models.Model):
             remaining_amount_to_cancel = transaction_total_amount - confirmed_amount - cancelled_amount
 
             # Cancel the remaining amount if any
-            if remaining_amount_to_cancel > 0:
+            if self.currency_id.compare_amounts(remaining_amount_to_cancel, 0) > 0:
                 void_transaction = self._create_child_transaction(remaining_amount_to_cancel)
                 void_transaction._log_sent_message()
                 void_transaction._set_canceled()

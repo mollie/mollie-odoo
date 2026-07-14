@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="mollie_sync_wizard_view_form" model="ir.ui.view">
+        <field name="name">sync_mollie_terminal_view_form</field>
+        <field name="model">mollie.sync.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <img
+                        class="img img-fluid w-75 w-md-50 mx-auto" alt="mollie-odoo-sync"
+                        src="/payment_mollie_official/static/description/img/mollie-odoo-sync.png"
+                    />
+                    <div class="text-center">
+                        <h2>Mollie Odoo Sync</h2>
+                        <p class="text-muted">This action will sync payment methods from Mollie to odoo and activate based on your account. </p>
+                    </div>
+                    <div class="text-center mt-3">
+                        <field name="provider_id" invisible="1" />
+                        <label for="reload_metadata" string="Override Metadata" />
+                        <field name="reload_metadata" help="By enabling Reload metadata, only the display information such as
+                        names and icons of existing payment methods will be refreshed. No
+                        methods will be added or removed" />
+                    </div>
+                </sheet>
+                <footer>
+                    <button name="action_confirm" type="object" string="Sync" class="btn-primary" />
+                    <button string="Cancel" special="cancel" class="btn-secondary" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>
