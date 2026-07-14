@@ -12,12 +12,6 @@
                     name="action_register_refund_payment" type="object"
                     invisible="not valid_for_mollie_refund"/>
             </header>
-            <xpath expr="//div[@name='journal_div']" position="after">
-                <field name="mollie_refund_reference" invisible="1"/>
-                <field name="mollie_refund_reference" groups="base.group_no_one" readonly="1" invisible="not mollie_refund_reference"/>
-                <span invisible="not mollie_refund_reference"> </span>
-                <span class="badge bg-success text-white" invisible="not mollie_refund_reference"> <span class="fa fa-check"/> Amount refunded in mollie </span>
-            </xpath>
         </field>
     </record>
 

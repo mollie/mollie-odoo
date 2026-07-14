@@ -23,6 +23,7 @@ class AccountMove(models.Model):
     # To proccess refunds from credit notes
 
     valid_for_mollie_refund = fields.Boolean(compute="_compute_valid_for_mollie_refund")
+    # TODO: Deprecated field, not used anywhere, remove in future
     mollie_refund_reference = fields.Char()
 
     def _get_mollie_payment_data_for_refund(self):
