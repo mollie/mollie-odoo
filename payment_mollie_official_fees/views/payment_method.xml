@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="payment_method_form_inherit_mollie_fees" model="ir.ui.view">
+        <field name="name">payment.method.view.form.inherit</field>
+        <field name="model">payment.method</field>
+        <field name="inherit_id" ref="payment.payment_method_form"/>
+        <field name="arch" type="xml">
+            <page name="brands" position="after">
+                <page name="fees" string="Fees" invisible="context.get('provider_code') != 'mollie'">
+                    <group>
+                        <group>
+                            <field name="fees_active" />
+                            <field name="fees_dom_fixed" invisible="not fees_active" />
+                            <field name="fees_dom_var" invisible="not fees_active" />
+                            <field name="fees_int_fixed" invisible="not fees_active" />
+                            <field name="fees_int_var" invisible="not fees_active" />
+                        </group>
+                    </group>
+                </page>
+            </page>
+        </field>
+    </record>
+
+</odoo>
