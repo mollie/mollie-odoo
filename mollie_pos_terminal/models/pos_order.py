@@ -23,3 +23,11 @@ class PosOrder(models.Model):
         # Will implement if needed
         mollie_lines = self.payment_ids.filtered(lambda line: line.transaction_id and line.payment_method_id.use_payment_terminal == 'mollie')
         return mollie_lines[0].transaction_id
+
+    def add_payment(self, data):
+        transaction_id = self.env.context.get('mollie_refund_transaction_id', False)
+        if transaction_id:
+            data.update({
+                'transaction_id': transaction_id
+            })
+        return super().add_payment(data)
