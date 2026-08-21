@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record
+    id="res_config_settings_view_form_mollie_pos_terminal_multi"
+    model="ir.ui.view"
+  >
+        <field
+      name="name"
+    >res.config.settings.view.form.mollie.pos.terminal.multi</field>
+        <field name="model">res.config.settings</field>
+        <field
+      name="inherit_id"
+      ref="mollie_pos_terminal.res_config_settings_view_form_inherit_mollie_pos_terminal"
+    />
+        <field name="arch" type="xml">
+            <xpath
+        expr="//setting[@id='mollie_payment_terminal_setting']"
+        position="attributes"
+      >
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath
+        expr="//setting[@id='mollie_payment_terminal_setting']"
+        position="after"
+      >
+                <setting
+          id="pos_mollie_payment_terminal_setting"
+          title="Configure Mollie Terminal API key per Point of Sale."
+          string="Mollie"
+          help="Accept payments with a Mollie payment terminal using per-POS API keys"
+        >
+                    <field
+            name="pos_mollie_terminal_api_key"
+            password="True"
+            modifiers="{'invisible': [('pos_config_id', '=', False)]}"
+          />
+                    <div invisible="not pos_mollie_terminal_api_key">
+                        <button
+              type="action"
+              name="%(mollie_pos_terminal.mollie_pos_terminal_action)d"
+              icon="fa-arrow-right"
+              class="btn-link"
+            >View Terminals</button>
+                    </div>
+                </setting>
+            </xpath>
+        </field>
+    </record>
+</odoo>
