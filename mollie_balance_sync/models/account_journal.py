@@ -319,4 +319,4 @@ class AccountBankStatementLine(models.Model):
 
     mollie_balance_json_info = fields.Char()
     mollie_transaction_id = fields.Char()
-    mollie_queue_id = fields.Many2one('mollie.transaction.queue', string='Mollie Queue')
+    mollie_queue_id = fields.Many2one('mollie.transaction.queue', string='Mollie Queue', index=True)
