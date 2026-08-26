@@ -34,14 +34,20 @@ class MollieTransactionQueue(models.Model):
         created: statement line created
         reconciled: queue related statement line reconciled
         """
-        for line in self:
-            if line.statement_line_ids:
-                if line.statement_line_ids[0].is_reconciled:
-                    line.state = 'reconciled'
-                else:
-                    line.state = 'created'
-            else:
-                line.state = 'not_created'
+        states = dict.fromkeys(self.ids, 'not_created')
+        if self.ids:
+            for queue, is_reconciled in self.env[
+                'account.bank.statement.line'
+            ]._read_group(
+                [('mollie_queue_id', 'in', self.ids)],
+                ['mollie_queue_id'],
+                ['is_reconciled:bool_or'],
+            ):
+                if queue:
+                    states[queue.id] = 'reconciled' if is_reconciled else 'created'
+
+        for record in self:
+            record.state = states[record.id]
 
     def _cron_generate_mollie_statements_from_queue(self):
         """ This method create bank statement lines from queue
