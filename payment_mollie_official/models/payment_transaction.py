@@ -13,6 +13,9 @@ from odoo import _, api, fields, models, tools
 
 _logger = logging.getLogger(__name__)
 
+# Description size on Mollie side is 255
+DESCRIPTION_SIZE = 255
+
 
 class PaymentTransaction(models.Model):
     _inherit = 'payment.transaction'
@@ -464,7 +467,7 @@ class PaymentTransaction(models.Model):
                 unit_price = -abs(unit_price)
             lines_amount_total += line.price_total
             line_data = {
-                'description': line.name,
+                'description': line.name[:DESCRIPTION_SIZE],
                 'type': line_type,
                 'quantity': quantity,
                 'unitPrice': {
@@ -522,7 +525,7 @@ class PaymentTransaction(models.Model):
             lines_amount_total += line.price_total
 
             line_data = {
-                'description': line.name,
+                'description': line.name[:DESCRIPTION_SIZE],
                 'type': line_type,
                 'quantity': quantity,
                 'quantityUnit': line.product_uom_id.name or 'pcs',
