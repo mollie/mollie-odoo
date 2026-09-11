@@ -13,6 +13,17 @@ from odoo import _, api, fields, models, tools
 
 _logger = logging.getLogger(__name__)
 
+# Mollie voucher issuer ids embed the voucher type, e.g. 'edenred-belgium-eco',
+# 'pluxee-belgium-lunch'. Tokens are matched against the lowercased issuer id.
+MOLLIE_VOUCHER_ISSUER_TOKENS = {
+    'meal': ('meal', 'lunch', 'restaurant'),
+    'eco': ('eco',),
+    'gift': ('gift', 'cadeau', 'compliments'),
+    'sports': ('sport',),
+    'consume': ('consum',),
+    'additional': ('additional',),
+}
+
 
 class PaymentTransaction(models.Model):
     _inherit = 'payment.transaction'
@@ -402,13 +413,27 @@ class PaymentTransaction(models.Model):
                 category = line.product_id.product_tmpl_id._get_mollie_voucher_category()
                 if category:
                     line_data.update({
-                        'category': category[0]
+                        'category': self._mollie_voucher_category_for_issuer(category)
                     })
             lines.append(line_data)
         if self.fees:
             lines.append(self._mollie_prepare_fees_line())
 
         return lines
+
+    def _mollie_voucher_category_for_issuer(self, categories):
+        """ The order API accepts a single category per line: return the one the
+        selected voucher issuer can pay, else the first configured one.
+
+        :param list categories: voucher categories configured for the product
+        :return: category to send to mollie
+        :rtype: str
+        """
+        issuer = (self.mollie_payment_issuer or '').lower()
+        for category in categories:
+            if any(token in issuer for token in MOLLIE_VOUCHER_ISSUER_TOKENS.get(category, ())):
+                return category
+        return categories[0]
 
     def _mollie_prepare_fees_line(self):
         return {
