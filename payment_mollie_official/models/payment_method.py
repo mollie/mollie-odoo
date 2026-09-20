@@ -119,7 +119,14 @@ class PaymentMethod(models.Model):
             return result_pms
 
         def is_mollie_method(method):
-            return method.provider_ids.filtered(lambda p: p.id in provider_ids)[:1]._get_code() == 'mollie'
+            # Only treat a payment method as a Mollie one when every compatible
+            # provider is Mollie. Methods such as `paypal` are also offered by
+            # their own provider; looking at the first provider only would let
+            # Mollie hide a method that another provider still supports.
+            compatible_providers = method.provider_ids.filtered(lambda p: p.id in provider_ids)
+            return bool(compatible_providers) and all(
+                provider._get_code() == 'mollie' for provider in compatible_providers
+            )
 
         mollie_providers = self.env['payment.provider'].browse(provider_ids).filtered(lambda provider: provider._get_code() == 'mollie')
         mollie_result_pms = result_pms.filtered(lambda m: is_mollie_method(m))
@@ -325,7 +332,17 @@ class PaymentMethod(models.Model):
 
         # Activate methods & update method data
         for method in mollie_provider.with_context(active_test=False).payment_method_ids:
-            method.active = mollie_methods_data.get(method.code, {}).get('status') == 'activated'
+            if mollie_methods_data.get(method.code, {}).get('status') == 'activated':
+                method.active = True
+                continue
+            # Never archive a method that is still served by another enabled
+            # provider, otherwise syncing Mollie disables e.g. `paypal` for the
+            # PayPal provider as well.
+            other_enabled_providers = method.provider_ids.filtered(
+                lambda p: p.id != mollie_provider.id and p.state != 'disabled'
+            )
+            if not other_enabled_providers:
+                method.active = False
 
     def _generate_issuers(self, issuers_data, payment_method):
         issuer_create_vals = []
