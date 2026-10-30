@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="payment_token_form_mollie" model="ir.ui.view">
+        <field name="name">payment.token.form.mollie</field>
+        <field name="model">payment.token</field>
+        <field name="inherit_id" ref="payment.payment_token_form"/>
+        <field name="arch" type="xml">
+            <field name="provider_ref" position="after">
+                <field name="mollie_is_oneoff_token" invisible="provider_code != 'mollie'"/>
+            </field>
+        </field>
+    </record>
+</odoo>

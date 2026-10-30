@@ -5,6 +5,22 @@
     <xpath expr="//input[@name='o_payment_radio']" position="before">
         <t t-set="inline_form_xml_id" t-value="pm_sudo._get_inline_form_xml_id(inline_form_xml_id, provider_sudo)"/>
     </xpath>
+    <!-- Mollie only stores cards for one-off payments with a card token, which requires Mollie Components. -->
+    <xpath expr="//div[@name='o_payment_tokenize_container']" position="attributes">
+        <attribute name="t-if" add="(provider_sudo._get_code() != 'mollie' or (pm_sudo.code == 'card' and provider_sudo.mollie_use_components))" separator="and"/>
+    </xpath>
+</template>
+
+<template id="mollie_payment_form" inherit_id="payment.form">
+    <xpath expr="//t[@t-set='allow_token_selection']" position="after">
+        <!-- The token will be charged automatically: subscription order or upsell, subscription change of payment
+             method (`subscription`), or subscription invoice where `sale_subscription` offers to automate payments. -->
+        <t t-set="mollie_is_recurring" t-value="bool(sale_order and 'is_subscription' in sale_order and (sale_order.is_subscription or sale_order.subscription_id.is_subscription))
+               or bool(subscription)
+               or bool(is_subscription and not sale_order and mode == 'payment' and not reference_prefix)"/>
+        <!-- One-off cards need the customer's approval on each payment, so they can't be charged automatically. -->
+        <t t-set="tokens_sudo" t-value="tokens_sudo.filtered(lambda t: not t.mollie_is_oneoff_token) if mollie_is_recurring else tokens_sudo"/>
+    </xpath>
 </template>
 
 <template id="mollie_creditcard_component">

@@ -202,6 +202,11 @@ class PaymentMethod(models.Model):
 
         if force_tokenization:
             mollie_allowed_methods = mollie_allowed_methods.filtered(lambda m: m.code in const.MANDATE_METHODS)
+            # Outside subscriptions, cards are saved with `storeCredentials`, which needs a Mollie Components card token.
+            if not (request and request.params.get('manage_subscription')):
+                mollie_allowed_methods = mollie_allowed_methods.filtered(
+                    lambda m: m.code == 'card' and mollie_providers[:1].mollie_use_components
+                )
 
         partner = self.env['res.partner'].browse(partner_id)
         if not extra_params.get('billingCountry') and partner.country_id:

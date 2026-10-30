@@ -204,4 +204,24 @@ patch(PaymentForm.prototype, {
         }
     },
 
+    /**
+     * Redirect the customer to Mollie when paying with a one-off token, as these tokens need the
+     * customer's approval. The server returns a redirect form for them instead of charging the token.
+     *
+     * @override method from @payment/js/payment_form
+     * @private
+     * @param {string} providerCode - The code of the selected payment option's provider.
+     * @param {number} paymentOptionId - The id of the selected payment option.
+     * @param {string} paymentMethodCode - The code of the selected payment method, if any.
+     * @param {object} processingValues - The processing values of the transaction.
+     * @return {void}
+     */
+    _processTokenFlow(providerCode, paymentOptionId, paymentMethodCode, processingValues) {
+        if (providerCode === 'mollie' && processingValues.redirect_form_html) {
+            this._processRedirectFlow(...arguments);
+        } else {
+            super._processTokenFlow(...arguments);
+        }
+    },
+
 });

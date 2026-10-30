@@ -55,6 +55,7 @@ class PaymentTransaction(models.Model):
             'payment_details': payment_data.get('details', {}).get('cardNumber', False),
             'provider_ref': payment_data['mandateId'],
             'mollie_customer_id': payment_data.get('customerId'),
+            'mollie_is_oneoff_token': payment_data.get('sequenceType') != 'first',
         }
 
     def _get_specific_rendering_values(self, processing_values):
@@ -98,10 +99,31 @@ class PaymentTransaction(models.Model):
                 'url_params': urls.url_parse(mollie_redirect_url).decode_query(),
             }
 
+    def _get_specific_processing_values(self, processing_values):
+        """ Override of `payment` to switch one-off token payments to the redirect flow.
+
+        One-off tokens need the customer's approval on Mollie. With the operation switched,
+        `_get_processing_values` renders the redirect form as for any redirect payment.
+
+        Note: self.ensure_one() from `_get_processing_values`
+        """
+        if (
+            self.provider_code == 'mollie'
+            and self.operation == 'online_token'
+            and self.token_id.mollie_is_oneoff_token
+        ):
+            self.operation = 'online_redirect'
+        return super()._get_specific_processing_values(processing_values)
+
     def _send_payment_request(self):
         """Override of `payment` to send a payment request to Mollie."""
         if self.provider_code != 'mollie':
             return super()._send_payment_request()
+
+        if self.token_id.mollie_is_oneoff_token:
+            if self.operation == 'offline':
+                raise ValidationError(_("This saved card requires the customer's approval and cannot be charged automatically."))
+            return  # Paid through the redirect flow, see `_get_specific_processing_values`.
 
         # Send the payment request to Mollie.
         payload = self._mollie_prepare_payment_request_payload()
@@ -260,6 +282,18 @@ class PaymentTransaction(models.Model):
             )
         return message
 
+    def _mollie_is_subscription(self):
+        """ Return whether the transaction pays a subscription order or a subscription invoice.
+
+        :return: True if a subscription is paid, False otherwise (or if `sale_subscription` is not installed)
+        :rtype: bool
+        """
+        if 'subscription_id' not in self.env['account.move.line']._fields:
+            return False
+        return bool(
+            self.sale_order_ids.filtered(lambda so: so.is_subscription or so.subscription_id.is_subscription)  # upsells included
+            or self.invoice_ids.line_ids.subscription_id
+        )
 
     def _mollie_prepare_payment_request_payload(self):
         """ Create the payload for the payment request based on the transaction values.
@@ -321,10 +355,15 @@ class PaymentTransaction(models.Model):
         if self.tokenize and not self.env.user.has_group('base.group_public') and self.payment_method_code in const.MANDATE_METHODS:  # for security
             mollie_customer_id = self.provider_id._mollie_get_customer_id(self.partner_id)
             if mollie_customer_id:
+                # Subscriptions need a mandate for automatic charges; other orders only store the card.
+                is_subscription = self._mollie_is_subscription()
                 method_specific_parameters.update({
                     "customerId": mollie_customer_id,
-                    "sequenceType": "first",
+                    "sequenceType": "first" if is_subscription else "oneoff",
                 })
+                if not is_subscription:
+                    method_specific_parameters['storeCredentials'] = True
+
                 if payment_data.get('captureMode') == 'manual':
                     del payment_data['captureMode']
 
@@ -335,10 +374,11 @@ class PaymentTransaction(models.Model):
         payment_data.update(method_specific_parameters)
 
         if self.token_id:
+            sequence_type = 'oneoff' if self.token_id.mollie_is_oneoff_token else 'recurring'
             payment_data.update({
                 "customerId": self.token_id.mollie_customer_id,
                 "mandateId": self.token_id.provider_ref,
-                "sequenceType": "recurring",
+                "sequenceType": sequence_type,
                 "description": payment_data['description'],
             })
             payment_data.pop("method")
@@ -609,8 +649,26 @@ class PaymentTransaction(models.Model):
     def _build_action_feedback_notification(self):
         """ Override to add the Mollie refund transaction ID to the action context for refund operations. """
         result = super()._build_action_feedback_notification()
-        if self.operation == 'refund':
-            ctx = self.env.context.copy()
-            ctx['mollie_refund_id'] = self.id
-            result['context'] = ctx
+        refund_txs = self.filtered(lambda tx: tx.operation == 'refund')
+        if refund_txs:
+            result['context'] = {**self.env.context, 'mollie_refund_tx_ids': refund_txs.ids}
+        return result
+
+    def _post_process(self):
+        """ Prevent Mollie one-off tokens from being saved on subscription sale orders."""
+        mollie_oneoff_txs = self.filtered(
+            lambda tx: tx.provider_code == 'mollie'
+            and tx.token_id.mollie_is_oneoff_token
+            and tx._mollie_is_subscription()
+        )
+        if not mollie_oneoff_txs:
+            return super()._post_process()
+
+        mollie_oneoff_txs.filtered(lambda tx: tx.subscription_action == 'assign_token').subscription_action = 'manual_send_mail'
+        result = super()._post_process()
+
+        mollie_oneoff_txs.sale_order_ids.filtered(
+            lambda so: so.payment_token_id.mollie_is_oneoff_token
+        ).payment_token_id = False
+
         return result

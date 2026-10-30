@@ -30,12 +30,12 @@ class AccountPaymentRegister(models.TransientModel):
         })
 
         result = refund_wizard.action_refund()
-        refund_transaction_id = result.get('context', {}).get('mollie_refund_id')
+        refund_tx_ids = result.get('context', {}).get('mollie_refund_tx_ids')
 
-        if not refund_transaction_id:
+        if not refund_tx_ids:
             return payments
 
-        refund_transaction = self.env['payment.transaction'].browse(refund_transaction_id)
+        refund_transaction = self.env['payment.transaction'].browse(refund_tx_ids)
         invoice_ids = (
             self.env.context.get('active_ids', [])
             if self.env.context.get('active_model') == 'account.move'
