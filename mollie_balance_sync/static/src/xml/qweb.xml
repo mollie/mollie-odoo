@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="drg_balance_payment_info">
+        <Dialog title="'Information'" footer="false">
+            <table class="table table-bordered">
+                <tbody>
+                    <t t-call="drg_balance_payment_info_line" data="this.tableVal" />
+                </tbody>
+            </table>
+        </Dialog>
+    </t>
+
+    <t t-name="drg_balance_payment_info_line">
+        <t t-foreach="data" t-as="d" t-key="d_index">
+            <tr>
+                <td>
+                    <strong>
+                        <t t-out="this.formatCamelCase(d)"/>
+                    </strong>
+                </td>
+                <td>
+                    <t t-out="this.formatValue(data[d])"/>
+                </td>
+            </tr>
+        </t>
+    </t>
+
+</templates>

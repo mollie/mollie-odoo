@@ -1,0 +1,7 @@
+id,name,model_id,group_id/id,operation,domain
+access_mollie_balance_account,access_mollie_balance_account,mollie.balance.account,account.group_account_user,crud,
+access_mollie_transaction_queue,access_mollie_transaction_queue,mollie.transaction.queue,account.group_account_user,crud,
+access_sync_mollie_statement_line,access_sync_mollie_statement_line,sync.mollie.statement.line,account.group_account_user,crud,
+access_sync_mollie_previous_statement_line,access_sync_mollie_previous_statement_line,sync.mollie.previous.statement.line,account.group_account_user,crud,
+mollie_balance_account_comp_rule,Mollie balance account multi-company,mollie.balance.account,,crud,"[('journal_id.company_id', 'parent_of', company_ids)]"
+mollie_transaction_queue_comp_rule,Mollie transaction queue multi-company,mollie.transaction.queue,,crud,"[('journal_id.company_id', 'parent_of', company_ids)]"
