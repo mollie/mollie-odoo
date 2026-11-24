@@ -5,6 +5,7 @@ from odoo import fields, models
 
 class MollieTerminalPaymentMixin(models.AbstractModel):
     _name = 'mollie.terminal.payment.mixin'
+    _description = 'Mollie Terminal Payment Mixin'
 
     mollie_terminal_payment_enabled = fields.Boolean(string='Mollie Sale', compute='_compute_mollie_terminal_details')
     mollie_terminal_active_transaction = fields.Boolean(string='Mollie Open Payment', compute='_compute_mollie_terminal_details')
