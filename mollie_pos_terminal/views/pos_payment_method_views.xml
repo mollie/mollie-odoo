@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="pos_payment_method_view_form_inherit_mollie_pos_terminal" model="ir.ui.view">
+        <field name="name">pos.payment.method.view.form.inherit</field>
+        <field name="model">pos.payment.method</field>
+        <field name="inherit_id" ref="pos_mollie.pos_payment_method_view_form_inherit_pos_mollie"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='mollie_payment_provider_id']" position="after">
+                <field name="mollie_pos_terminal_id" invisible="payment_provider != 'mollie'" required="payment_provider == 'mollie'" options="{'no_create': True}"/>
+                <field name="mollie_voucher_category"
+                    invisible="payment_provider != 'mollie'" />
+            </xpath>
+            <xpath expr="//field[@name='mollie_terminal_id']" position="attributes">
+                <attribute name="readonly">1</attribute>
+                <attribute name="required">0</attribute>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

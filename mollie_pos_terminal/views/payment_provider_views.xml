@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="payment_provider_form_inherit_mollie_pos_terminal" model="ir.ui.view">
+        <field name="name">payment.provider.form.inherit.mollie.pos.terminal</field>
+        <field name="model">payment.provider</field>
+        <field name="inherit_id" ref="payment.payment_provider_form"/>
+        <field name="arch" type="xml">
+            <div name="button_box" position="inside">
+                <button type="object" name="action_view_mollie_terminals" class="oe_stat_button" icon="credit_card"
+                    invisible="code != 'mollie'" groups="point_of_sale.group_pos_manager">
+                    <field name="mollie_terminal_count" widget="statinfo" string="Terminals"/>
+                </button>
+            </div>
+        </field>
+    </record>
+
+</odoo>
