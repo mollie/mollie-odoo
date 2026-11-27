@@ -20,13 +20,6 @@ patch(BankRecButtonList.prototype, {
             return buttonsToDisplay;
         }
 
-        const isValidCondition = (this.props.isTopLine && this.ui.size > 3) ||
-                                 (!this.props.isTopLine && this.ui.size <= 3);
-
-        if (!isValidCondition) {
-            return buttonsToDisplay;
-        }
-
         const mollieInfo = JSON.parse(this.statementLineData.mollie_balance_json_info);
         const type = mollieInfo?.MollieType;
 

@@ -107,7 +107,7 @@ class MollieTransactionQueue(models.Model):
                 domain += [('provider_id', 'in', mollie_providers.ids)]
             transaction = self.env['payment.transaction'].search(domain, limit=1)
             if transaction and transaction.partner_id:
-                extra_data['partner_id'] = transaction.partner_id.id
+                extra_data['partner_id'] = transaction.partner_id.commercial_partner_id.id
 
             self._set_custom_extra_data(payment_data, extra_data)
 

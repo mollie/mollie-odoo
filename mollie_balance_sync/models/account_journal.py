@@ -7,7 +7,7 @@ import requests
 from datetime import datetime
 from werkzeug import urls
 
-from odoo import _, fields, models
+from odoo import _, fields, models, tools
 from odoo.exceptions import UserError
 
 
@@ -134,27 +134,23 @@ class AccountJournal(models.Model):
                     continue
 
                 amount = float(transaction['initialAmount']['value'])
+                details = transaction.get('deductionDetails') or {}
+                repayments = float((details.get('repayments') or {}).get('value') or 0)
+                deductions = float((transaction.get('deductions') or {}).get('value') or 0)
+                deductions = tools.float_round(deductions - repayments, precision_digits=2)
 
-                if transaction.get('deductions'):
-                    transaction_lines += [{
-                        'balance_transaction_id': transaction['id'],
-                        'transaction_date': transaction_date,
-                        'payment_ref': ' '.join(['deductions :', transaction['type'], '#' + transaction_id]),
-                        'amount': float(transaction['deductions']['value']),
-                        'transaction_id': transaction_id,
-                        'journal_id': self.id
-                    }]
-
-                if amount != 0.0:
-                    transaction_lines += [{
-                        'balance_transaction_id': transaction['id'],
-                        'transaction_date': transaction_date,
-                        'payment_ref': transaction['type'],
-                        'amount': float(transaction['initialAmount']['value']),
-                        'transaction_id': transaction_id,
-                        'journal_id': self.id,
-                        'transaction_json': json.dumps(transaction['context'] or {})
-                    }]
+                vals = {
+                    'balance_transaction_id': transaction['id'],
+                    'transaction_date': transaction_date,
+                    'transaction_id': transaction_id,
+                    'journal_id': self.id,
+                }
+                if repayments:
+                    transaction_lines.append(dict(vals, payment_ref=f"repayments : {transaction['type']} #{transaction_id}", amount=repayments))
+                if deductions:
+                    transaction_lines.append(dict(vals, payment_ref=f"deductions : {transaction['type']} #{transaction_id}", amount=deductions))
+                if amount:
+                    transaction_lines.append(dict(vals, payment_ref=transaction['type'], amount=amount, transaction_json=json.dumps(transaction['context'] or {})))
             else:
                 links = transactions_response.get('_links')
                 if links and links.get('next'):
