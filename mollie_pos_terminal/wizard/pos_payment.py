@@ -92,7 +92,7 @@ class PosMakePayment(models.TransientModel):
 
         if abs(self.amount) > self.mollie_max_refund_amount:
             self.mollie_refund_error = _(
-                'Refund amount (%(amount)s) exceeds maximum refundable (%(max_amount)s)',
+                'Refund amount (%(amount).2f) exceeds maximum refundable (%(max_amount).2f)',
                 amount=abs(self.amount),
                 max_amount=self.mollie_max_refund_amount
             )
