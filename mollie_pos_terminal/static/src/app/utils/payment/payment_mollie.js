@@ -163,6 +163,9 @@ export class PaymentMollie extends PaymentInterface {
     async handleMollieStatusResponse() {
 
         const line = this.pending_mollie_line();
+        if (!line) {
+            return;
+        }
         const paymentStatus = await this.env.services.orm.silent
             .call('mollie.pos.terminal.payments', 'get_mollie_payment_status', [
             ], {
@@ -185,6 +188,9 @@ export class PaymentMollie extends PaymentInterface {
 
     _resolvePaymentStatus(state) {
         const line = this.pending_mollie_line();
+        if (!line) {
+            return;
+        }
         const resolver = this.paymentLineResolvers?.[line.uuid];
         if (resolver) {
             resolver(state);
